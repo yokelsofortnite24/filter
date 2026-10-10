@@ -264,6 +264,20 @@ select.input{padding-right:40px;text-overflow:ellipsis;white-space:nowrap;overfl
   body.printing-receipt .receipt{box-shadow:none;border:none}
   body.printing-receipt{background:#fff !important}
 }
+/* ---- v13 ---- */
+.seg{display:flex;background:#EFE4D0;border-radius:12px;padding:3px;gap:3px}
+.seg button{flex:1;min-height:40px;border:none;background:transparent;border-radius:10px;font-weight:600;font-size:14px;color:var(--coffee-700)}
+.seg button.on{background:var(--card);color:var(--coffee-900);box-shadow:0 2px 6px -3px rgba(42,24,15,.3)}
+.rate-card{display:flex;align-items:center;gap:8px;padding:14px 16px;margin-bottom:16px}
+.stars{display:flex;gap:2px;margin-top:4px}.stars button{background:none;border:none;font-size:26px;color:#D9B98A;min-width:40px;min-height:40px;padding:0;line-height:1}
+.stars button:active{color:var(--caramel-dark);transform:scale(1.15)}
+.close-card{padding:16px;margin-bottom:16px}
+.close-grid{display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;margin-top:12px}
+.close-grid>div{display:flex;flex-direction:column;gap:2px;min-width:0}
+.close-grid b{font-size:17px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.pill-toggle{display:inline-flex;align-items:center;gap:8px;min-height:36px;padding:0 14px;border-radius:999px;border:1px solid var(--line);background:#F6E7CC;color:#8A5A1E;font-weight:600;font-size:13px}
+.pill-toggle .dot{width:8px;height:8px;border-radius:50%;background:#B0896B}
+.pill-toggle.on{background:#E3EEDF;color:#3F6B3A}.pill-toggle.on .dot{background:#5E8C5A}
 </style>
 </head>
 <body>
@@ -273,7 +287,7 @@ select.input{padding-right:40px;text-overflow:ellipsis;white-space:nowrap;overfl
 // Bumped on every real deploy. Lets a running tab/installed PWA detect a
 // newer version is live on the server and prompt to refresh, instead of
 // silently running stale code forever (a common PWA gotcha).
-const APP_BUILD = '2026-10-10-12';
+const APP_BUILD = '2026-10-10-13';
 async function checkForUpdate(){
   try {
     const resp = await fetch('./index.html?_=' + Date.now(), { cache: 'no-store' });
@@ -1143,6 +1157,16 @@ function renderLiveOrderBanner(){
     <div class="lo-steps">${[1,2,3,4].map(i=>`<span class="${i<=n?'on':''}"></span>`).join('')}</div>
   </div>`;
 }
+function renderRatePrompt(){
+  if (!state._myRevLoaded && !state._myRevLoading && state.session){ state._myRevLoading=true; sb.from('reviews').select('order_id').eq('customer_id',state.session.user.id).then(({data})=>{ state.myReviewOrders=(data||[]).map(x=>x.order_id); state._myRevLoaded=true; if(state.tab==='menu') render(); }); }
+  if (!state._myRevLoaded) return '';
+  let dismissed=[]; try{ dismissed=JSON.parse(localStorage.getItem('filter_rate_dismissed')||'[]'); }catch(e){}
+  const o=(state.orders||[]).find(x=>x.status==='completed' && Date.now()-new Date(x.completed_at||x.created_at).getTime()<3*86400000 && !state.myReviewOrders.includes(x.id) && !dismissed.includes(x.id) && (x.order_items||[]).some(i=>i.product_id));
+  if(!o) return '';
+  const it=o.order_items.find(i=>i.product_id);
+  return `<div class="card rate-card"><div style="flex:1;min-width:0"><div class="lo-kicker" style="color:var(--caramel-dark);opacity:1">How was it?</div><div style="font-weight:700;font-size:15px">Rate your ${esc(it.product_name)}</div><div class="stars">${[1,2,3,4,5].map(n=>`<button aria-label="${n} stars" onclick="openReviewModal('${it.product_id}','${esc(it.product_name).replace(/'/g,'&#39;')}','${o.id}'); state.reviewModal.rating=${n}; render()">★</button>`).join('')}</div></div><button class="btn btn-ghost btn-sm" aria-label="Dismiss" onclick="dismissRate('${o.id}')">✕</button></div>`;
+}
+function dismissRate(id){ let d=[]; try{ d=JSON.parse(localStorage.getItem('filter_rate_dismissed')||'[]'); }catch(e){} d.push(id); localStorage.setItem('filter_rate_dismissed', JSON.stringify(d.slice(-50))); render(); }
 function renderOrderAgain(){
   if (liveOrder()) return '';
   const o=(state.orders||[]).find(x=>x.status==='completed' && (x.order_items||[]).length); if(!o) return '';
@@ -1168,7 +1192,7 @@ function receiptData(o){
   });
   const sub = Number(o.subtotal||0), promo = Number(o.discount_amount||0) - Number(o.loyalty_discount_amount||0), pts = Number(o.loyalty_discount_amount||0);
   return {
-    biz: st.business_name || 'Filter', tagline: st.tagline || 'Coffee & Tea', phone: st.support_phone || '', address: st.address || '',
+    biz: st.business_name || 'Filter', tagline: st.tagline || 'Coffee & Tea', phone: st.support_phone || '',
     num: o.order_number, placed: new Date(o.created_at),
     pickup: `${o.pickup_date ? new Date(o.pickup_date+'T12:00').toLocaleDateString([],{weekday:'short',day:'numeric',month:'short'}) : ''}${o.pickup_time ? ' · ' + fmtTime12(o.pickup_time.slice(0,5)) : ''}`,
     items, sub, promo: promo > 0 ? promo : 0, ptsRedeemed: Number(o.loyalty_points_redeemed||0), ptsDiscount: pts,
@@ -1193,7 +1217,7 @@ function receiptHtml(d){
   const row = (l, v, cls='') => `<div class="rc-row ${cls}"><span>${l}</span><span>${v}</span></div>`;
   return `<div class="receipt" id="receipt-paper">
     <div class="rc-head"><img src="./icon-192.png" alt="" class="rc-logo"><div class="rc-biz">${esc(d.biz)}</div><div class="rc-tag">${esc(d.tagline)}</div>
-      ${d.address?`<div class="rc-small">${esc(d.address)}</div>`:''}${d.phone?`<div class="rc-small">${esc(d.phone)}</div>`:''}</div>
+      ${d.phone?`<div class="rc-small">${esc(d.phone)}</div>`:''}</div>
     <div class="rc-sep"></div>
     ${row('Order', `<b>#${d.num}</b>`)}
     ${row('Placed', d.placed.toLocaleDateString([],{day:'numeric',month:'short',year:'numeric'})+' · '+d.placed.toLocaleTimeString([],{hour:'numeric',minute:'2-digit'}))}
@@ -1240,7 +1264,7 @@ async function drawReceiptCanvas(d){
   push(64, yy => {}); // logo
   push(34, yy => { x.font = serif; x.fillStyle = '#2A180F'; x.textAlign = 'center'; x.fillText(d.biz, W/2, yy + 26); });
   push(20, yy => { x.font = sans('500 13px'); x.fillStyle = '#6B4A34'; x.textAlign = 'center'; x.fillText(d.tagline, W/2, yy + 14); });
-  for (const t of [d.address, d.phone].filter(Boolean)) for (const l of wrap(t, sans('400 12px'), W - 2*P)) push(17, yy => { x.font = sans('400 12px'); x.fillStyle = '#6B4A34'; x.textAlign = 'center'; x.fillText(l, W/2, yy + 12); });
+  for (const t of [d.phone].filter(Boolean)) for (const l of wrap(t, sans('400 12px'), W - 2*P)) push(17, yy => { x.font = sans('400 12px'); x.fillStyle = '#6B4A34'; x.textAlign = 'center'; x.fillText(l, W/2, yy + 12); });
   const sep = () => push(22, yy => { x.strokeStyle = '#D9C7A8'; x.setLineDash([4, 4]); x.beginPath(); x.moveTo(P, yy + 11); x.lineTo(W - P, yy + 11); x.stroke(); x.setLineDash([]); });
   const row = (l, v, opt = {}) => push(opt.h || 22, yy => { x.font = sans(opt.w || '400 13px'); x.fillStyle = opt.c || '#2A180F'; x.textAlign = 'left'; x.fillText(l, P, yy + 15); x.textAlign = 'right'; x.font = sans(opt.vw || opt.w || '600 13px'); x.fillText(v, W - P, yy + 15); });
   sep();
@@ -1317,7 +1341,7 @@ function renderMenuTab(){
   <div style="padding:16px 18px">
     ${renderShopStatus()}
     ${renderLiveOrderBanner()}
-    ${!state.search && state.activeCategory==='all' ? renderOrderAgain() : ''}
+    ${!state.search && state.activeCategory==='all' ? renderRatePrompt() + renderOrderAgain() : ''}
     ${drop ? renderDropBanner(drop) : ''}
     ${recommendation && !state.search && state.activeCategory==='all' && !(renderOrderAgain() && (state.orders||[]).find(x=>x.status==='completed')?.order_items?.some(i=>i.product_name===recommendation.name)) ? `<div class="card" style="padding:14px;margin-bottom:16px;display:flex;align-items:center;gap:12px;cursor:pointer" onclick="openProduct('${recommendation.id}')">
       <div style="width:44px;height:44px;border-radius:12px;background:linear-gradient(135deg,#EFE0C4,var(--caramel-light));display:flex;align-items:center;justify-content:center;font-size:20px;flex-shrink:0;overflow:hidden">${recommendation.image_url?`<img src="${esc(recommendation.image_url)}" style="width:100%;height:100%;object-fit:cover">`:productEmoji(recommendation)}</div>
@@ -1770,6 +1794,7 @@ async function submitReview(){
   const m = state.reviewModal;
   const { error } = await sb.from('reviews').insert({ customer_id: state.session.user.id, product_id: m.productId, order_id: m.orderId, rating: m.rating, comment: m.comment || null });
   if (error) { showToast(error.message.includes('duplicate') ? "You've already rated this item for this order" : error.message, 'err'); return; }
+  (state.myReviewOrders = state.myReviewOrders || []).push(m.orderId);
   setState({ reviewModal: null });
   showToast('Thanks for the feedback! ★', 'ok');
   refreshProducts();
@@ -1961,7 +1986,14 @@ function renderRewardsTab(){
         <div style="font-size:12px;color:var(--coffee-500)">${esc(p.description||'')}</div>
       </div>`).join('') || `<div class="card" style="padding:16px;color:var(--coffee-500);font-size:14px">No promos running right now — check back soon.</div>`}
     </div>
+    ${renderPointsHistory()}
   </div>`;
+}
+function ptsReasonLabel(r){ const m={payment_confirmed:'Earned on order',order_redemption:'Used on order',redeemed:'Used on order',reward_redemption:'Reward redeemed',mission_completed:'Mission bonus',order_cancelled:'Order cancelled',referral:'Referral bonus'}; return m[r] || (r||'').replace(/_/g,' '); }
+function pointsHistoryRows(list){ return list.length ? `<div class="card" style="padding:0 16px">${list.map(t=>`<div class="kv"><span style="min-width:0"><span style="display:block;font-size:13px;color:var(--coffee-900)">${esc(ptsReasonLabel(t.reason))}</span><span class="meta">${new Date(t.created_at).toLocaleDateString([],{day:'numeric',month:'short'})}</span></span><b style="color:${t.points_change<0?'var(--danger)':'#3F6B3A'};white-space:nowrap">${t.points_change>0?'+':''}${t.points_change}</b></div>`).join('')}</div>` : `<div class="card" style="padding:16px;color:var(--coffee-500);font-size:14px">No points activity yet.</div>`; }
+function renderPointsHistory(){
+  if (!state._ptsLoaded && !state._ptsLoading){ state._ptsLoading=true; sb.from('loyalty_transactions').select('*').eq('customer_id',state.session.user.id).order('created_at',{ascending:false}).limit(30).then(({data})=>{ state.pointsHistory=data||[]; state._ptsLoaded=true; state._ptsLoading=false; if(state.tab==='rewards') render(); }); }
+  return `<h3 style="margin:24px 0 12px;font-size:15px">Points history</h3>${state._ptsLoaded?pointsHistoryRows(state.pointsHistory):'<div class="meta">Loading…</div>'}`;
 }
 async function redeemRewardUI(rewardId){
   const { error } = await sb.rpc('redeem_reward', { p_reward_id: rewardId });
@@ -2173,6 +2205,7 @@ function renderAdminDashboard(){
   return `
     ${renderAdminQuickSearch()}
     <div style="margin:4px 0 16px"><div class="meta">${new Date().toLocaleDateString([],{weekday:'long',day:'numeric',month:'long'})}</div><div class="display" style="font-size:24px;margin-top:2px">${greet}, ${esc((state.profile?.full_name||'').split(' ')[0]||'there')}</div></div>
+    ${renderDailyClose(orders, today)}
     <div class="stat-grid" style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:16px">
       ${statCard('Total sales', money(totalSales))}
       ${statCard('All orders', orders.length)}
@@ -2198,6 +2231,30 @@ function quickResultsHtml(){
   const os=state.workerOrders.filter(o=>String(o.order_number).includes(q)||(o.profiles?.full_name||'').toLowerCase().includes(q)||(o.profiles?.phone||'').includes(q)).slice(0,5);
   const us=_adminUsers.filter(u=>(u.full_name||'').toLowerCase().includes(q)||(u.phone||'').includes(q)).slice(0,5);
   return `<div class="card qs-results">${os.map(o=>`<button class="qs-row" onclick="setState({orderDetailId:'${o.id}'})"><span class="qs-ic">🧾</span><span style="flex:1;min-width:0"><b>#${o.order_number}</b> ${esc(o.profiles?.full_name||'Deleted customer')}<span class="meta" style="display:block">${o.status} · ${money(o.total)}</span></span></button>`).join('')}${us.map(u=>`<button class="qs-row" onclick="openCustomerProfile('${u.id}')"><span class="qs-ic">👤</span><span style="flex:1;min-width:0"><b>${esc(u.full_name||'No name')}</b><span class="meta" style="display:block">${esc(u.phone||'no phone')} · ${u.role}</span></span></button>`).join('')}${!os.length&&!us.length?`<div class="meta" style="padding:12px 14px">No orders or customers match “${esc(q)}”.</div>`:''}</div>`;
+}
+function renderDailyClose(orders, today){
+  const t = orders.filter(o => o.status !== 'cancelled' && localDateStr(new Date(o.created_at)) === today);
+  const paid = t.filter(o => o.payment_confirmed).reduce((a, o) => a + Number(o.total || 0), 0);
+  const unpaidOrders = t.filter(o => !o.payment_confirmed);
+  const unpaid = unpaidOrders.reduce((a, o) => a + Number(o.total || 0), 0);
+  const cnt = {}; t.forEach(o => (o.order_items || []).forEach(i => cnt[i.product_name] = (cnt[i.product_name] || 0) + i.quantity));
+  const top = Object.entries(cnt).sort((a, b) => b[1] - a[1])[0];
+  const accepting = state.settings?.is_accepting_orders !== false;
+  return `<div class="card close-card">
+    <div style="display:flex;justify-content:space-between;align-items:center;gap:8px"><div class="display" style="font-size:17px">Daily close</div>
+      <button class="pill-toggle ${accepting?'on':''}" onclick="toggleAccepting()" aria-pressed="${accepting}"><span class="dot"></span>${accepting?'Taking orders':'Orders paused'}</button></div>
+    <div class="close-grid">
+      <div><span class="meta">Collected</span><b>${money(paid)}</b></div>
+      <div><span class="meta">To collect</span><b style="color:${unpaid?'#8A5A1E':'inherit'}">${money(unpaid)}</b><span class="meta">${unpaidOrders.length} unpaid</span></div>
+      <div><span class="meta">Top today</span><b style="font-size:14px">${top ? esc(top[0]) + ' ×' + top[1] : '—'}</b></div>
+    </div></div>`;
+}
+async function toggleAccepting(){
+  const next = !(state.settings?.is_accepting_orders !== false);
+  if (!next && !confirm('Pause new orders? Customers will see "Not taking orders right now".')) return;
+  const { error } = await sb.from('business_settings').update({ is_accepting_orders: next }).eq('id', true);
+  if (error) return showToast(error.message, 'err');
+  state.settings.is_accepting_orders = next; showToast(next ? 'Taking orders again' : 'New orders paused', 'ok'); render();
 }
 function renderAdminQuickSearch(){
   if (!_adminUsers.length && !state._quLoading){ state._quLoading=true; loadAdminUsers().catch(()=>{}); }
@@ -2724,17 +2781,18 @@ let _adminUsers = [];
 async function openCustomerProfile(id){
   if (state.profile?.role !== 'admin' || !id) return;
   setState({ customerProfile: { id, loading: true } });
-  const [pr, ords, favs, revs, email, push] = await Promise.all([
+  const [pr, ords, favs, revs, email, push, lt] = await Promise.all([
     sb.from('profiles').select('*').eq('id', id).maybeSingle(),
     sb.from('orders').select('*, order_items(*, order_item_options(*))').eq('customer_id', id).order('created_at', { ascending: false }),
     sb.from('favorites').select('product_id').eq('customer_id', id),
     sb.from('reviews').select('*').eq('customer_id', id).order('created_at', { ascending: false }),
     sb.rpc('admin_get_user_email', { p_user_id: id }),
     sb.from('push_subscriptions').select('id').eq('user_id', id),
+    sb.from('loyalty_transactions').select('*').eq('customer_id', id).order('created_at', { ascending: false }).limit(20),
   ]);
   if (!state.customerProfile || state.customerProfile.id !== id) return;
   if (!pr.data) { showToast(pr.error?.message || 'Could not load this profile', 'err'); setState({ customerProfile: null }); return; }
-  setState({ customerProfile: { id, loading: false, profile: pr.data, orders: ords.data || [], favorites: (favs.data || []).map(f => f.product_id), reviews: revs.data || [], email: typeof email.data === 'string' ? email.data : '', pushOn: (push.data || []).length > 0 } });
+  setState({ customerProfile: { id, loading: false, profile: pr.data, orders: ords.data || [], favorites: (favs.data || []).map(f => f.product_id), reviews: revs.data || [], points: lt.data || [], email: typeof email.data === 'string' ? email.data : '', pushOn: (push.data || []).length > 0 } });
 }
 function renderCustomerProfileSheet(fresh){
   const c = state.customerProfile;
@@ -2765,6 +2823,14 @@ function renderCustomerProfileSheet(fresh){
       ${kv('Push notifications', c.pushOn ? 'On' : 'Off')}
       ${kv('Promo / loyalty messages', `${u.notify_promos === false ? 'Off' : 'On'} / ${u.notify_loyalty === false ? 'Off' : 'On'}`)}
     </div>
+    ${u.role==='customer' ? `<div class="sec-title">Adjust points</div>
+    <div class="card" style="padding:12px 16px">
+      <div class="seg" role="group"><button class="${state.adjMode!=='remove'?'on':''}" onclick="state.adjMode='add'; render()">Add</button><button class="${state.adjMode==='remove'?'on':''}" onclick="state.adjMode='remove'; render()">Remove</button></div>
+      <div style="display:flex;gap:8px;margin-top:8px"><input class="input" id="adj-amt" type="number" inputmode="numeric" min="1" placeholder="Points" style="flex:0 0 96px"><input class="input" id="adj-reason" placeholder="Reason (required)" maxlength="200"></div>
+      <button class="btn btn-primary btn-sm" style="width:100%;margin-top:8px" onclick="adjustPointsUI('${u.id}')">${state.adjMode==='remove'?'Remove points':'Add points'}</button>
+    </div>
+    <div class="sec-title">Points history</div>
+    ${pointsHistoryRows(c.points||[])}` : ''}
     <div class="sec-title">Favourite items</div>
     <div class="meta" style="font-size:13px">${favNames.length ? favNames.map(esc).join(', ') : 'None saved'}${top.length ? `<br>Most ordered: ${top.map(([n, q]) => `${esc(n)} ×${q}`).join(', ')}` : ''}</div>
     <div class="sec-title">Recent orders</div>
@@ -2774,6 +2840,18 @@ function renderCustomerProfileSheet(fresh){
     ${c.reviews.length ? c.reviews.slice(0, 5).map(r => `<div style="margin-bottom:8px;font-size:13px"><b>${esc(prodName(r.product_id))}</b> <span style="color:var(--caramel-dark)">${'★'.repeat(Math.max(0, Math.min(5, r.rating || 0)))}</span>${r.comment ? `<div class="meta">${esc(r.comment)}</div>` : ''}</div>`).join('') : '<div class="meta">No reviews yet</div>'}
     ${u.role !== 'admin' && u.id !== state.session.user.id ? `<div style="margin-top:24px;padding-top:8px;border-top:1px solid rgba(230,217,194,.6)"><button class="link-danger" onclick="deleteUserAccount('${u.id}')">Delete account</button></div>` : ''}
   </div></div>`;
+}
+async function adjustPointsUI(uid){
+  const amt = parseInt(document.getElementById('adj-amt')?.value, 10), reason = (document.getElementById('adj-reason')?.value || '').trim();
+  if (!amt || amt < 1) return showToast('Enter a points amount', 'err');
+  if (!reason) return showToast('Please add a reason', 'err');
+  const delta = state.adjMode === 'remove' ? -amt : amt;
+  if (!confirm(`${delta>0?'Add':'Remove'} ${amt} points?\nReason: ${reason}`)) return;
+  const { data, error } = await sb.rpc('admin_adjust_points', { p_user_id: uid, p_delta: delta, p_reason: reason });
+  if (error) return showToast(error.message, 'err');
+  forgetTyped && forgetTyped('adj-amt'); forgetTyped && forgetTyped('adj-reason');
+  showToast(`Done — new balance ${data} pts`, 'ok');
+  state.adjMode = 'add'; openCustomerProfile(uid);
 }
 async function loadAdminUsers(){
   const { data } = await sb.from('profiles').select('*').order('created_at', { ascending: false });
@@ -2834,7 +2912,6 @@ function renderAdminSettings(){
     <label class="small">Business Name</label><input class="input" id="s-name" value="${esc(s.business_name||'')}" oninput="state.settingsDraft.business_name=this.value" style="margin:6px 0 12px">
     <label class="small">Tagline</label><input class="input" id="s-tag" value="${esc(s.tagline||'')}" oninput="state.settingsDraft.tagline=this.value" style="margin:6px 0 12px">
     <label class="small">Contact / WhatsApp Number</label><input class="input" id="s-phone" value="${esc(s.support_phone||'')}" oninput="state.settingsDraft.support_phone=this.value" style="margin:6px 0 12px">
-    <label class="small">Address (shown on receipts)</label><input class="input" id="s-address" name="address" autocomplete="off" value="${esc(s.address||'')}" oninput="state.settingsDraft.address=this.value" onchange="state.settingsDraft.address=this.value" style="margin-bottom:12px" placeholder="e.g. House 12, Street 4, DHA Phase 6, Lahore">
     <label class="small">Support Email</label><input class="input" id="s-email" name="support_email" type="email" inputmode="email" autocomplete="off" autocapitalize="off" spellcheck="false" value="${esc(s.support_email||'')}" oninput="state.settingsDraft.support_email=this.value" onchange="state.settingsDraft.support_email=this.value" style="margin:6px 0 12px">
     <div style="display:flex;gap:10px">
       <div style="flex:1"><label class="small">Open Time</label><input class="input" id="s-open" type="time" value="${s.open_time||'07:00'}" onchange="state.settingsDraft.open_time=this.value" style="margin:6px 0 12px"></div>
@@ -2945,7 +3022,7 @@ async function saveSettings(){
   // a field without firing one. The draft then still held the old value,
   // so "Save" wrote the old email back. The visible fields win.
   const d = Object.assign({}, state.settingsDraft || {});
-  const fieldMap = { 's-name':'business_name', 's-tag':'tagline', 's-phone':'support_phone', 's-email':'support_email', 's-address':'address', 's-open':'open_time', 's-close':'close_time', 's-tax':'tax_rate', 's-lpp':'loyalty_points_per_currency', 's-banner':'banner_text' };
+  const fieldMap = { 's-name':'business_name', 's-tag':'tagline', 's-phone':'support_phone', 's-email':'support_email', 's-open':'open_time', 's-close':'close_time', 's-tax':'tax_rate', 's-lpp':'loyalty_points_per_currency', 's-banner':'banner_text' };
   Object.entries(fieldMap).forEach(([id, key]) => { const el = document.getElementById(id); if (el) d[key] = el.value; });
   const ba = document.getElementById('s-banner-active'); if (ba) d.banner_active = ba.checked;
   const ac = document.getElementById('s-accepting'); if (ac) d.is_accepting_orders = ac.checked;
@@ -2956,7 +3033,6 @@ async function saveSettings(){
     tagline: d.tagline || '',
     support_phone: d.support_phone || '',
     support_email: d.support_email || '',
-    address: (d.address||'').trim() || null,
     open_time: d.open_time || '07:00',
     close_time: d.close_time || '19:00',
     tax_rate: Number(d.tax_rate) || 0,
