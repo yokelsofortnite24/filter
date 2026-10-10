@@ -3,7 +3,7 @@
 // basic install/offline shell support so the app can be added to the
 // home screen like a native app.
 
-const CACHE_NAME = 'filter-shell-2026-10-10-10';
+const CACHE_NAME = 'filter-shell-2026-10-10-11';
 // Push payloads use app-absolute paths like '/' or '/?tab=orders'. Map them onto
 // this SW's scope so they work at the domain root (Netlify) and under /filter/ (GitHub Pages).
 function appUrl(u){ try { const scope = self.registration.scope; if (!u || u === '/') return scope; if (/^https?:/i.test(u)) return u; return new URL(u.replace(/^\//, ''), scope).href; } catch (e) { return self.registration.scope; } }

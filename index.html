@@ -225,6 +225,22 @@ select.input{padding-right:40px;text-overflow:ellipsis;white-space:nowrap;overfl
 .tabbtn.active{color:var(--coffee-900)}
 .chip{font-weight:600}
 .ver{opacity:.5}
+/* ---- v11 ---- */
+.shop-status{display:flex;align-items:center;gap:8px;font-size:13px;padding:10px 14px;border-radius:14px;background:var(--card);border:1px solid rgba(230,217,194,.7);margin-bottom:12px}
+.shop-status .dot{width:8px;height:8px;border-radius:50%;background:#5E8C5A;box-shadow:0 0 0 4px rgba(94,140,90,.15);flex-shrink:0}
+.shop-status.closed .dot{background:#B0896B;box-shadow:0 0 0 4px rgba(176,137,107,.15)}
+.live-order{background:linear-gradient(145deg,#4A3020,#2A180F);color:var(--cream-2);border-radius:18px;padding:16px;margin-bottom:16px;cursor:pointer;box-shadow:var(--soft)}
+.live-order.ready{background:linear-gradient(145deg,#C9893F,#9C6326);animation:pulse-r 2.4s ease-in-out infinite}
+@keyframes pulse-r{0%,100%{box-shadow:0 0 0 0 rgba(201,137,63,.45)}50%{box-shadow:0 0 0 8px rgba(201,137,63,0)}}
+.lo-kicker{font-size:11px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;opacity:.75}
+.lo-title{font-family:'Fraunces',serif;font-size:21px;font-weight:600;margin-top:2px}
+.lo-sub{font-size:13px;opacity:.8;margin-top:2px}
+.lo-steps{display:flex;gap:6px;margin-top:12px}.lo-steps span{flex:1;height:4px;border-radius:4px;background:rgba(251,247,239,.22)}.lo-steps span.on{background:var(--cream-2)}
+.order-again{display:flex;align-items:center;gap:12px;padding:14px 16px;margin-bottom:16px}
+.qs-results{margin-top:8px;padding:4px 0;overflow:hidden}
+.qs-row{display:flex;align-items:center;gap:12px;width:100%;text-align:left;background:none;border:none;border-bottom:1px solid rgba(230,217,194,.6);padding:10px 14px;font:inherit;color:inherit;min-height:52px;cursor:pointer}
+.qs-row:last-child{border-bottom:none}
+.qs-ic{width:32px;height:32px;border-radius:10px;background:#F1E6D2;display:flex;align-items:center;justify-content:center;flex-shrink:0}
 </style>
 </head>
 <body>
@@ -234,7 +250,7 @@ select.input{padding-right:40px;text-overflow:ellipsis;white-space:nowrap;overfl
 // Bumped on every real deploy. Lets a running tab/installed PWA detect a
 // newer version is live on the server and prompt to refresh, instead of
 // silently running stale code forever (a common PWA gotcha).
-const APP_BUILD = '2026-10-10-10';
+const APP_BUILD = '2026-10-10-11';
 async function checkForUpdate(){
   try {
     const resp = await fetch('./index.html?_=' + Date.now(), { cache: 'no-store' });
@@ -1078,6 +1094,45 @@ function filteredProducts(){
     return true;
   });
 }
+// ---- v11 helpers: shop status, live order, order again, share ----
+function fmtTime12(t){ if(!t) return ''; const [h,m]=t.split(':').map(Number); const ap=h>=12?'pm':'am'; const hh=((h+11)%12)+1; return m?`${hh}:${String(m).padStart(2,'0')}${ap}`:`${hh}${ap}`; }
+function shopStatus(){
+  const st=state.settings||{}; const o=(st.open_time||'07:00').slice(0,5), c=(st.close_time||'19:00').slice(0,5);
+  const d=new Date(); const now=String(d.getHours()).padStart(2,'0')+':'+String(d.getMinutes()).padStart(2,'0');
+  const hours=`${fmtTime12(o)} – ${fmtTime12(c)}`;
+  if (st.is_accepting_orders===false) return {open:false, text:'Not taking orders right now', hours};
+  const inHours = o<=c ? (now>=o && now<c) : (now>=o || now<c);
+  if (inHours) return {open:true, text:`Open now · until ${fmtTime12(c)}`, hours};
+  return {open:false, text:`Closed · opens ${fmtTime12(o)}`, hours};
+}
+function renderShopStatus(){
+  const s=shopStatus();
+  return `<div class="shop-status ${s.open?'open':'closed'}"><span class="dot"></span><b>${s.text}</b><span class="meta" style="margin-left:auto;white-space:nowrap">Today ${s.hours}</span></div>`;
+}
+function liveOrder(){ const cut=Date.now()-18*3600000; return (state.orders||[]).find(o=>['pending','accepted','preparing','ready'].includes(o.status) && new Date(o.created_at).getTime()>cut); }
+function renderLiveOrderBanner(){
+  const o=liveOrder(); if(!o) return '';
+  const steps={pending:['Order received',"We'll confirm it shortly",1],accepted:['Order confirmed',"We'll start it soon",2],preparing:['Being made now','Almost there',3],ready:['Your order is ready!','Come pick it up at the counter',4]};
+  const [t,sub,n]=steps[o.status];
+  return `<div class="live-order ${o.status==='ready'?'ready':''}" onclick="setState({orderDetailId:'${o.id}'})">
+    <div style="display:flex;justify-content:space-between;align-items:center;gap:8px"><div><div class="lo-kicker">Order #${o.order_number}${o.pickup_time?' · pickup '+fmtTime12(o.pickup_time.slice(0,5)):''}</div><div class="lo-title">${t}</div><div class="lo-sub">${sub}</div></div><div style="font-size:28px">${o.status==='ready'?'🛎️':'☕'}</div></div>
+    <div class="lo-steps">${[1,2,3,4].map(i=>`<span class="${i<=n?'on':''}"></span>`).join('')}</div>
+  </div>`;
+}
+function renderOrderAgain(){
+  if (liveOrder()) return '';
+  const o=(state.orders||[]).find(x=>x.status==='completed' && (x.order_items||[]).length); if(!o) return '';
+  const items=o.order_items.map(i=>`${i.quantity}× ${i.product_name}`).join(', ');
+  return `<div class="card order-again"><div style="flex:1;min-width:0"><div class="lo-kicker" style="color:var(--caramel-dark);opacity:1">Order again</div><div style="font-weight:700;font-size:15px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${esc(items)}</div><div class="meta">${money(o.total)} · last on ${new Date(o.created_at).toLocaleDateString([],{day:'numeric',month:'short'})}</div></div><button class="btn btn-primary btn-sm" onclick="reorder('${o.id}')">Add to cart</button></div>`;
+}
+function orderSummaryText(o){
+  const lines=(o.order_items||[]).map(i=>`• ${i.quantity}× ${i.product_name}${i.size_name?' ('+i.size_name+')':''} — ${money(i.line_total ?? i.unit_price*i.quantity)}`);
+  return `${state.settings?.business_name||'Filter'} — Order #${o.order_number}\n${o.profiles?.full_name?'For: '+o.profiles.full_name+'\n':''}Pickup: ${o.pickup_date||''} ${o.pickup_time?fmtTime12(o.pickup_time.slice(0,5)):''}\n\n${lines.join('\n')}\n\nTotal: ${money(o.total)} (${o.payment_confirmed?'paid':'payment pending'})\nStatus: ${o.status}${o.special_instructions?'\nNotes: '+o.special_instructions:''}`;
+}
+function waNumber(ph){ let d=String(ph||'').replace(/\D/g,''); if(!d) return ''; if(d.startsWith('0')) d='92'+d.slice(1); return d; }
+function findAnyOrder(id){ return state.workerOrders.find(x=>x.id===id)||state.orders.find(x=>x.id===id)||(state.customerProfile?.orders||[]).find(x=>x.id===id); }
+function shareOrderWhatsApp(id){ const o=findAnyOrder(id); if(!o) return; const n=waNumber(o.profiles?.phone); window.open(`https://wa.me/${n}?text=${encodeURIComponent(orderSummaryText(o))}`,'_blank'); }
+async function copyOrderSummary(id){ const o=findAnyOrder(id); if(!o) return; const t=orderSummaryText(o); try{ if(navigator.share){ await navigator.share({title:'Order #'+o.order_number,text:t}); return; } await navigator.clipboard.writeText(t); showToast('Order summary copied','ok'); }catch(e){ if(e&&e.name!=='AbortError') showToast('Could not share','err'); } }
 function renderMenuTab(){
   const prods = filteredProducts();
   const featured = state.products.filter(p=>p.is_featured && p.is_available);
@@ -1086,8 +1141,11 @@ function renderMenuTab(){
   const recommendation = taste ? state.products.find(p=>p.name===taste.favorite && p.is_available) : null;
   return `
   <div style="padding:16px 18px">
+    ${renderShopStatus()}
+    ${renderLiveOrderBanner()}
+    ${!state.search && state.activeCategory==='all' ? renderOrderAgain() : ''}
     ${drop ? renderDropBanner(drop) : ''}
-    ${recommendation && !state.search && state.activeCategory==='all' ? `<div class="card" style="padding:14px;margin-bottom:16px;display:flex;align-items:center;gap:12px;cursor:pointer" onclick="openProduct('${recommendation.id}')">
+    ${recommendation && !state.search && state.activeCategory==='all' && !(renderOrderAgain() && (state.orders||[]).find(x=>x.status==='completed')?.order_items?.some(i=>i.product_name===recommendation.name)) ? `<div class="card" style="padding:14px;margin-bottom:16px;display:flex;align-items:center;gap:12px;cursor:pointer" onclick="openProduct('${recommendation.id}')">
       <div style="width:44px;height:44px;border-radius:12px;background:linear-gradient(135deg,#EFE0C4,var(--caramel-light));display:flex;align-items:center;justify-content:center;font-size:20px;flex-shrink:0;overflow:hidden">${recommendation.image_url?`<img src="${esc(recommendation.image_url)}" style="width:100%;height:100%;object-fit:cover">`:productEmoji(recommendation)}</div>
       <div style="flex:1"><div style="font-size:11px;color:var(--caramel-dark);font-weight:700">JUST FOR YOU</div><div style="font-size:13.5px;font-weight:700">Order your usual: ${esc(recommendation.name)}?</div></div>
       <div style="color:var(--coffee-500)">›</div>
@@ -1473,9 +1531,10 @@ function renderOrderDetailSheet(fresh){
     <span class="badge ${o.payment_confirmed?'ready':'pending'}" style="margin-left:6px">${o.payment_confirmed?'✓ PAID':'PAYMENT PENDING'}</span>
     <div style="margin:16px 0">${renderOrderTimeline(o)}</div>
     ${o.status==='cancelled' && o.cancel_reason ? `<div style="font-size:12.5px;color:var(--danger);margin-bottom:12px"><b>Cancelled:</b> ${esc(o.cancel_reason)}</div>` : ''}
+    ${['admin','worker'].includes(state.profile?.role) ? `<div style="display:flex;gap:8px;margin:0 0 12px"><button class="btn btn-ghost btn-sm" style="flex:1" onclick="shareOrderWhatsApp('${o.id}')">WhatsApp${o.profiles?.phone?' customer':''}</button><button class="btn btn-ghost btn-sm" style="flex:1" onclick="copyOrderSummary('${o.id}')">Share receipt</button></div>` : ''}
     ${canCancel(o) ? `<button class="link-danger" style="margin:0 0 16px" onclick="cancelOrder('${o.id}')">Cancel this order</button>` : ''}
-    <div style="font-size:12.5px;color:var(--coffee-500);margin-bottom:16px">Pickup: ${o.pickup_date||''} ${o.pickup_time||''}</div>
-    ${state.profile?.role==='admin' ? `<div class="card" style="padding:14px;margin-bottom:16px;background:${o.payment_confirmed?'#EAF2E9':'#FBF2E1'}">
+    <div style="font-size:12.5px;color:var(--coffee-500);margin-bottom:16px">Pickup: ${o.pickup_date||''} ${o.pickup_time?fmtTime12(o.pickup_time.slice(0,5)):''}</div>
+    ${state.profile?.role==='admin' && o.status!=='cancelled' ? `<div class="card" style="padding:14px;margin-bottom:16px;background:${o.payment_confirmed?'#EAF2E9':'#FBF2E1'}">
       <div style="display:flex;justify-content:space-between;align-items:center;gap:10px">
         <div>
           <div style="font-weight:700;font-size:13.5px">${o.payment_confirmed?'Payment confirmed':'Waiting for payment confirmation'}</div>
@@ -1937,6 +1996,7 @@ function renderAdminDashboard(){
   const maxDay = Math.max(...Object.values(last7),1);
   const hr=new Date().getHours(); const greet = hr<12?'Good morning':hr<17?'Good afternoon':'Good evening';
   return `
+    ${renderAdminQuickSearch()}
     <div style="margin:4px 0 16px"><div class="meta">${new Date().toLocaleDateString([],{weekday:'long',day:'numeric',month:'long'})}</div><div class="display" style="font-size:24px;margin-top:2px">${greet}, ${esc((state.profile?.full_name||'').split(' ')[0]||'there')}</div></div>
     <div class="stat-grid" style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:16px">
       ${statCard('Total sales', money(totalSales))}
@@ -1957,6 +2017,16 @@ function renderAdminDashboard(){
       <h3 class="display" style="margin:0 0 8px;font-size:17px">Most popular</h3>
       ${topProducts.length ? topProducts.map(([name,qty],i)=>`<div style="display:flex;justify-content:space-between;padding:10px 0;${i<topProducts.length-1?'border-bottom:1px solid var(--line)':''};font-size:14px"><span>${i+1}. ${esc(name)}</span><b>${qty} sold</b></div>`).join('') : `<div style="color:var(--coffee-500);font-size:13px">No completed orders yet.</div>`}
     </div>`;
+}
+function quickResultsHtml(){
+  const q=(state.adminQuick||'').trim().toLowerCase(); if(!q) return '';
+  const os=state.workerOrders.filter(o=>String(o.order_number).includes(q)||(o.profiles?.full_name||'').toLowerCase().includes(q)||(o.profiles?.phone||'').includes(q)).slice(0,5);
+  const us=_adminUsers.filter(u=>(u.full_name||'').toLowerCase().includes(q)||(u.phone||'').includes(q)).slice(0,5);
+  return `<div class="card qs-results">${os.map(o=>`<button class="qs-row" onclick="setState({orderDetailId:'${o.id}'})"><span class="qs-ic">🧾</span><span style="flex:1;min-width:0"><b>#${o.order_number}</b> ${esc(o.profiles?.full_name||'Deleted customer')}<span class="meta" style="display:block">${o.status} · ${money(o.total)}</span></span></button>`).join('')}${us.map(u=>`<button class="qs-row" onclick="openCustomerProfile('${u.id}')"><span class="qs-ic">👤</span><span style="flex:1;min-width:0"><b>${esc(u.full_name||'No name')}</b><span class="meta" style="display:block">${esc(u.phone||'no phone')} · ${u.role}</span></span></button>`).join('')}${!os.length&&!us.length?`<div class="meta" style="padding:12px 14px">No orders or customers match “${esc(q)}”.</div>`:''}</div>`;
+}
+function renderAdminQuickSearch(){
+  if (!_adminUsers.length && !state._quLoading){ state._quLoading=true; loadAdminUsers().catch(()=>{}); }
+  return `<div style="margin-bottom:16px"><input class="input" id="admin-quick" type="search" placeholder="Search orders, customers, phone…" value="${esc(state.adminQuick||'')}" oninput="state.adminQuick=this.value; document.getElementById('qs-wrap').innerHTML=quickResultsHtml()"><div id="qs-wrap">${quickResultsHtml()}</div></div>`;
 }
 function statCard(label,val){ return `<div class="card" style="padding:16px"><div style="font-size:12px;color:var(--coffee-500);font-weight:600">${label}</div><div class="display" style="font-size:26px;margin-top:6px">${val}</div></div>`; }
 
@@ -2076,11 +2146,11 @@ function renderAdminMenu(){
     <div style="display:flex;flex-direction:column;gap:10px">
       ${state.products.map(p=>`<div class="card" style="padding:12px;display:flex;justify-content:space-between;align-items:center;gap:10px">
         <div>
-          <div style="font-weight:700;font-size:14px">${esc(p.name)} ${!p.is_available?'<span style=\"color:var(--danger);font-size:11px\">(unavailable)</span>':''}</div>
+          <div style="font-weight:700;font-size:14px">${esc(p.name)} ${!p.is_available?'<span class=\"badge cancelled\" style=\"font-size:10px;padding:2px 8px;margin-left:4px\">Sold out</span>':''}</div>
           <div style="font-size:12px;color:var(--coffee-500)">${esc(state.categories.find(c=>c.id===p.category_id)?.name||'Uncategorized')} · ${money(p.base_price)}</div>
         </div>
         <div style="display:flex;gap:8px;align-items:center;flex-shrink:0">
-          <button class="btn btn-ghost btn-sm" onclick="toggleAvailability('${p.id}',${p.is_available})">${p.is_available?'Hide':'Show'}</button>
+          <button class="btn btn-ghost btn-sm" onclick="toggleAvailability('${p.id}',${p.is_available})">${p.is_available?'Sold out':'Restock'}</button>
           <button class="btn btn-outline btn-sm" onclick="openAdminProductEditor('${p.id}')">Edit</button>
           <button class="btn btn-sm link-danger" style="padding:0 8px" onclick="deleteProduct(\'${p.id}\')">Delete</button>
         </div>
