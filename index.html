@@ -287,7 +287,7 @@ select.input{padding-right:40px;text-overflow:ellipsis;white-space:nowrap;overfl
 // Bumped on every real deploy. Lets a running tab/installed PWA detect a
 // newer version is live on the server and prompt to refresh, instead of
 // silently running stale code forever (a common PWA gotcha).
-const APP_BUILD = '2026-10-10-13';
+const APP_BUILD = '2026-10-10-14';
 async function checkForUpdate(){
   try {
     const resp = await fetch('./index.html?_=' + Date.now(), { cache: 'no-store' });
@@ -2907,7 +2907,7 @@ function renderAdminSettings(){
   if (!state.settingsDraft) state.settingsDraft = { ...(state.settings || {}) };
   const s = state.settingsDraft;
   setTimeout(async () => { await loadStaffCodes(); const el = document.getElementById('staff-codes-body'); if (el) el.outerHTML = staffCodesBodyHtml(); }, 0);
-  setTimeout(async () => { await loadPayoutDetails(); const el = document.getElementById('payout-body'); if (el) el.outerHTML = payoutDetailsBodyHtml(); }, 0);
+  setTimeout(async () => { await loadPayoutDetails(); const el = document.getElementById('payout-body'); if (el && !el.contains(document.activeElement)) el.innerHTML = payoutDetailsBodyHtml(); }, 0);
   return `<div class="card" style="padding:16px;margin-bottom:16px">
     <label class="small">Business Name</label><input class="input" id="s-name" value="${esc(s.business_name||'')}" oninput="state.settingsDraft.business_name=this.value" style="margin:6px 0 12px">
     <label class="small">Tagline</label><input class="input" id="s-tag" value="${esc(s.tagline||'')}" oninput="state.settingsDraft.tagline=this.value" style="margin:6px 0 12px">
@@ -2928,42 +2928,53 @@ function renderAdminSettings(){
   <div id="staff-codes-body" style="margin-top:16px">${staffCodesBodyHtml()}</div>`;
 }
 async function loadPayoutDetails(){
-  const { data } = await sb.from('payout_details').select('*').maybeSingle();
+  const { data, error } = await sb.from('payout_details').select('*').maybeSingle();
+  if (error) { state._payoutError = error.message; return; }
   state.payoutDetails = data || {};
-  if (!state.payoutDraft) state.payoutDraft = { ...state.payoutDetails };
+  state._payoutLoaded = true; state._payoutError = '';
+  // Only seed the form from the DB when the admin hasn't started editing.
+  if (!state.payoutDraft || !state._payoutDirty) state.payoutDraft = { ...state.payoutDetails };
 }
 function payoutDetailsBodyHtml(){
   // Same draft-isolation pattern as Settings above — bank details are never
   // auto-overwritten mid-edit by a background refresh.
+  // Never build the form from an empty placeholder: that is what made saves wipe
+  // the other fields and look like nothing was saved.
+  if (!state._payoutLoaded) return `<div class="card" style="padding:16px"><h3 style="margin:0 0 4px;font-size:15px">🏦 Bank / Payout Details</h3><div class="meta">${state._payoutError ? 'Could not load: ' + esc(state._payoutError) : 'Loading…'}</div></div>`;
   if (!state.payoutDraft) state.payoutDraft = { ...(state.payoutDetails || {}) };
   const b = state.payoutDraft;
   return `<div class="card" style="padding:16px">
     <h3 style="margin:0 0 4px;font-size:15px">🏦 Bank / Payout Details</h3>
     <p style="font-size:12.5px;color:var(--coffee-500);margin:0 0 14px">Kept private to you and your staff unless you choose to show it to customers — useful if someone wants to pay by bank transfer before pickup.</p>
-    <label class="small">Bank Name</label><input class="input" id="pd-bank" value="${esc(b.bank_name||'')}" oninput="state.payoutDraft.bank_name=this.value" style="margin:6px 0 12px">
-    <label class="small">Account Title</label><input class="input" id="pd-title" value="${esc(b.account_title||'')}" oninput="state.payoutDraft.account_title=this.value" style="margin:6px 0 12px">
-    <label class="small">Account Number</label><input class="input" id="pd-number" value="${esc(b.account_number||'')}" oninput="state.payoutDraft.account_number=this.value" style="margin:6px 0 12px">
-    <label class="small">IBAN (optional)</label><input class="input" id="pd-iban" value="${esc(b.iban||'')}" oninput="state.payoutDraft.iban=this.value" style="margin:6px 0 12px">
-    <label class="small">Notes (optional)</label><input class="input" id="pd-notes" value="${esc(b.notes||'')}" oninput="state.payoutDraft.notes=this.value" placeholder="e.g. send payment screenshot on WhatsApp" style="margin:6px 0 12px">
-    <label style="font-size:13px;display:block;margin-bottom:12px"><input type="checkbox" id="pd-show" ${b.show_to_customers?'checked':''} onchange="state.payoutDraft.show_to_customers=this.checked"> Show these details to signed-in customers at checkout</label>
-    <button class="btn btn-primary" style="width:100%" onclick="savePayoutDetails()">Save Bank Details</button>
+    <label class="small">Bank Name</label><input class="input" id="pd-bank" value="${esc(b.bank_name||'')}" oninput="state.payoutDraft.bank_name=this.value; state._payoutDirty=true" onchange="state.payoutDraft.bank_name=this.value; state._payoutDirty=true" style="margin:6px 0 12px">
+    <label class="small">Account Title</label><input class="input" id="pd-title" value="${esc(b.account_title||'')}" oninput="state.payoutDraft.account_title=this.value; state._payoutDirty=true" onchange="state.payoutDraft.account_title=this.value; state._payoutDirty=true" style="margin:6px 0 12px">
+    <label class="small">Account Number</label><input class="input" id="pd-number" value="${esc(b.account_number||'')}" oninput="state.payoutDraft.account_number=this.value; state._payoutDirty=true" onchange="state.payoutDraft.account_number=this.value; state._payoutDirty=true" style="margin:6px 0 12px">
+    <label class="small">IBAN (optional)</label><input class="input" id="pd-iban" value="${esc(b.iban||'')}" oninput="state.payoutDraft.iban=this.value; state._payoutDirty=true" onchange="state.payoutDraft.iban=this.value; state._payoutDirty=true" style="margin:6px 0 12px">
+    <label class="small">Notes (optional)</label><input class="input" id="pd-notes" value="${esc(b.notes||'')}" oninput="state.payoutDraft.notes=this.value; state._payoutDirty=true" onchange="state.payoutDraft.notes=this.value; state._payoutDirty=true" placeholder="e.g. send payment screenshot on WhatsApp" style="margin:6px 0 12px">
+    <label style="font-size:13px;display:block;margin-bottom:12px"><input type="checkbox" id="pd-show" ${b.show_to_customers?'checked':''} onchange="state.payoutDraft.show_to_customers=this.checked; state._payoutDirty=true"> Show these details to signed-in customers at checkout</label>
+    <button class="btn btn-primary" style="width:100%" id="pd-save" onclick="savePayoutDetails()">Save Bank Details</button>
   </div>`;
 }
 async function savePayoutDetails(){
-  const d = state.payoutDraft || {};
+  if (!state._payoutLoaded) { showToast('Still loading your bank details, try again in a moment', 'err'); return; }
+  // Read straight from the inputs (covers iOS autofill / paste that fire no input event).
+  const val = id => (document.getElementById(id)?.value || '').trim();
+  const show = document.getElementById('pd-show');
   const payload = {
-    bank_name: (d.bank_name||'').trim(),
-    account_title: (d.account_title||'').trim(),
-    account_number: (d.account_number||'').trim(),
-    iban: (d.iban||'').trim(),
-    notes: (d.notes||'').trim(),
-    show_to_customers: !!d.show_to_customers,
+    bank_name: val('pd-bank'), account_title: val('pd-title'), account_number: val('pd-number'),
+    iban: val('pd-iban'), notes: val('pd-notes'), show_to_customers: !!(show && show.checked),
+    updated_at: new Date().toISOString(),
   };
-  const { error } = await sb.from('payout_details').update(payload).eq('id', true);
-  if (error) { showToast(error.message, 'err'); return; }
-  showToast('Bank details saved', 'ok');
-  await loadPayoutDetails();
-  state.payoutDraft = { ...state.payoutDetails };
+  const btn = document.getElementById('pd-save'); if (btn) { btn.disabled = true; btn.textContent = 'Saving…'; }
+  let { data, error } = await sb.from('payout_details').update(payload).eq('id', true).select();
+  if (!error && (!data || !data.length)) ({ data, error } = await sb.from('payout_details').insert({ id: true, ...payload }).select());
+  if (btn) { btn.disabled = false; btn.textContent = 'Save Bank Details'; }
+  const row = data && data[0];
+  if (error || !row) { showToast('Not saved: ' + (error?.message || 'no permission to change bank details'), 'err'); return; }
+  if (row.account_number !== payload.account_number || row.account_title !== payload.account_title || row.bank_name !== payload.bank_name || row.show_to_customers !== payload.show_to_customers) { showToast('Not saved — the server kept different values. Please try again.', 'err'); return; }
+  state.payoutDetails = row; state.payoutDraft = { ...row }; state._payoutDirty = false;
+  forgetTyped('pd-');
+  showToast('Bank details saved', 'ok'); render();
 }
 async function loadStaffCodes(){
   const { data } = await sb.from('app_config').select('*').in('key', ['admin_signup_code','worker_signup_code']);
