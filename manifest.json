@@ -1,0 +1,20 @@
+{
+  "id": "./",
+  "name": "Filter — Coffee & Tea",
+  "short_name": "Filter",
+  "description": "Order ahead for pickup from Filter — coffee, karak tea, and green tea.",
+  "start_url": "./index.html?source=pwa",
+  "scope": "./",
+  "display": "standalone",
+  "orientation": "portrait",
+  "background_color": "#F6F0E4",
+  "theme_color": "#F6F0E4",
+  "lang": "en",
+  "categories": ["food", "shopping"],
+  "icons": [
+    { "src": "./icon-192.png", "sizes": "192x192", "type": "image/png", "purpose": "any" },
+    { "src": "./icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any" },
+    { "src": "./icon-maskable-512.png", "sizes": "512x512", "type": "image/png", "purpose": "maskable" },
+    { "src": "./icon.svg", "sizes": "any", "type": "image/svg+xml", "purpose": "any" }
+  ]
+}

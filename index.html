@@ -1,0 +1,2734 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+<meta http-equiv="Pragma" content="no-cache">
+<meta http-equiv="Expires" content="0">
+<meta name="theme-color" content="#F6F0E4">
+<link rel="manifest" href="./manifest.json">
+<link rel="icon" href="./icon.svg" type="image/svg+xml">
+<link rel="apple-touch-icon" sizes="180x180" href="./apple-touch-icon.png">
+<link rel="icon" type="image/png" sizes="192x192" href="./icon-192.png">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<meta name="apple-mobile-web-app-title" content="Filter">
+<title>Filter — Coffee & Tea</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,500;9..144,600;9..144,700&family=Inter:wght@400;500;600;700;800&display=swap');
+
+:root{
+  --cream:#F6F0E4; --cream-2:#FBF7EF; --card:#FFFDF9;
+  --coffee-900:#2A180F; --coffee-700:#4A3020; --coffee-500:#6B4A34;
+  --caramel:#B5713D; --caramel-dark:#8F5629; --caramel-light:#E3B583;
+  --sage:#77875F; --line:#E6D9C2; --danger:#B34B3C; --shadow:0 10px 30px -12px rgba(42,24,15,.18);
+}
+*{box-sizing:border-box}
+body{margin:0;background:var(--cream);color:var(--coffee-900);font-family:'Inter',sans-serif;-webkit-font-smoothing:antialiased}
+h1,h2,h3,.display{font-family:'Fraunces',serif}
+button{font-family:inherit;cursor:pointer}
+::selection{background:var(--caramel-light)}
+.scrim{position:fixed;inset:0;background:rgba(42,24,15,.45);backdrop-filter:blur(2px);z-index:40;display:flex;align-items:flex-end;justify-content:center}
+@media(min-width:640px){.scrim{align-items:center}}
+.sheet{background:var(--cream-2);width:100%;max-width:520px;max-height:92vh;overflow-y:auto;border-radius:28px 28px 0 0;padding:24px;box-shadow:var(--shadow);animation:up .28s ease}
+@media(min-width:640px){.sheet{border-radius:24px}}
+@keyframes up{from{transform:translateY(24px);opacity:0}to{transform:translateY(0);opacity:1}}
+.sheet.no-anim{animation:none}
+.card{background:var(--card);border:1px solid var(--line);border-radius:20px;box-shadow:var(--shadow)}
+.btn{border:none;border-radius:14px;padding:12px 20px;font-weight:600;font-size:14px;transition:.15s;display:inline-flex;align-items:center;justify-content:center;gap:6px}
+.btn-primary{background:var(--coffee-900);color:var(--cream-2)}
+.btn-primary:hover{background:var(--caramel-dark)}
+.btn-primary:disabled{opacity:.5;cursor:not-allowed}
+.btn-outline{background:transparent;border:1.5px solid var(--coffee-900);color:var(--coffee-900)}
+.btn-ghost{background:var(--line);color:var(--coffee-700)}
+.btn-danger{background:var(--danger);color:#fff}
+.input{width:100%;padding:13px 15px;border-radius:12px;border:1.5px solid var(--line);background:var(--card);font-size:16px;color:var(--coffee-900)}
+.input:focus{outline:none;border-color:var(--caramel)}
+.chip{padding:8px 16px;border-radius:999px;border:1.5px solid var(--line);background:var(--card);font-size:13px;font-weight:600;color:var(--coffee-700);white-space:nowrap}
+.chip.active{background:var(--coffee-900);color:var(--cream-2);border-color:var(--coffee-900)}
+.badge{font-size:11px;font-weight:700;padding:3px 9px;border-radius:999px;letter-spacing:.02em}
+.badge.pending{background:#EDE0C8;color:#8F5629}
+.badge.accepted{background:#DCE6D2;color:#4C6B3B}
+.badge.preparing{background:#F3D9B1;color:#8F5629}
+.badge.ready{background:#CFE7DC;color:#2E6E52}
+.badge.completed{background:#D9D2C4;color:#4A3020}
+.badge.cancelled{background:#EFD3CD;color:#B34B3C}
+.spinner{width:18px;height:18px;border:2.5px solid var(--caramel-light);border-top-color:var(--caramel-dark);border-radius:50%;animation:spin .7s linear infinite}
+@keyframes spin{to{transform:rotate(360deg)}}
+.tabbar{position:sticky;bottom:0;background:var(--cream-2);border-top:1px solid var(--line);display:flex;justify-content:space-around;padding:8px 0 max(8px,env(safe-area-inset-bottom));z-index:30}
+.tabbtn{background:none;border:none;display:flex;flex-direction:column;align-items:center;gap:2px;color:var(--coffee-500);font-size:10px;font-weight:700;padding:4px 10px;border-radius:12px}
+.tabbtn.active{color:var(--caramel-dark)}
+.topbar{position:sticky;top:0;background:rgba(246,240,228,.92);backdrop-filter:blur(8px);z-index:20;padding:16px 18px;border-bottom:1px solid var(--line)}
+.scrollx{display:flex;gap:8px;overflow-x:auto;padding-bottom:2px}
+.scrollx::-webkit-scrollbar{display:none}
+.fade-in{animation:fadein .25s ease}
+@keyframes fadein{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:translateY(0)}}
+.toast{position:fixed;top:16px;left:50%;transform:translateX(-50%);background:var(--coffee-900);color:var(--cream-2);padding:12px 20px;border-radius:14px;font-size:13px;font-weight:600;z-index:100;box-shadow:var(--shadow);animation:fadein .2s ease}
+.stamp{display:inline-flex;align-items:center;justify-content:center;width:38px;height:38px;border-radius:50%;background:var(--coffee-900);color:var(--cream-2)}
+.progress-track{height:6px;background:var(--line);border-radius:99px;overflow:hidden}
+.progress-fill{height:100%;background:linear-gradient(90deg,var(--caramel),var(--caramel-dark));transition:width .5s ease}
+::-webkit-scrollbar{width:8px;height:8px}
+::-webkit-scrollbar-thumb{background:var(--line);border-radius:8px}
+.link{color:var(--caramel-dark);font-weight:600;text-decoration:underline;cursor:pointer;background:none;border:none;font-size:inherit;font-family:inherit}
+label.small{font-size:12px;font-weight:700;color:var(--coffee-500);text-transform:uppercase;letter-spacing:.04em}
+.btn{transition:.16s cubic-bezier(.4,0,.2,1)}
+.btn:active{transform:scale(.96)}
+.card{transition:box-shadow .2s ease, transform .2s ease}
+@media(hover:hover){.card.hoverable:hover{transform:translateY(-2px);box-shadow:0 16px 34px -14px rgba(42,24,15,.26)}}
+.topbar{transition:box-shadow .2s}
+#loadbar{position:fixed;top:0;left:0;height:3px;background:linear-gradient(90deg,var(--caramel),var(--caramel-dark));z-index:200;transition:width .3s ease,opacity .3s ease;box-shadow:0 0 8px var(--caramel)}
+.toast-stack{position:fixed;top:14px;left:50%;transform:translateX(-50%);z-index:100;display:flex;flex-direction:column;gap:8px;align-items:center;pointer-events:none}
+.toast{position:static;animation:fadein .2s ease}
+.toast.no-anim{animation:none}
+.toast.err{background:var(--danger)}
+.toast.ok{background:#3E6B4C}
+.bell-wrap{position:relative}
+.notif-dot{position:absolute;top:-3px;right:-3px;width:9px;height:9px;border-radius:50%;background:var(--danger);border:1.5px solid var(--cream-2)}
+.notif-panel{position:fixed;top:64px;right:14px;width:320px;max-width:88vw;max-height:420px;overflow-y:auto;background:var(--card);border:1px solid var(--line);border-radius:18px;box-shadow:var(--shadow);z-index:60;animation:fadein .18s ease}
+.notif-row{padding:12px 14px;border-bottom:1px solid var(--line);font-size:13px;cursor:pointer}
+.notif-row:last-child{border-bottom:none}
+.notif-row.unread{background:#FBF2E1}
+.skel{background:linear-gradient(90deg,var(--line) 25%,#f1e8d6 37%,var(--line) 63%);background-size:400% 100%;animation:shimmer 1.4s ease infinite;border-radius:12px}
+@keyframes shimmer{0%{background-position:100% 0}100%{background-position:0 0}}
+.star-row{display:flex;gap:6px;font-size:26px;cursor:pointer}
+.star{color:var(--line)}
+.star.filled{color:var(--caramel-dark)}
+select.input{-webkit-appearance:none;appearance:none;background-image:url("data:image/svg+xml;charset=UTF-8,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 20 20' fill='%236B4A34'%3E%3Cpath d='M5.5 7.5l4.5 4.5 4.5-4.5'/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:right 12px center}
+.tab-fresh{animation:tabfade .22s cubic-bezier(.4,0,.2,1)}
+@keyframes tabfade{from{opacity:0;transform:translateY(4px)}to{opacity:1;transform:translateY(0)}}
+.wallet-card{border-radius:22px;padding:26px;background:linear-gradient(135deg,#2A180F,#4A3020 60%,#6B4A34);color:#F6F0E4;position:relative;overflow:hidden;box-shadow:0 20px 40px -16px rgba(42,24,15,.5)}
+.wallet-card::after{content:'';position:absolute;top:-40px;right:-40px;width:140px;height:140px;border-radius:50%;background:radial-gradient(circle,rgba(255,255,255,.08),transparent 70%)}
+.tabbtn{transition:.15s}
+
+/* ---- Responsive: keep the phone-app feel centered and clean on tablets/desktops ---- */
+@media (min-width: 640px) {
+  body{background:linear-gradient(180deg,#EFE2C6,var(--cream) 340px)}
+  .app-frame{max-width:480px;margin:0 auto;min-height:100vh;background:var(--cream);box-shadow:0 30px 90px -30px rgba(42,24,15,.35);position:relative}
+  .app-frame-wide{max-width:1040px;margin:0 auto;min-height:100vh;background:var(--cream);box-shadow:0 30px 90px -30px rgba(42,24,15,.35);position:relative}
+  .stat-grid{grid-template-columns:repeat(4,1fr) !important}
+}
+@media (min-width: 640px) and (max-width: 1039px) {
+  .app-frame-wide{max-width:92vw}
+}
+/* ---- Final polish: calmer, cleaner ---- */
+html{-webkit-text-size-adjust:100%;scroll-behavior:smooth}
+body{-webkit-tap-highlight-color:transparent;line-height:1.45}
+.card{box-shadow:0 1px 2px rgba(42,24,15,.04),0 8px 24px -14px rgba(42,24,15,.16);border-color:#EADFCB}
+.topbar{padding:12px 16px;background:rgba(251,247,239,.94)}
+.input:focus{box-shadow:0 0 0 3px rgba(181,113,61,.16)}
+.btn:disabled{opacity:.5;cursor:not-allowed}
+.btn-ghost{background:#EFE5D2}
+.chip{padding:8px 15px;font-size:12.5px}
+.chip.active{box-shadow:0 4px 12px -6px rgba(42,24,15,.5)}
+.tabbar{box-shadow:0 -6px 20px -14px rgba(42,24,15,.3)}
+.tabbtn{font-weight:600;letter-spacing:.01em}
+.pts-pill{display:inline-flex;align-items:center;gap:4px;background:#F3E6CC;color:var(--caramel-dark);font-size:11.5px;font-weight:700;padding:6px 10px;border-radius:999px;white-space:nowrap}
+.sheet{box-shadow:0 -10px 40px -12px rgba(42,24,15,.35)}
+h3{letter-spacing:-.005em}
+/* ---- Polish round 2026-10-10-03 ---- */
+html,body{overflow-x:hidden;max-width:100%}
+html{scroll-behavior:auto}
+body{overscroll-behavior-y:none;-webkit-tap-highlight-color:transparent;-webkit-touch-callout:none;text-rendering:optimizeLegibility}
+input,textarea,select,.input{font-size:16px !important}
+img{max-width:100%}
+.btn{min-height:44px}
+.chip{min-height:44px;display:inline-flex;align-items:center;padding:0 16px;border-width:1px;transition:background .15s ease,color .15s ease,border-color .15s ease}
+.tabbtn{min-height:48px;min-width:56px;justify-content:center}
+.card{border:1px solid rgba(230,217,194,.6)}
+.topbar{border-bottom:none;box-shadow:0 1px 0 rgba(230,217,194,.7);padding-top:max(12px,env(safe-area-inset-top));padding-left:max(16px,env(safe-area-inset-left));padding-right:max(16px,env(safe-area-inset-right))}
+.tabbar{border-top:none;padding-bottom:max(8px,env(safe-area-inset-bottom))}
+.app-frame{padding-bottom:calc(70px + env(safe-area-inset-bottom)) !important}
+.sheet{padding-bottom:max(24px,calc(16px + env(safe-area-inset-bottom)));overscroll-behavior:contain;-webkit-overflow-scrolling:touch}
+.scrim{overscroll-behavior:contain;animation:fadein .18s ease}
+.scrollx{scroll-snap-type:x proximity;overscroll-behavior-x:contain;-webkit-overflow-scrolling:touch;scrollbar-width:none;padding:2px 2px 4px}
+.scrollx>*{scroll-snap-align:start;flex-shrink:0}
+.toast-stack{top:max(14px,env(safe-area-inset-top))}
+#loadbar{opacity:0;width:0;pointer-events:none}
+textarea,input,select{font-family:inherit}
+/* ---- Clean-up 2026-10-10-09: calmer UI, 8px rhythm ---- */
+:root{--r:16px;--soft:0 1px 2px rgba(42,24,15,.04),0 6px 18px -12px rgba(42,24,15,.14)}
+.card{box-shadow:var(--soft);border-color:rgba(230,217,194,.55);border-radius:var(--r)}
+.chip.active{box-shadow:none}
+.btn-sm{min-height:44px;padding:0 16px;font-size:13px;border-radius:12px}
+.btn-outline{border-width:1px}
+.meta{font-size:12px;color:var(--coffee-500);line-height:1.5}
+.ver{font-size:10px;opacity:.6;margin-left:4px;letter-spacing:.02em}
+.empty{text-align:center;padding:32px 16px;color:var(--coffee-500);font-size:13px}
+.badge{font-weight:600;letter-spacing:0;padding:4px 10px;font-size:11px}
+.link-danger{background:none;border:none;color:var(--danger);font-size:13px;font-weight:600;padding:0;min-height:44px;display:inline-flex;align-items:center;cursor:pointer;opacity:.85}
+.link-danger:hover{opacity:1;text-decoration:underline}
+.linkish{background:none;border:none;padding:0;font:inherit;cursor:pointer;text-decoration:underline;text-decoration-color:rgba(107,74,52,.35);text-underline-offset:3px}
+.admin-nav{display:flex;gap:4px;margin:16px 16px 0;padding:4px;background:#EFE4D0;border-radius:16px;position:sticky;top:calc(env(safe-area-inset-top) + 0px);z-index:20;box-shadow:0 6px 16px -14px rgba(42,24,15,.4)}
+.admin-nav-btn{flex:1;min-height:44px;border:none;background:transparent;border-radius:12px;font-size:14px;font-weight:600;color:var(--coffee-700);display:flex;align-items:center;justify-content:center;gap:6px;white-space:nowrap;transition:background .18s,color .18s}
+.admin-nav-btn .ic{font-size:15px;opacity:.85}
+.admin-nav-btn.active{background:var(--card);color:var(--coffee-900);box-shadow:0 2px 8px -3px rgba(42,24,15,.25)}
+@media (max-width:360px){.admin-nav-btn{font-size:13px}.admin-nav-btn .ic{display:none}}
+.admin-section-title{display:flex;align-items:baseline;justify-content:space-between;padding:20px 16px 0}
+.admin-section-title h2{font-family:'Fraunces',serif;font-size:24px;margin:0;font-weight:600;letter-spacing:-.01em}
+.admin-more-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin-top:16px}
+.admin-more-tile{min-height:88px;border:1px solid var(--line);background:var(--card);border-radius:18px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:8px;font-size:14px;font-weight:600;color:var(--coffee-900);transition:transform .12s}
+.admin-more-tile:active{transform:scale(.97)}
+.admin-more-tile .ic{width:40px;height:40px;border-radius:12px;background:#F1E6D2;display:flex;align-items:center;justify-content:center;font-size:20px}
+.admin-more-tile.active{background:var(--coffee-900);color:var(--cream-2);border-color:var(--coffee-900)}
+.admin-more-tile.active .ic{background:rgba(251,247,239,.14)}
+.admin-body{padding:16px}
+.fade-out{opacity:0 !important;transform:scale(.98);transition:opacity .2s ease,transform .2s ease;pointer-events:none}
+.order-card{padding:16px;display:flex;flex-direction:column;gap:8px}
+.oc-head{display:flex;justify-content:space-between;align-items:flex-start;gap:8px}
+.oc-title{font-weight:700;font-size:15px}
+.oc-who{font-weight:500;color:var(--coffee-700);font-size:15px}
+.oc-total{font-weight:700;font-size:15px;white-space:nowrap}
+.oc-badges{display:flex;gap:8px;flex-wrap:wrap}
+.oc-actions{display:flex;gap:8px;margin-top:8px}
+.order-card .link-danger{align-self:flex-start;min-height:32px;font-size:12px}
+.user-list{padding:0 16px}
+.user-row{display:flex;align-items:center;gap:8px;padding:8px 0;border-bottom:1px solid rgba(230,217,194,.6)}
+.user-row:last-child{border-bottom:none}
+.user-main{flex:1;min-width:0;text-align:left;background:none;border:none;padding:8px 0;cursor:pointer;color:inherit;font:inherit}
+.user-name{font-weight:600;font-size:14px}
+.role-select{width:auto !important;min-width:140px;padding:8px 32px 8px 12px !important;font-size:16px;border-radius:999px;border-width:1px;background-color:var(--cream-2)}
+.stat-row{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin:16px 0}
+.stat{background:var(--card);border-radius:12px;padding:12px;text-align:center;box-shadow:var(--soft)}
+.stat b{display:block;font-size:16px}
+.kv{display:flex;justify-content:space-between;gap:8px;padding:8px 0;border-bottom:1px solid rgba(230,217,194,.6);font-size:13px}
+.kv:last-child{border-bottom:none}
+.sec-title{font-size:12px;font-weight:700;color:var(--coffee-500);text-transform:uppercase;letter-spacing:.04em;margin:16px 0 8px}
+.tabbar{position:fixed;left:0;right:0;bottom:0;max-width:480px;margin:0 auto;background:rgba(251,247,239,.97);backdrop-filter:blur(10px)}
+.topbar .btn-ghost[style*="border-radius:50%"]{width:44px !important;height:44px !important;min-width:44px;flex-shrink:0}
+.topbar .btn-ghost{min-width:44px}
+select.input{padding-right:40px;text-overflow:ellipsis;white-space:nowrap;overflow:hidden}
+.ios-hint{position:fixed;left:12px;right:12px;bottom:calc(84px + env(safe-area-inset-bottom));z-index:90;background:var(--coffee-900);color:var(--cream-2);border-radius:18px;padding:14px 16px;display:flex;gap:12px;align-items:center;font-size:13px;line-height:1.4;box-shadow:var(--shadow);max-width:456px;margin:0 auto;animation:fadein .25s ease}
+@media (prefers-reduced-motion:reduce){*{animation-duration:.01ms !important;transition-duration:.01ms !important}}
+@media (max-width:380px){.topbar{padding:10px 12px}.pts-pill{padding:5px 8px;font-size:11px}}
+/* ---- Design round 2026-10-10-10: warmth back, roomier ---- */
+:root{--soft:0 1px 2px rgba(42,24,15,.05),0 10px 24px -16px rgba(74,48,32,.28)}
+.topbar{background:linear-gradient(180deg,#FBF4E6,var(--cream-2))}
+.card{border-radius:18px}
+.admin-body{padding:16px 16px 32px}
+.admin-body>.card,.admin-body>div>.card{margin-bottom:12px}
+.admin-body .card .display{letter-spacing:-.01em}
+.stat-grid > .card:first-child{background:linear-gradient(145deg,#4A3020,#2A180F);color:var(--cream-2);border-color:transparent}
+.stat-grid > .card:first-child *{color:inherit !important}
+.empty{padding:40px 24px;font-size:14px;line-height:1.5}
+.empty::before{content:"☕";display:block;font-size:28px;margin-bottom:8px;opacity:.55}
+.sec-title{font-size:11px;letter-spacing:.08em;margin:24px 0 8px}
+.order-card{padding:16px 16px 12px;gap:10px}
+.oc-actions .btn{flex:1}
+.user-row{padding:12px 0}
+.badge{border-radius:999px}
+.btn-primary{box-shadow:0 6px 14px -8px rgba(42,24,15,.55)}
+.btn-primary:active,.btn:active{transform:scale(.98)}
+.btn{transition:transform .12s ease,background .15s ease}
+.tabbtn{font-size:11px;font-weight:600}
+.tabbtn.active{color:var(--coffee-900)}
+.chip{font-weight:600}
+.ver{opacity:.5}
+</style>
+</head>
+<body>
+<div id="loadbar"></div>
+<div id="root"></div>
+<script>
+// Bumped on every real deploy. Lets a running tab/installed PWA detect a
+// newer version is live on the server and prompt to refresh, instead of
+// silently running stale code forever (a common PWA gotcha).
+const APP_BUILD = '2026-10-10-10';
+async function checkForUpdate(){
+  try {
+    const resp = await fetch('./index.html?_=' + Date.now(), { cache: 'no-store' });
+    const text = await resp.text();
+    const m = text.match(/const APP_BUILD = '([^']+)'/);
+    if (m && m[1] !== APP_BUILD) {
+      if (document.hidden || !state.user) { location.reload(); return; }
+      state.updateAvailable = true;
+      render();
+      if (!document.getElementById('force-update-bar')) {
+        const b = document.createElement('div'); b.id='force-update-bar';
+        b.style.cssText='position:fixed;left:12px;right:12px;top:calc(env(safe-area-inset-top) + 10px);z-index:99999;background:#3B2618;color:#F6EFE3;border-radius:14px;padding:12px 14px;display:flex;align-items:center;justify-content:space-between;gap:10px;font-size:14px;box-shadow:0 6px 20px rgba(0,0,0,.2)';
+        b.innerHTML='<span>A new version of Filter is ready</span><button style="background:#F6EFE3;color:#3B2618;border:0;border-radius:10px;padding:10px 14px;font-weight:700;min-height:44px" onclick="location.reload()">Update Now</button>';
+        document.body.appendChild(b);
+      }
+    }
+  } catch (e) { /* offline or blocked — ignore, will retry */ }
+}
+function reloadForUpdate(){ location.reload(); }
+
+const SUPABASE_URL = "https://zgcorxbwzdmfmkvpfwye.supabase.co";
+const SUPABASE_KEY = "sb_publishable_E9eRv7AINJAQPKsHvxTc7g_GYogdFa0";
+const VAPID_PUBLIC_KEY = "BKF6o9VGw55AgQhihCtHTSGIG1wMuDs2QLO0eaWX1cltzrH6NJKyQjJL9luz8sXvLdIqH7NmU3Ft9TAHBDiucDw";
+
+// ---------------------------------------------------------------
+// Minimal self-contained Supabase client (REST + Auth over fetch).
+// We avoid loading the official supabase-js SDK from an external CDN
+// since this sandbox only allows scripts from cdnjs.cloudflare.com,
+// which does not host it. This shim talks directly to Supabase's
+// PostgREST + GoTrue HTTP APIs, which is all supabase-js does anyway.
+// ---------------------------------------------------------------
+function authHeaders(extra){
+  return Object.assign({
+    'apikey': SUPABASE_KEY,
+    'Authorization': `Bearer ${state.session?.access_token || SUPABASE_KEY}`,
+    'Content-Type': 'application/json',
+  }, extra || {});
+}
+async function parseJsonSafe(resp){ try { return await resp.json(); } catch(e){ return null; } }
+
+// ---- request activity indicator ----
+let _pending = 0;
+// Background work (polling, update checks) runs inside _bgDepth>0 and never
+// shows the bar. User-started loads only show it if they take >400ms.
+let _bgDepth = 0, _loadbarTimer = null, _loadbarShown = false;
+function beginRequest(bg){ if (bg) return; _pending++; updateLoadbar(); }
+function endRequest(bg){ if (bg) return; _pending = Math.max(0, _pending-1); updateLoadbar(); }
+function updateLoadbar(){
+  const bar = document.getElementById('loadbar'); if (!bar) return;
+  if (_pending > 0) {
+    if (!_loadbarShown && !_loadbarTimer) _loadbarTimer = setTimeout(() => { _loadbarTimer = null; if (_pending > 0) { _loadbarShown = true; bar.style.opacity = '1'; bar.style.width = '70%'; } }, 400);
+  } else {
+    clearTimeout(_loadbarTimer); _loadbarTimer = null;
+    if (_loadbarShown) { _loadbarShown = false; bar.style.width = '100%'; setTimeout(()=>{ if(_pending===0){ bar.style.opacity='0'; bar.style.width='0%'; } }, 200); }
+  }
+}
+
+// ---- session persistence (this app runs on its own real domain now, so
+// normal browser storage is safe and is how "stay signed in" actually works) ----
+const SESSION_STORAGE_KEY = 'filter_auth_session';
+function saveSessionToStorage(session){
+  try { localStorage.setItem(SESSION_STORAGE_KEY, JSON.stringify(session)); } catch (e) { /* storage unavailable — session just won't persist */ }
+}
+function loadSessionFromStorage(){
+  try { const raw = localStorage.getItem(SESSION_STORAGE_KEY); return raw ? JSON.parse(raw) : null; } catch (e) { return null; }
+}
+function clearSessionFromStorage(){
+  try { localStorage.removeItem(SESSION_STORAGE_KEY); } catch (e) { /* ignore */ }
+}
+
+// ---- session refresh (keeps the user signed in) ----
+let _refreshTimer = null;
+function scheduleRefresh(session){
+  clearTimeout(_refreshTimer);
+  if (!session?.refresh_token || !session?.expires_in) return;
+  const ms = Math.max((session.expires_in - 90) * 1000, 15000);
+  _refreshTimer = setTimeout(refreshSession, ms);
+}
+async function refreshSession(){
+  if (!state.session?.refresh_token) return false;
+  try {
+    const resp = await fetch(`${SUPABASE_URL}/auth/v1/token?grant_type=refresh_token`, { method: 'POST', headers: authHeaders(), body: JSON.stringify({ refresh_token: state.session.refresh_token }) });
+    const json = await parseJsonSafe(resp);
+    if (!resp.ok || !json?.access_token) { clearSessionFromStorage(); return false; }
+    state.session = json;
+    saveSessionToStorage(json);
+    scheduleRefresh(json);
+    return true;
+  } catch (e) { return false; }
+}
+async function doFetch(url, opts){
+  const bg = _bgDepth > 0;
+  beginRequest(bg);
+  try {
+    let resp = await fetch(url, opts);
+    if (resp.status === 401 && state.session?.refresh_token) {
+      const ok = await refreshSession();
+      if (ok) {
+        opts.headers = Object.assign({}, opts.headers, { 'Authorization': `Bearer ${state.session.access_token}` });
+        resp = await fetch(url, opts);
+      }
+    }
+    return resp;
+  } finally { endRequest(bg); }
+}
+
+function fromTable(table){
+  const q = { selectCols: '*', filters: [], orderCol: null, orderAsc: true, limitN: null, method: 'GET', body: null, single: null };
+  const builder = {
+    select(cols){ q.selectCols = cols || '*'; return builder; },
+    eq(col, val){ q.filters.push(`${col}=eq.${encodeURIComponent(val)}`); return builder; },
+    in(col, vals){ q.filters.push(`${col}=in.(${(vals||[]).map(v=>encodeURIComponent('"'+String(v).replace(/"/g,'\\"')+'"')).join(',')})`); return builder; },
+    order(col, opts){ q.orderCol = col; q.orderAsc = !(opts && opts.ascending === false); return builder; },
+    limit(n){ q.limitN = n; return builder; },
+    insert(payload){ q.method = 'POST'; q.body = payload; return builder; },
+    update(payload){ q.method = 'PATCH'; q.body = payload; return builder; },
+    delete(){ q.method = 'DELETE'; return builder; },
+    maybeSingle(){ q.single = 'maybe'; return exec(); },
+    single(){ q.single = true; return exec(); },
+    then(resolve, reject){ return exec().then(resolve, reject); },
+  };
+  async function exec(){
+    let url = `${SUPABASE_URL}/rest/v1/${table}?select=${encodeURIComponent(q.selectCols)}`;
+    if (q.filters.length) url += '&' + q.filters.join('&');
+    if (q.orderCol) url += `&order=${q.orderCol}.${q.orderAsc ? 'asc' : 'desc'}`;
+    if (q.limitN) url += `&limit=${q.limitN}`;
+    const headers = authHeaders(q.method !== 'GET' ? { 'Prefer': 'return=representation' } : {});
+    let resp;
+    try {
+      resp = await doFetch(url, { method: q.method, headers, cache: 'no-store', body: q.body !== null ? JSON.stringify(q.body) : undefined });
+    } catch (e) { return { data: null, error: { message: 'Network error: ' + e.message } }; }
+    const json = await parseJsonSafe(resp);
+    if (!resp.ok) return { data: null, error: { message: (json && (json.message || json.error_description || json.msg || json.hint)) || resp.statusText || 'Request failed' } };
+    // An UPDATE that RLS blocks returns 200 with zero rows — that used to look
+    // like a successful save even though nothing changed for customers.
+    if (q.method === 'PATCH' && Array.isArray(json) && json.length === 0) return { data: null, error: { message: "Not saved — your account doesn't have permission to change this (check that you're signed in as admin)." } };
+    if (q.single === true) return { data: Array.isArray(json) ? json[0] : json, error: null };
+    if (q.single === 'maybe') return { data: Array.isArray(json) ? (json[0] || null) : json, error: null };
+    return { data: json, error: null };
+  }
+  return builder;
+}
+async function rpcCall(fn, params){
+  try {
+    const resp = await doFetch(`${SUPABASE_URL}/rest/v1/rpc/${fn}`, { method: 'POST', cache: 'no-store', headers: authHeaders(), body: JSON.stringify(params || {}) });
+    const json = await parseJsonSafe(resp);
+    if (!resp.ok) return { data: null, error: { message: (json && (json.message || json.hint || json.error_description)) || resp.statusText || 'Request failed' } };
+    return { data: json, error: null };
+  } catch (e) { return { data: null, error: { message: 'Network error: ' + e.message } }; }
+}
+const sb = {
+  from: fromTable,
+  rpc: rpcCall,
+  auth: {
+    async signUp({ email, password, options }){
+      try {
+        const resp = await fetch(`${SUPABASE_URL}/auth/v1/signup`, { method: 'POST', headers: authHeaders(), body: JSON.stringify({ email, password, data: options?.data || {} }) });
+        const json = await parseJsonSafe(resp);
+        if (!resp.ok) return { data: null, error: { message: (json && (json.msg || json.error_description || json.message)) || 'Sign up failed' } };
+        if (json && json.access_token) return { data: { session: json, user: json.user }, error: null };
+        return { data: { session: null, user: json }, error: null };
+      } catch (e) { return { data: null, error: { message: 'Network error: ' + e.message } }; }
+    },
+    async signInWithPassword({ email, password }){
+      try {
+        const resp = await fetch(`${SUPABASE_URL}/auth/v1/token?grant_type=password`, { method: 'POST', headers: authHeaders(), body: JSON.stringify({ email, password }) });
+        const json = await parseJsonSafe(resp);
+        if (!resp.ok) return { data: null, error: { message: (json && (json.msg || json.error_description || json.message)) || 'Invalid email or password' } };
+        return { data: { session: json, user: json.user }, error: null };
+      } catch (e) { return { data: null, error: { message: 'Network error: ' + e.message } }; }
+    },
+    async signOut(){ return { error: null }; },
+  },
+};
+
+let state = {
+  session: null, profile: null, view: 'loading', tab: 'menu',
+  categories: [], products: [], settings: null,
+  cart: [], activeCategory: 'all', search: '', filters: { hot: false, iced: false },
+  favorites: new Set(), orders: [], notifications: [], rewards: [], promotions: [],
+  productModal: null, cartOpen: false, checkoutOpen: false, orderDetailId: null,
+  adminTab: 'dashboard', workerOrders: [], toasts: [], authMode: 'signin', authBusy: false, authError: '',
+  promoCode: '', promoResult: null, redeemPoints: 0, pickupSlots: [], notifPanelOpen: false, reviewModal: null, pushEnabled: false, iosInstallModal: false, milestones: [], pendingGiftClaims: [], myGifts: [], staffCodes: {}, chatOpen: false, chatMessages: [], chatBusy: false, chatConfigured: null, adminOrderSearch: '', adminOrderStatusFilter: 'all', membershipCardOpen: false, slotLoads: {}, missions: [], myMissions: [], orderSearch: '', payoutDetails: {}, updateAvailable: false, settingsDraft: null, payoutDraft: null,
+};
+const root = document.getElementById('root');
+let _toastId = 0;
+function setState(patch){ state = { ...state, ...patch }; render(); }
+function showToast(msg, type){
+  const id = ++_toastId;
+  state.toasts.push({ id, msg, type: type||'info' });
+  render();
+  setTimeout(()=>{ state.toasts = state.toasts.filter(t=>t.id!==id); render(); }, 3200);
+}
+function money(n){ return 'Rs ' + Math.round(Number(n||0)).toLocaleString('en-US'); }
+function esc(s){ return (s||'').replace(/[&<>"']/g, c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c])); }
+
+// ---------------- AUTH ----------------
+async function init(){
+  registerServiceWorker();
+  try {
+    await loadPublicData();
+  } catch (e) {
+    root.innerHTML = `<div style="min-height:100vh;display:flex;align-items:center;justify-content:center;padding:24px;text-align:center;color:var(--coffee-700)">
+      <div><h2 class="display">Couldn't reach Filter's server</h2><p style="font-size:13px;max-width:340px">${esc(e.message || 'Please check your connection and reload.')}</p></div></div>`;
+    return;
+  }
+  const stored = loadSessionFromStorage();
+  if (stored?.refresh_token) {
+    state.session = stored;
+    const ok = await refreshSession();
+    if (ok) {
+      await loadProfile();
+      if (pushSupported()) { const sub = await currentPushSubscription(); state.pushEnabled = !!sub; }
+      setState({ view: state.profile?.role || 'customer' });
+      startPolling();
+      startUpdateChecks();
+      return;
+    }
+    state.session = null;
+    clearSessionFromStorage();
+  }
+  setState({ view: 'auth' });
+  startPolling();
+  startUpdateChecks();
+}
+function startUpdateChecks(){
+  checkForUpdate();
+  setInterval(checkForUpdate, 30000);
+  document.addEventListener('visibilitychange', ()=>{ if(!document.hidden) checkForUpdate(); });
+  window.addEventListener('focus', checkForUpdate);
+}
+async function onLoginSuccess(session){
+  state.session = session;
+  saveSessionToStorage(session);
+  scheduleRefresh(session);
+  await loadPublicData();
+  await loadProfile();
+  if (pushSupported()) { const sub = await currentPushSubscription(); state.pushEnabled = !!sub; }
+  setState({ view: state.profile?.role || 'customer' });
+  if ((state.profile?.role === 'admin' || state.profile?.role === 'worker') && pushSupported() && !state.pushEnabled) {
+    setTimeout(() => showToast('🔔 Tap "Enable Alerts" up top so you get notified the moment an order comes in', 'info'), 1200);
+  }
+}
+async function loadProfile(){
+  const { data, error } = await sb.from('profiles').select('*').eq('id', state.session.user.id).maybeSingle();
+  if (error) { showToast(error.message); return; }
+  state.profile = data;
+  if (data?.role === 'customer') await Promise.all([loadFavorites(), loadOrders(), loadNotifications(), refreshMilestones(), loadMyGifts(), loadMyMissions()]);
+  if (data?.role === 'worker') await Promise.all([loadWorkerOrders(), loadNotifications()]);
+  if (data?.role === 'admin') await Promise.all([loadWorkerOrders(), loadNotifications()]);
+}
+async function loadMyGifts(){
+  const { data } = await sb.from('milestone_redemptions').select('*, loyalty_milestones(gift_name, gift_description)').eq('customer_id', state.session.user.id).eq('claimed', false).order('granted_at', { ascending: false });
+  state.myGifts = data || [];
+}
+async function loadMyMissions(){
+  const { data: missions } = await sb.from('missions').select('*').eq('is_active', true);
+  const { data: progress } = await sb.from('mission_progress').select('*').eq('customer_id', state.session.user.id);
+  const progressMap = Object.fromEntries((progress||[]).map(p => [p.mission_id, p]));
+  state.missions = (missions||[]).map(m => ({ ...m, myProgress: progressMap[m.id]?.progress || 0, completed: progressMap[m.id]?.completed || false }));
+}
+async function loadPublicData(){
+  const [{data: cats}, {data: prods}, {data: settings}, {data: rewards}, {data: promos}] = await Promise.all([
+    sb.from('categories').select('*').eq('is_active', true).order('sort_order'),
+    sb.from('products').select('*, product_sizes(*), product_option_groups(*, product_option_choices(*))').order('sort_order'),
+    sb.from('business_settings').select('*').maybeSingle(),
+    sb.from('rewards').select('*').eq('is_active', true).order('points_cost'),
+    sb.from('promotions').select('*').eq('is_active', true),
+  ]);
+  // Only overwrite when a query actually returned data — a transient network
+  // hiccup must never blank out the menu a customer is looking at.
+  if (cats) state.categories = cats;
+  if (prods) state.products = prods;
+  if (settings) state.settings = settings;
+  if (rewards) state.rewards = rewards;
+  if (promos) state.promotions = promos;
+}
+// Targeted refreshers — avoid re-fetching the whole nested menu tree (with sizes/options)
+// just to reflect a single small change, so admin edits feel instant.
+async function refreshProducts(){ const { data } = await sb.from('products').select('*, product_sizes(*), product_option_groups(*, product_option_choices(*))').order('sort_order'); state.products = data || []; }
+async function refreshCategories(){ const { data } = await sb.from('categories').select('*').order('sort_order'); state.categories = data || []; }
+async function refreshPromotions(){ const { data } = await sb.from('promotions').select('*'); state.promotions = data || []; }
+async function refreshRewards(){ const { data } = await sb.from('rewards').select('*'); state.rewards = data || []; }
+async function refreshSettings(){ const { data } = await sb.from('business_settings').select('*').maybeSingle(); state.settings = data; }
+async function signUp(email, password, fullName){
+  if (!email || !password || !fullName) { state.authError = 'Please fill in all fields'; return render(); }
+  if (password.length < 6) { state.authError = 'Password must be at least 6 characters'; return render(); }
+  state.authBusy = true; state.authError = ''; render();
+  const { data, error } = await sb.auth.signUp({ email, password, options: { data: { full_name: fullName } } });
+  state.authBusy = false;
+  if (error) { state.authError = error.message; return render(); }
+  if (!data.session) { state.authError = ''; showToast('Check your email to confirm your account, then sign in.'); render(); return; }
+  showToast('Welcome to Filter!', 'ok');
+  await onLoginSuccess(data.session);
+}
+async function signIn(email, password){
+  if (!email || !password) { state.authError = 'Please fill in all fields'; return render(); }
+  state.authBusy = true; state.authError = ''; render();
+  const { data, error } = await sb.auth.signInWithPassword({ email, password });
+  state.authBusy = false;
+  if (error) { state.authError = error.message; return render(); }
+  await onLoginSuccess(data.session);
+}
+async function signOut(){ clearTimeout(_refreshTimer); await sb.auth.signOut(); state.session = null; state.profile = null; clearSessionFromStorage(); setState({ view: 'auth', cart: [], tab: 'menu', notifPanelOpen: false }); }
+
+// ---------------- PUSH NOTIFICATIONS (real OS notifications, home-screen app) ----------------
+let swRegistration = null;
+// ---------------- ADD TO HOME SCREEN ----------------
+let _deferredInstallPrompt = null;
+function isStandalone(){
+  return window.matchMedia('(display-mode: standalone)').matches || window.navigator.standalone === true;
+}
+function isIOS(){
+  return /iphone|ipad|ipod/i.test(navigator.userAgent) || (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
+}
+window.addEventListener('beforeinstallprompt', (e) => {
+  e.preventDefault();
+  _deferredInstallPrompt = e;
+  render();
+});
+window.addEventListener('appinstalled', () => { _deferredInstallPrompt = null; showToast('Filter installed! Find it on your home screen.', 'ok'); render(); });
+function shouldShowIosHint(){
+  try { return isIOS() && !isStandalone() && /safari/i.test(navigator.userAgent) && !/crios|fxios|edgios/i.test(navigator.userAgent) && state.view === 'customer' && !localStorage.getItem('filter_ios_hint_dismissed') && !modalInUse(); } catch (e) { return false; }
+}
+function dismissIosHint(){ try { localStorage.setItem('filter_ios_hint_dismissed', '1'); } catch (e) {} render(); }
+function canOfferInstall(){ return !isStandalone() && (!!_deferredInstallPrompt || isIOS()); }
+async function promptInstall(){
+  if (_deferredInstallPrompt) {
+    _deferredInstallPrompt.prompt();
+    await _deferredInstallPrompt.userChoice;
+    _deferredInstallPrompt = null;
+    render();
+  } else if (isIOS()) {
+    setState({ iosInstallModal: true });
+  }
+}
+function renderInstallBanner(){
+  if (!canOfferInstall()) return '';
+  return `<button class="btn btn-primary" style="width:100%;max-width:400px;margin-top:14px;box-shadow:var(--shadow)" onclick="promptInstall()">📲 Add Filter to Your Phone</button>`;
+}
+function renderIosInstallModal(fresh){
+  return `<div class="scrim" onclick="if(event.target===this) setState({iosInstallModal:false})"><div class="sheet ${fresh?'':'no-anim'}" style="max-width:380px;text-align:center">
+    <div class="stamp" style="margin:0 auto 14px;width:48px;height:48px;font-size:20px">📲</div>
+    <h2 class="display" style="margin:0 0 10px;font-size:20px">Add Filter to Your Home Screen</h2>
+    <div style="text-align:left;font-size:14px;color:var(--coffee-700);line-height:1.8;margin-bottom:18px">
+      1. Tap the <b>Share</b> button <span style="font-size:16px">⬆️</span> in Safari's toolbar<br>
+      2. Scroll down and tap <b>Add to Home Screen</b><br>
+      3. Tap <b>Add</b> — Filter will open like a real app, and you can enable push notifications from there
+    </div>
+    <button class="btn btn-primary" style="width:100%" onclick="setState({iosInstallModal:false})">Got it</button>
+  </div></div>`;
+}
+
+async function registerServiceWorker(){
+  if (!('serviceWorker' in navigator)) return null;
+  try {
+    swRegistration = await navigator.serviceWorker.register('./sw.js', { updateViaCache: 'none' });
+    try { swRegistration.update(); } catch(e){}
+    if (!window.__swReloadHooked) { window.__swReloadHooked = true; let had = !!navigator.serviceWorker.controller;
+      navigator.serviceWorker.addEventListener('controllerchange', () => { if (had) location.reload(); had = true; }); }
+    return swRegistration;
+  }
+  catch (e) { return null; }
+}
+function urlBase64ToUint8Array(base64String){
+  const padding = '='.repeat((4 - base64String.length % 4) % 4);
+  const base64 = (base64String + padding).replace(/-/g, '+').replace(/_/g, '/');
+  const raw = atob(base64);
+  return Uint8Array.from([...raw].map(c => c.charCodeAt(0)));
+}
+function pushSupported(){
+  return 'serviceWorker' in navigator && 'PushManager' in window && window.isSecureContext;
+}
+async function currentPushSubscription(){
+  if (!swRegistration) return null;
+  try { return await swRegistration.pushManager.getSubscription(); } catch (e) { return null; }
+}
+async function enablePushNotifications(){
+  if (!pushSupported()) { showToast("This browser/tab can't receive push notifications. Try installing Filter to your home screen first.", 'err'); return; }
+  if (!swRegistration) await registerServiceWorker();
+  if (!swRegistration) { showToast('Could not start the notification service.', 'err'); return; }
+  const perm = await Notification.requestPermission();
+  if (perm !== 'granted') { showToast('Notifications permission was not granted.', 'err'); return; }
+  try {
+    const sub = await swRegistration.pushManager.subscribe({ userVisibleOnly: true, applicationServerKey: urlBase64ToUint8Array(VAPID_PUBLIC_KEY) });
+    const json = sub.toJSON();
+    const { error } = await sb.from('push_subscriptions').insert({
+      user_id: state.session.user.id, endpoint: json.endpoint, p256dh: json.keys.p256dh, auth: json.keys.auth, user_agent: navigator.userAgent,
+    });
+    if (error && !error.message.includes('duplicate')) { showToast(error.message, 'err'); return; }
+    state.pushEnabled = true;
+    showToast("Notifications enabled — you'll get real alerts on this device.", 'ok');
+    render();
+  } catch (e) { showToast('Could not enable notifications: ' + e.message, 'err'); }
+}
+async function disablePushNotifications(){
+  const sub = await currentPushSubscription();
+  if (sub) {
+    await sb.from('push_subscriptions').delete().eq('endpoint', sub.endpoint);
+    await sub.unsubscribe();
+  }
+  state.pushEnabled = false;
+  showToast('Notifications turned off for this device.');
+  render();
+}
+async function toggleNotifPref(key, value){
+  state.profile[key] = value;
+  await sb.from('profiles').update({ [key]: value }).eq('id', state.session.user.id);
+  showToast('Preference saved', 'ok');
+}
+async function shareReferral(){
+  const code = state.profile?.referral_code || '';
+  const text = `Come get coffee & tea at Filter! Use my code ${code} when you sign up.`;
+  if (navigator.share) {
+    try { await navigator.share({ title: 'Filter', text }); } catch (e) { /* user cancelled */ }
+  } else {
+    try { await navigator.clipboard.writeText(text); showToast('Copied — paste it anywhere!', 'ok'); }
+    catch (e) { showToast(text, 'info'); }
+  }
+}
+
+// ---------------- LIVE UPDATES (polling — no external realtime SDK needed) ----------------
+// True while the person is actively typing/selecting somewhere — a background
+// refresh must never blow away an in-progress edit by rebuilding the screen.
+function isEditingSomething(){
+  const el = document.activeElement;
+  if (!el) return false;
+  const tag = el.tagName;
+  return tag === 'INPUT' || tag === 'TEXTAREA' || tag === 'SELECT';
+}
+let _polling = false;
+function startPolling(){
+  setInterval(pollTick, 4000);
+  // Phones pause timers while the app is in the background — refresh the
+  // instant the person comes back so they never look at stale data.
+  document.addEventListener('visibilitychange', () => { if (!document.hidden) pollTick(); });
+  window.addEventListener('focus', () => pollTick());
+}
+// Cheap fingerprint of everything polling can change; if it's identical after
+// a poll we don't touch the DOM at all (no flicker, no lost scroll/taps).
+function pollSignature(){
+  try { return JSON.stringify([state.categories, state.products, state.settings, state.rewards, state.promotions, state.orders, state.notifications, state.myGifts, state.profile, state.workerOrders]); }
+  catch (e) { return String(Math.random()); }
+}
+// A customizer/sheet the person is using is never rebuilt by background data;
+// it picks up fresh data the next time they interact.
+function modalInUse(){ return !!(state.customerProfile || state.productModal || state.checkoutOpen || state.cartOpen || state.reviewModal || state.chatOpen || state.membershipCardOpen || state.orderDetailId || state.iosInstallModal || state.adminMoreOpen); }
+async function pollTick(){
+    if (_polling) return;
+    if (!state.session || !state.profile) return;
+    _polling = true;
+    _bgDepth++;
+    const _sigBefore = pollSignature();
+    try {
+      // Keep the menu, categories, prices, availability, promos and rewards in
+      // sync for EVERYONE signed in — so an admin's edit shows up for an
+      // already-open customer session without them needing to reload.
+      await loadPublicData();
+
+      if (state.profile.role === 'customer') {
+        const prevStatus = Object.fromEntries(state.orders.map(o => [o.id, o.status]));
+        const prevPoints = state.profile.loyalty_points;
+        const prevGiftCount = (state.myGifts||[]).length;
+        await loadOrders();
+        const statusChanges = state.orders.filter(o => prevStatus[o.id] && prevStatus[o.id] !== o.status);
+        await Promise.all([loadNotifications(), loadMyGifts()]);
+        const { data: freshProfile } = await sb.from('profiles').select('*').eq('id', state.session.user.id).maybeSingle();
+        let pointsGained = 0;
+        if (freshProfile) {
+          if (prevPoints != null && freshProfile.loyalty_points > prevPoints) pointsGained = freshProfile.loyalty_points - prevPoints;
+          state.profile = freshProfile;
+        }
+        const giftUnlocked = (state.myGifts||[]).length > prevGiftCount;
+
+        if (isEditingSomething()) return; // data is fresh in state; screen updates next safe render
+        statusChanges.forEach(o => showToast(`Order #${o.order_number} is now ${o.status}`));
+        if (pointsGained > 0) showToast(`+${pointsGained} loyalty points earned!`, 'ok');
+        if (giftUnlocked) showToast('🎁 You unlocked a free gift! Check Rewards.', 'ok');
+        if (pollSignature() !== _sigBefore && !modalInUse()) render();
+      } else if (state.profile.role === 'worker' || state.profile.role === 'admin') {
+        const prevCount = state.workerOrders.length;
+        await Promise.all([loadWorkerOrders(), loadNotifications()]);
+        const newOrderArrived = state.workerOrders.length > prevCount;
+
+        if (isEditingSomething()) return; // never wipe an in-progress edit (settings, product form, etc.)
+        if (newOrderArrived) showToast('New order received');
+        if (pollSignature() !== _sigBefore && !modalInUse()) render();
+      }
+    } catch (e) { /* silent — retry on next tick */ }
+    finally { _polling = false; _bgDepth = Math.max(0, _bgDepth - 1); }
+}
+
+// ---------------- DATA LOADERS ----------------
+async function loadFavorites(){
+  const { data } = await sb.from('favorites').select('product_id').eq('customer_id', state.session.user.id);
+  state.favorites = new Set((data||[]).map(f=>f.product_id));
+}
+async function loadOrders(){
+  const { data } = await sb.from('orders').select('*, order_items(*, order_item_options(*))').eq('customer_id', state.session.user.id).order('created_at', { ascending: false });
+  state.orders = data || [];
+}
+async function loadNotifications(){
+  const { data } = await sb.from('notifications').select('*').eq('user_id', state.session.user.id).order('created_at', { ascending: false }).limit(30);
+  state.notifications = data || [];
+}
+async function loadWorkerOrders(){
+  const { data } = await sb.from('orders').select('*, order_items(*, order_item_options(*)), profiles!orders_customer_id_fkey(full_name, phone)').order('created_at', { ascending: false }).limit(100);
+  state.workerOrders = data || [];
+}
+
+// ---------------- CART ----------------
+function cartKey(item){ return item.product_id + '|' + item.size_name + '|' + item.choices.map(c=>c.name).sort().join(',') + '|' + item.notes; }
+function addToCart(item){
+  const existing = state.cart.find(c => cartKey(c) === cartKey(item));
+  if (existing) existing.qty += item.qty; else state.cart.push(item);
+  setState({ productModal: null }); showToast('Added to cart');
+}
+function removeFromCart(idx){ state.cart.splice(idx,1); render(); }
+function cartLineTotal(item){ return (item.unit_price) * item.qty; }
+function cartSubtotal(){ return state.cart.reduce((s,i)=>s+cartLineTotal(i),0); }
+
+// ---------------- ORDER PLACEMENT ----------------
+async function placeOrder({ pickupDate, pickupTime, notes }){
+  const subtotal = cartSubtotal();
+  const taxRate = Number(state.settings?.tax_rate || 0);
+  let discount = 0, promoId = null;
+  if (state.promoResult) { discount += Number(state.promoResult.calculated_discount); promoId = state.promoResult.promo_id; }
+  const loyaltyDiscount = state.redeemPoints * Number(state.settings?.loyalty_point_value || 0.01);
+  discount += loyaltyDiscount;
+  const taxable = Math.max(subtotal - discount, 0);
+  const tax = +(taxable * taxRate).toFixed(2);
+  const total = +(taxable + tax).toFixed(2);
+  const pointsEarned = Math.floor(total * Number(state.settings?.loyalty_points_per_currency || 1));
+
+  const { data: order, error } = await sb.from('orders').insert({
+    customer_id: state.session.user.id, status: 'pending', fulfillment_type: 'pickup',
+    pickup_date: pickupDate, pickup_time: pickupTime, subtotal, discount_amount: +discount.toFixed(2),
+    tax_amount: tax, total, loyalty_points_redeemed: state.redeemPoints, loyalty_discount_amount: +loyaltyDiscount.toFixed(2),
+    loyalty_points_earned: pointsEarned, promo_id: promoId, special_instructions: notes,
+  }).select().single();
+  if (error) { showToast('Order failed: ' + error.message, 'err'); return null; }
+
+  let itemsFailed = false;
+  for (const item of state.cart) {
+    const { data: oi, error: oiErr } = await sb.from('order_items').insert({
+      order_id: order.id, product_id: item.product_id, product_name: item.name, size_name: item.size_name,
+      size_price_modifier: item.size_mod, unit_price: item.unit_price, quantity: item.qty,
+      line_total: cartLineTotal(item), special_instructions: item.notes,
+    }).select().single();
+    if (oiErr) { itemsFailed = true; showToast('Some items failed to save: ' + oiErr.message, 'err'); continue; }
+    if (item.choices.length) {
+      const { error: optErr } = await sb.from('order_item_options').insert(item.choices.map(c => ({ order_item_id: oi.id, choice_name: c.name, price_modifier: c.price_modifier })));
+      if (optErr) itemsFailed = true;
+    }
+  }
+  if (itemsFailed) showToast(`Order #${order.order_number} was created but some details didn't save — please tell staff or call ${state.settings?.support_phone || ''}`, 'err');
+  if (state.redeemPoints > 0) await sb.rpc('redeem_points_for_order', { p_order_id: order.id, p_points: state.redeemPoints });
+  if (promoId) await sb.rpc('record_promo_redemption', { p_order_id: order.id, p_promo_id: promoId });
+
+  await loadProfile();
+  setState({ cart: [], checkoutOpen: false, promoCode: '', promoResult: null, redeemPoints: 0, view: 'customer', tab: 'orders' });
+  showToast(`Order #${order.order_number} placed! 🎉`, 'ok');
+  return order;
+}
+
+// ---------------- RENDER ROOT ----------------
+let _modalWasOpen = {};
+function justOpened(key, isOpenNow){
+  const was = !!_modalWasOpen[key];
+  _modalWasOpen[key] = !!isOpenNow;
+  return !!isOpenNow && !was;
+}
+let _lastTab = null;
+function tabJustChanged(tab){
+  const changed = tab !== _lastTab;
+  _lastTab = tab;
+  return changed;
+}
+function render(){
+  if (state.view === 'loading') { root.innerHTML = `<div style="height:100vh;display:flex;align-items:center;justify-content:center;flex-direction:column;gap:12px"><div class="spinner" style="width:32px;height:32px;border-width:3px"></div><div class="display" style="font-size:22px;color:var(--coffee-700)">Filter</div></div>`; return; }
+  let html = '';
+  if (state.view === 'auth') html = renderAuth();
+  else if (state.view === 'customer') html = renderCustomer() + renderChatBubble();
+  else if (state.view === 'worker') html = renderWorker();
+  else if (state.view === 'admin') html = renderAdmin();
+  if (state.toasts.length) html += `<div class="toast-stack">${state.toasts.map(t=>`<div class="toast ${t.type==='err'?'err':t.type==='ok'?'ok':''} ${justOpened('toast:'+t.id, true)?'':'no-anim'}">${esc(t.msg)}</div>`).join('')}</div>`;
+  if (state.productModal) html += renderProductModal(justOpened('product', true)); else justOpened('product', false);
+  if (state.cartOpen) html += renderCartSheet(justOpened('cart', true)); else justOpened('cart', false);
+  if (state.checkoutOpen) html += renderCheckoutSheet(justOpened('checkout', true)); else justOpened('checkout', false);
+  if (state.customerProfile) html += renderCustomerProfileSheet(justOpened('custProfile', true)); else justOpened('custProfile', false);
+  if (state.orderDetailId) html += renderOrderDetailSheet(justOpened('orderDetail', true)); else justOpened('orderDetail', false);
+  if (state.reviewModal) html += renderReviewModal(justOpened('review', true)); else justOpened('review', false);
+  if (state.iosInstallModal) html += renderIosInstallModal(justOpened('ios', true)); else justOpened('ios', false);
+  if (state.chatOpen) html += renderChatSheet(justOpened('chat', true)); else justOpened('chat', false);
+  if (state.membershipCardOpen) html += renderMembershipCardModal(justOpened('membership', true)); else justOpened('membership', false);
+  if (shouldShowIosHint()) html += `<div class="ios-hint" role="status"><span style="font-size:22px">📲</span><div style="flex:1">Install Filter: tap <b>Share</b> ⬆️ then <b>Add to Home Screen</b>.</div><button class="btn" style="background:transparent;color:var(--cream-2);min-width:44px;padding:0 6px" aria-label="Dismiss" onclick="dismissIosHint()">✕</button></div>`;
+  if (state.updateAvailable) html += `<div style="position:fixed;bottom:0;left:0;right:0;background:var(--coffee-900);color:var(--cream-2);padding:14px 18px;display:flex;justify-content:space-between;align-items:center;gap:12px;z-index:150;box-shadow:0 -8px 24px -8px rgba(0,0,0,.3)">
+    <span style="font-size:13px;font-weight:600">🔄 A newer version is ready</span>
+    <button class="btn btn-primary" style="padding:9px 16px;font-size:13px;white-space:nowrap" onclick="reloadForUpdate()">Update Now</button>
+  </div>`;
+  const active = document.activeElement;
+  const activeId = active && active.id && root.contains(active) ? active.id : null;
+  let selStart = null, selEnd = null;
+  try { if (activeId) { selStart = active.selectionStart; selEnd = active.selectionEnd; } } catch (e) {}
+  const scrolls = captureScrolls();
+  root.innerHTML = html;
+  restoreTypedValues(activeId, selStart, selEnd);
+  restoreScrolls(scrolls);
+}
+// ---- Scroll protection: every scrolled container (chip rows, sheets, lists)
+// and the page keep their position across re-renders. Containers are keyed by
+// id if they have one, else by their position in the DOM tree.
+function _domKey(el){
+  if (el.id) return '#' + el.id;
+  const parts = [];
+  while (el && el !== root) { const par = el.parentElement; if (!par) break; parts.unshift(Array.prototype.indexOf.call(par.children, el) + ':' + el.tagName); el = par; }
+  return parts.join('/');
+}
+function captureScrolls(){
+  const out = { win: [window.scrollX, window.scrollY], els: {} };
+  root.querySelectorAll('*').forEach(el => { if (el.scrollLeft || el.scrollTop) out.els[_domKey(el)] = [el.scrollLeft, el.scrollTop]; });
+  return out;
+}
+function restoreScrolls(s){
+  Object.entries(s.els).forEach(([k, [x, y]]) => {
+    const el = k[0] === '#' ? document.getElementById(k.slice(1)) : _byKey(k);
+    if (el) { el.scrollLeft = x; el.scrollTop = y; }
+  });
+  if (window.scrollX !== s.win[0] || window.scrollY !== s.win[1]) window.scrollTo(s.win[0], s.win[1]);
+}
+function _byKey(k){
+  let el = root;
+  for (const part of k.split('/')) { const [i, tag] = part.split(':'); el = el && el.children[Number(i)]; if (!el || el.tagName !== tag) return null; }
+  return el;
+}
+// ---- Form protection: ANY re-render (polling, toasts, button taps) used to
+// rebuild inputs from state and wipe what the person had typed. We remember
+// every value the person types (by element id) and put it back after each
+// render. An entry is forgotten as soon as its field leaves the screen
+// (form saved/closed, tab changed), so fresh data shows next time.
+const _typed = {};
+function _rememberTyped(e){
+  const el = e.target;
+  if (!el || !el.id || !root.contains(el)) return;
+  if (!/^(INPUT|TEXTAREA|SELECT)$/.test(el.tagName) || el.type === 'file') return;
+  _typed[el.id] = (el.type === 'checkbox' || el.type === 'radio') ? { checked: el.checked } : { value: el.value };
+}
+document.addEventListener('input', _rememberTyped, true);
+document.addEventListener('change', _rememberTyped, true);
+function forgetTyped(prefix){ Object.keys(_typed).forEach(k => { if (!prefix || k.startsWith(prefix)) delete _typed[k]; }); }
+function restoreTypedValues(activeId, selStart, selEnd){
+  Object.keys(_typed).forEach(id => {
+    const el = document.getElementById(id);
+    if (!el) { delete _typed[id]; return; }
+    const v = _typed[id];
+    if ('checked' in v) el.checked = v.checked; else if (el.value !== v.value) el.value = v.value;
+  });
+  if (activeId) {
+    const el = document.getElementById(activeId);
+    if (el && document.activeElement !== el) {
+      try { el.focus({ preventScroll: true }); if (selStart != null) el.setSelectionRange(selStart, selEnd); } catch (e) {}
+    }
+  }
+}
+
+// ================= AUTH VIEW =================
+function authField(label, id, opts={}){
+  return `<div style="margin-bottom:18px">
+    <label class="small" style="display:block;margin-bottom:8px">${label}</label>
+    <input class="input" id="${id}" type="${opts.type||'text'}" value="${esc(opts.value||'')}" ${opts.required?'required':''} ${opts.minlength?`minlength="${opts.minlength}"`:''} placeholder="${esc(opts.placeholder||'')}" style="padding:14px 16px;font-size:15px">
+  </div>`;
+}
+function renderAuth(){
+  const mode = state.authMode;
+  const isStaff = mode === 'staff';
+  const isStaffRegister = mode === 'staffRegister';
+  return `
+  <div class="app-frame" style="min-height:100vh;display:flex;align-items:center;justify-content:center;padding:clamp(16px,5vw,28px);background:radial-gradient(circle at 30% 15%, ${(isStaff||isStaffRegister)?'#E4D9C4':'#EFE2C6'}, var(--cream) 65%)">
+    <div class="card fade-in" style="width:100%;max-width:420px;padding:clamp(28px,7vw,44px) clamp(22px,6vw,32px)">
+      <div style="text-align:center;margin-bottom:36px">
+        <div class="stamp" style="margin:0 auto 18px;width:64px;height:64px;box-shadow:0 10px 24px -8px rgba(42,24,15,.4);background:${(isStaff||isStaffRegister)?'var(--caramel-dark)':'transparent'};overflow:hidden">${(isStaff||isStaffRegister)?'<span style="font-size:26px">🔑</span>':'<img src="./icon.svg" style="width:100%;height:100%;object-fit:cover">'}</div>
+        <h1 class="display" style="margin:0;font-size:clamp(28px,7vw,34px);color:var(--coffee-900);letter-spacing:-.01em">Filter</h1>
+        <p style="color:var(--coffee-500);font-size:14px;margin-top:8px">${isStaffRegister?'Register with a Staff Code':isStaff?'Staff Portal — Workers & Owner':'Coffee & Tea, Crafted Warmly'}</p>
+      </div>
+      ${!isStaff && !isStaffRegister ? `<div style="display:flex;background:var(--line);border-radius:14px;padding:4px;margin-bottom:28px">
+        <button class="btn" style="flex:1;padding:12px;background:${mode==='signin'?'var(--card)':'transparent'};color:var(--coffee-900);box-shadow:${mode==='signin'?'var(--shadow)':'none'}" onclick="state.authError='';setState({authMode:'signin'})">Sign In</button>
+        <button class="btn" style="flex:1;padding:12px;background:${mode==='signup'?'var(--card)':'transparent'};color:var(--coffee-900);box-shadow:${mode==='signup'?'var(--shadow)':'none'}" onclick="state.authError='';setState({authMode:'signup'})">Sign Up</button>
+      </div>` : ''}
+      ${state.authError ? `<div style="background:#F6E2DC;color:var(--danger);padding:13px 16px;border-radius:14px;font-size:13px;font-weight:600;margin-bottom:20px;line-height:1.4">${esc(state.authError)}</div>` : ''}
+      ${isStaffRegister ? `
+        ${authField('Full Name','sr-name')}
+        ${authField('Email','sr-email',{type:'email'})}
+        ${authField('Password','sr-pass',{type:'password',minlength:6,placeholder:'At least 6 characters'})}
+        <div style="margin-bottom:18px">
+          <label class="small" style="display:block;margin-bottom:8px">Role</label>
+          <select class="input" id="sr-role" style="padding:14px 16px;font-size:15px"><option value="worker">Worker</option><option value="admin">Admin</option></select>
+        </div>
+        ${authField('Access Code','sr-code',{placeholder:'Given to you by the owner'})}
+        <button class="btn btn-primary" style="width:100%;padding:15px;margin-top:6px" onclick="registerStaffWithCode()" ${state.authBusy?'disabled':''}>${state.authBusy?`<div class="spinner" style="border-color:rgba(255,255,255,.35);border-top-color:#fff;margin:0 auto"></div>`:'Create Staff Account'}</button>
+        <button class="link" style="display:block;margin:20px auto 0;font-size:13px;text-align:center;width:100%" onclick="state.authError='';setState({authMode:'staff'})">← Back to staff sign in</button>
+      ` : `
+      <form onsubmit="return handleAuthSubmit(event)">
+        ${mode==='signup' ? authField('Full Name','af-name',{value:state._afName,required:true}) : ''}
+        ${authField('Email','af-email',{type:'email',value:state._afEmail,required:true})}
+        <div style="margin-bottom:26px">
+          <label class="small" style="display:block;margin-bottom:8px">Password</label>
+          <input class="input" id="af-pass" type="password" required minlength="6" placeholder="At least 6 characters" style="padding:14px 16px;font-size:15px">
+        </div>
+        <button class="btn btn-primary" style="width:100%;padding:15px" type="submit" ${state.authBusy?'disabled':''}>${state.authBusy?`<div class="spinner" style="border-color:rgba(255,255,255,.35);border-top-color:#fff;margin:0 auto"></div>`:(mode==='signup'?'Create Account':'Sign In')}</button>
+      </form>
+      ${isStaff
+        ? `<p style="text-align:center;font-size:13px;color:var(--coffee-500);margin-top:28px">Have an access code from the owner?</p>
+           <button class="link" style="display:block;margin:8px auto 0;font-size:13px;text-align:center;width:100%" onclick="state.authError='';setState({authMode:'staffRegister'})">Register with a Staff Code</button>
+           <button class="link" style="display:block;margin:20px auto 0;font-size:13px;color:var(--coffee-500);text-align:center;width:100%" onclick="state.authError='';setState({authMode:'signin'})">← Back to customer sign in</button>`
+        : `<div style="margin-top:28px;padding-top:24px;border-top:1px solid var(--line);text-align:center">
+             <p style="font-size:12.5px;color:var(--coffee-500);margin:0 0 12px">New accounts are created as Customers</p>
+             <button class="link" style="font-size:13px;color:var(--coffee-500)" onclick="state.authError='';setState({authMode:'staff'})">🔑 Staff Sign In</button>
+           </div>`}
+      `}
+    </div>
+  </div>`;
+}
+async function registerStaffWithCode(){
+  const full_name = document.getElementById('sr-name').value.trim();
+  const email = document.getElementById('sr-email').value.trim();
+  const password = document.getElementById('sr-pass').value;
+  const role = document.getElementById('sr-role').value;
+  const code = document.getElementById('sr-code').value.trim();
+  if (!full_name || !email || !password || !code) { state.authError = 'Please fill in every field'; return render(); }
+  if (password.length < 6) { state.authError = 'Password must be at least 6 characters'; return render(); }
+  state.authBusy = true; state.authError = ''; render();
+  try {
+    const resp = await fetch(`${SUPABASE_URL}/functions/v1/register-staff-with-code`, {
+      method: 'POST', headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ email, password, full_name, role, code }),
+    });
+    const json = await parseJsonSafe(resp);
+    state.authBusy = false;
+    if (!resp.ok) { state.authError = json?.error || 'Could not create account'; return render(); }
+    showToast('Account created — sign in below', 'ok');
+    setState({ authMode: 'staff' });
+  } catch (e) { state.authBusy = false; state.authError = 'Network error: ' + e.message; render(); }
+}
+function handleAuthSubmit(e){
+  e.preventDefault();
+  const email = document.getElementById('af-email').value.trim();
+  const pass = document.getElementById('af-pass').value;
+  state._afEmail = email;
+  if (state.authMode === 'signup') { const name = document.getElementById('af-name').value.trim(); state._afName = name; signUp(email, pass, name); }
+  else signIn(email, pass);
+  return false;
+}
+
+// ================= CUSTOMER VIEW =================
+function renderCustomer(){
+  const tabs = [['menu','Menu','☕'],['orders','Orders','🧾'],['favorites','Favorites','♥'],['rewards','Rewards','★'],['profile','Profile','◍']];
+  let body = '';
+  if (state.tab === 'menu') body = renderMenuTab();
+  else if (state.tab === 'orders') body = renderOrdersTab();
+  else if (state.tab === 'favorites') body = renderFavoritesTab();
+  else if (state.tab === 'rewards') body = renderRewardsTab();
+  else if (state.tab === 'profile') body = renderProfileTab();
+  const cartCount = state.cart.reduce((s,i)=>s+i.qty,0);
+  return `
+  <div class="app-frame" style="min-height:100vh;display:flex;flex-direction:column;padding-bottom:70px">
+    <div class="topbar" style="display:flex;align-items:center;justify-content:space-between">
+      <div style="display:flex;align-items:center;gap:10px">
+        <div class="stamp" style="width:34px;height:34px;overflow:hidden"><img src="./icon.svg" style="width:100%;height:100%;object-fit:cover"></div>
+        <div><div class="display" style="font-size:19px;line-height:1">Filter</div><div style="font-size:11px;color:var(--coffee-500)">Hi, ${esc((state.profile?.full_name||'there').split(' ')[0])}</div></div>
+      </div>
+      <div style="display:flex;align-items:center;gap:8px">
+        <div class="pts-pill">★ ${state.profile?.loyalty_points||0}</div>
+        <button class="btn btn-ghost" style="width:36px;height:36px;padding:0;border-radius:50%;font-weight:700;font-size:14px;background:${state.tab==='profile'?'var(--coffee-900)':'var(--line)'};color:${state.tab==='profile'?'var(--cream-2)':'var(--coffee-700)'}" onclick="setState({tab:'profile', notifPanelOpen:false})" title="Profile">${esc((state.profile?.full_name||'?').trim().charAt(0).toUpperCase()||'?')}</button>
+        ${renderInstallIconBtn()}
+        ${renderBell()}
+        <button class="btn btn-ghost" style="padding:9px 12px;position:relative" onclick="setState({cartOpen:true, notifPanelOpen:false})">🛍
+          ${cartCount>0?`<span style="position:absolute;top:-6px;right:-6px;background:var(--caramel-dark);color:#fff;border-radius:99px;font-size:10px;width:18px;height:18px;display:flex;align-items:center;justify-content:center">${cartCount}</span>`:''}
+        </button>
+      </div>
+    </div>
+    ${state.notifPanelOpen ? renderNotifPanel() : ''}
+    ${state.settings?.banner_active && state.settings?.banner_text ? `<div style="background:var(--coffee-900);color:var(--cream-2);text-align:center;padding:9px;font-size:13px;font-weight:600">${esc(state.settings.banner_text)}</div>` : ''}
+    <div style="flex:1" id="tab-content" class="${tabJustChanged(state.tab)?'tab-fresh':''}">${body}</div>
+    <div class="tabbar">
+      ${tabs.map(([k,label,icon])=>`<button class="tabbtn ${state.tab===k?'active':''}" onclick="setState({tab:'${k}'})"><span style="font-size:17px">${icon}</span>${label}</button>`).join('')}
+    </div>
+  </div>`;
+}
+
+function unreadCount(){ return state.notifications.filter(n=>!n.is_read).length; }
+function renderInstallIconBtn(){
+  if (!canOfferInstall()) return '';
+  return `<button class="btn btn-ghost" style="padding:9px 11px" onclick="promptInstall()" title="Add to Home Screen">📲</button>`;
+}
+function renderBell(){
+  const n = unreadCount();
+  return `<div class="bell-wrap"><button class="btn btn-ghost" style="padding:9px 11px" onclick="toggleNotifPanel()">🔔${n>0?`<span class="notif-dot"></span>`:''}</button></div>`;
+}
+function toggleNotifPanel(){ setState({ notifPanelOpen: !state.notifPanelOpen, cartOpen:false }); if (state.notifPanelOpen) markAllNotificationsRead(); }
+function renderNotifPanel(){
+  const isStaff = state.profile?.role === 'worker' || state.profile?.role === 'admin';
+  return `<div class="notif-panel">
+    <div style="padding:12px 14px;border-bottom:1px solid var(--line);font-weight:700;font-size:13px;display:flex;justify-content:space-between;align-items:center">
+      Notifications <button class="btn btn-ghost" style="padding:4px 8px;font-size:11px" onclick="setState({notifPanelOpen:false})">✕</button>
+    </div>
+    ${state.notifications.length ? state.notifications.slice(0,20).map(n=>{
+      const relatedOrder = n.related_order_id ? state.workerOrders.find(o=>o.id===n.related_order_id) : null;
+      return `<div class="notif-row ${!n.is_read?'unread':''}">
+      <div onclick="${n.related_order_id?`setState({orderDetailId:'${n.related_order_id}', notifPanelOpen:false})`:''}" style="cursor:${n.related_order_id?'pointer':'default'}">
+        <b>${esc(n.title)}</b><br><span style="color:var(--coffee-500)">${esc(n.body||'')}</span><br>
+        <span style="color:var(--coffee-500);font-size:11px">${new Date(n.created_at).toLocaleString([],{month:'short',day:'numeric',hour:'numeric',minute:'2-digit'})}</span>
+      </div>
+      ${isStaff && relatedOrder && relatedOrder.status==='pending' ? `<button class="btn btn-primary" style="margin-top:8px;font-size:11px;padding:6px 10px" onclick="event.stopPropagation(); updateOrderStatus('${relatedOrder.id}','accepted'); markAllNotificationsRead()">Accept Order</button>` : ''}
+      ${state.profile?.role==='admin' && relatedOrder && !relatedOrder.payment_confirmed ? `<button class="btn btn-primary" style="margin-top:8px;font-size:11px;padding:6px 10px" onclick="event.stopPropagation(); confirmPayment('${relatedOrder.id}')">💰 Confirm Payment</button>` : ''}
+    </div>`;
+    }).join('') : `<div style="padding:24px;text-align:center;color:var(--coffee-500);font-size:13px">You're all caught up.</div>`}
+  </div>`;
+}
+async function markAllNotificationsRead(){
+  const unread = state.notifications.filter(n=>!n.is_read);
+  if (!unread.length) return;
+  state.notifications.forEach(n=>n.is_read=true); render();
+  await Promise.all(unread.map(n=>sb.from('notifications').update({ is_read: true }).eq('id', n.id)));
+}
+
+function productEmoji(p){
+  const tags = (p.tags||[]).join(' ').toLowerCase();
+  const name = (p.name||'').toLowerCase();
+  if (tags.includes('tea') || name.includes('tea') || name.includes('chai')) return p.is_iced ? '🧊' : '🍵';
+  if (tags.includes('chocolate') || name.includes('chocolate')) return '🍫';
+  if (tags.includes('bakery')) return '🥐';
+  if (p.is_iced) return '🧊';
+  return '☕';
+}
+function filteredProducts(){
+  return state.products.filter(p=>{
+    if (state.activeCategory!=='all' && p.category_id!==state.activeCategory) return false;
+    if (state.search && !p.name.toLowerCase().includes(state.search.toLowerCase()) && !(p.description||'').toLowerCase().includes(state.search.toLowerCase())) return false;
+    if (state.filters.hot && !p.is_hot) return false;
+    if (state.filters.iced && !p.is_iced) return false;
+    return true;
+  });
+}
+function renderMenuTab(){
+  const prods = filteredProducts();
+  const featured = state.products.filter(p=>p.is_featured && p.is_available);
+  const drop = (state.promotions||[]).find(p=>p.is_drop && p.is_active && p.ends_at && new Date(p.ends_at) > new Date());
+  const taste = computeTasteProfile();
+  const recommendation = taste ? state.products.find(p=>p.name===taste.favorite && p.is_available) : null;
+  return `
+  <div style="padding:16px 18px">
+    ${drop ? renderDropBanner(drop) : ''}
+    ${recommendation && !state.search && state.activeCategory==='all' ? `<div class="card" style="padding:14px;margin-bottom:16px;display:flex;align-items:center;gap:12px;cursor:pointer" onclick="openProduct('${recommendation.id}')">
+      <div style="width:44px;height:44px;border-radius:12px;background:linear-gradient(135deg,#EFE0C4,var(--caramel-light));display:flex;align-items:center;justify-content:center;font-size:20px;flex-shrink:0;overflow:hidden">${recommendation.image_url?`<img src="${esc(recommendation.image_url)}" style="width:100%;height:100%;object-fit:cover">`:productEmoji(recommendation)}</div>
+      <div style="flex:1"><div style="font-size:11px;color:var(--caramel-dark);font-weight:700">JUST FOR YOU</div><div style="font-size:13.5px;font-weight:700">Order your usual: ${esc(recommendation.name)}?</div></div>
+      <div style="color:var(--coffee-500)">›</div>
+    </div>` : ''}
+    <input class="input" placeholder="Search drinks..." value="${esc(state.search)}" oninput="state.search=this.value; renderMenuInPlace()" style="margin-bottom:14px">
+    <div class="scrollx" style="margin-bottom:12px">
+      <button class="chip ${state.activeCategory==='all'?'active':''}" onclick="setState({activeCategory:'all'})">All</button>
+      ${state.categories.map(c=>`<button class="chip ${state.activeCategory===c.id?'active':''}" onclick="setState({activeCategory:'${c.id}'})">${esc(c.name)}</button>`).join('')}
+    </div>
+    <div class="scrollx" style="margin-bottom:18px">
+      <button class="chip ${state.filters.hot?'active':''}" onclick="state.filters.hot=!state.filters.hot; render()">🔥 Hot</button>
+      <button class="chip ${state.filters.iced?'active':''}" onclick="state.filters.iced=!state.filters.iced; render()">🧊 Iced</button>
+    </div>
+    ${(!state.search && state.activeCategory==='all' && featured.length) ? `
+      <div style="margin-bottom:22px">
+        <h3 style="margin:0 0 10px;font-size:15px;color:var(--coffee-700)">✦ Featured</h3>
+        <div class="scrollx">${featured.map(p=>renderFeaturedCard(p)).join('')}</div>
+      </div>` : ''}
+    <div id="menu-grid" style="display:grid;grid-template-columns:1fr 1fr;gap:12px">
+      ${prods.length ? prods.map(p=>renderProductCard(p)).join('') : `<div style="grid-column:1/-1;text-align:center;padding:40px 0;color:var(--coffee-500)">No drinks match. Try another search.</div>`}
+    </div>
+  </div>`;
+}
+function renderDropBanner(drop){
+  const msLeft = new Date(drop.ends_at) - new Date();
+  const hrs = Math.floor(msLeft / 3600000);
+  const mins = Math.floor((msLeft % 3600000) / 60000);
+  return `<div class="card" style="padding:16px;margin-bottom:16px;background:linear-gradient(135deg,var(--caramel-dark),var(--coffee-900));color:var(--cream-2)">
+    <div style="font-size:11px;font-weight:700;letter-spacing:.04em;opacity:.85;margin-bottom:4px">⚡ LIMITED-TIME DROP</div>
+    <div style="font-size:15px;font-weight:700;margin-bottom:4px">${esc(drop.code)} — ${esc(drop.description||'')}</div>
+    <div style="font-size:12px;opacity:.85">Ends in ${hrs>0?hrs+'h ':''}${mins}m — use this code at checkout</div>
+  </div>`;
+}
+window.renderMenuInPlace = function(){
+  const grid = document.getElementById('menu-grid');
+  if (grid) grid.innerHTML = filteredProducts().map(p=>renderProductCard(p)).join('') || `<div style="grid-column:1/-1;text-align:center;padding:40px 0;color:var(--coffee-500)">No drinks match.</div>`;
+}
+function renderFeaturedCard(p){
+  return `<div class="card hoverable" style="min-width:200px;padding:14px;cursor:pointer" onclick="openProduct('${p.id}')">
+    <div style="height:90px;border-radius:12px;background:linear-gradient(135deg,var(--caramel-light),var(--caramel));margin-bottom:10px;display:flex;align-items:center;justify-content:center;font-size:30px;overflow:hidden">${p.image_url?`<img src="${esc(p.image_url)}" style="width:100%;height:100%;object-fit:cover">`:'☕'}</div>
+    <div style="font-weight:700;font-size:14px">${esc(p.name)}</div>
+    <div style="font-size:13px;color:var(--caramel-dark);font-weight:700;margin-top:2px">${money(p.base_price)}</div>
+  </div>`;
+}
+function renderProductCard(p){
+  const fav = state.favorites.has(p.id);
+  return `<div class="card hoverable" style="padding:12px;${!p.is_available?'opacity:.5':''}">
+    <div style="position:relative;height:96px;border-radius:12px;background:linear-gradient(135deg,#EFE0C4,var(--caramel-light));margin-bottom:8px;display:flex;align-items:center;justify-content:center;font-size:28px;overflow:hidden" onclick="${p.is_available?`openProduct('${p.id}')`:''}">
+      ${p.image_url?`<img src="${esc(p.image_url)}" style="width:100%;height:100%;object-fit:cover">`:productEmoji(p)}
+      <button onclick="event.stopPropagation(); toggleFavorite('${p.id}')" style="position:absolute;top:6px;right:6px;background:rgba(255,255,255,.85);border:none;border-radius:99px;width:26px;height:26px;font-size:13px;color:${fav?'var(--danger)':'var(--coffee-500)'}">${fav?'♥':'♡'}</button>
+      ${!p.is_available?`<div style="position:absolute;bottom:0;left:0;right:0;background:rgba(42,24,15,.75);color:#fff;font-size:10px;text-align:center;padding:3px;font-weight:700">SOLD OUT</div>`:''}
+    </div>
+    <div style="cursor:pointer" onclick="${p.is_available?`openProduct('${p.id}')`:''}">
+      <div style="font-weight:700;font-size:13.5px;line-height:1.2">${esc(p.name)}</div>
+      <div style="font-size:11.5px;color:var(--coffee-500);margin:3px 0 6px;min-height:14px">${p.avg_rating>0?`★ ${p.avg_rating} (${p.rating_count})`:''}</div>
+      <div style="display:flex;justify-content:space-between;align-items:center">
+        <div style="font-weight:700;color:var(--caramel-dark);font-size:14px">${money(p.base_price)}</div>
+        ${p.is_available?`<button class="btn btn-primary" style="padding:6px 10px;font-size:12px" onclick="event.stopPropagation(); openProduct('${p.id}')">+ Add</button>`:''}
+      </div>
+    </div>
+  </div>`;
+}
+async function toggleFavorite(productId){
+  if (state.favorites.has(productId)) {
+    state.favorites.delete(productId);
+    await sb.from('favorites').delete().eq('customer_id', state.session.user.id).eq('product_id', productId);
+  } else {
+    state.favorites.add(productId);
+    await sb.from('favorites').insert({ customer_id: state.session.user.id, product_id: productId });
+  }
+  render();
+}
+function openProduct(id){
+  const p = state.products.find(x=>x.id===id); if (!p) return;
+  const sizes = (p.product_sizes||[]).sort((a,b)=>a.sort_order-b.sort_order);
+  const defaultSize = sizes.find(s=>s.is_default) || sizes[0];
+  setState({ productModal: { product: p, size: defaultSize?.id || null, choices: {}, qty: 1, notes: '' } });
+}
+
+// ================= PRODUCT MODAL =================
+function renderProductModal(fresh){
+  const m = state.productModal, p = m.product;
+  const sizes = (p.product_sizes||[]).sort((a,b)=>a.sort_order-b.sort_order);
+  const groups = (p.product_option_groups||[]).sort((a,b)=>a.sort_order-b.sort_order);
+  const size = sizes.find(s=>s.id===m.size);
+  let unit = Number(p.base_price) + Number(size?.price_modifier||0);
+  let choiceObjs = [];
+  groups.forEach(g=>{ const sel = m.choices[g.id]||[]; sel.forEach(cid=>{ const ch = g.product_option_choices.find(c=>c.id===cid); if(ch){ unit += Number(ch.price_modifier); choiceObjs.push(ch); }}); });
+  const canAdd = groups.filter(g=>g.is_required).every(g=>(m.choices[g.id]||[]).length>0);
+  return `<div class="scrim" onclick="if(event.target===this) closeModal()"><div class="sheet ${fresh?'':'no-anim'}">
+    <div style="height:150px;border-radius:16px;background:linear-gradient(135deg,#EFE0C4,var(--caramel-light));display:flex;align-items:center;justify-content:center;font-size:44px;margin-bottom:14px;overflow:hidden">${p.image_url?`<img src="${esc(p.image_url)}" style="width:100%;height:100%;object-fit:cover">`:'☕'}</div>
+    <h2 class="display" style="margin:0 0 4px;font-size:22px">${esc(p.name)}</h2>
+    <p style="color:var(--coffee-500);font-size:13.5px;margin:0 0 16px">${esc(p.description||'')}</p>
+
+    ${sizes.length ? `<label class="small">Size</label><div class="scrollx" style="margin:8px 0 16px">
+      ${sizes.map(s=>`<button class="chip ${m.size===s.id?'active':''}" onclick="state.productModal.size='${s.id}'; render()">${esc(s.name)}${s.price_modifier>0?` +${money(s.price_modifier)}`:''}</button>`).join('')}
+    </div>` : ''}
+
+    ${groups.map(g=>`
+      <label class="small">${esc(g.name)}${g.is_required?' · Required':''}</label>
+      <div class="scrollx" style="margin:8px 0 16px">
+        ${g.product_option_choices.sort((a,b)=>a.sort_order-b.sort_order).map(c=>{
+          const sel = (m.choices[g.id]||[]).includes(c.id);
+          return `<button class="chip ${sel?'active':''}" onclick="selectChoice('${g.id}','${c.id}',${g.max_selections})">${esc(c.name)}${c.price_modifier>0?` +${money(c.price_modifier)}`:''}</button>`;
+        }).join('')}
+      </div>`).join('')}
+
+    <label class="small">Special Instructions</label>
+    <textarea class="input" style="margin:8px 0 16px;min-height:60px;resize:vertical" placeholder="e.g. extra hot, less ice..." oninput="state.productModal.notes=this.value">${esc(m.notes)}</textarea>
+
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:18px">
+      <label class="small">Quantity</label>
+      <div style="display:flex;align-items:center;gap:14px">
+        <button class="btn btn-ghost" style="width:44px;height:44px;padding:0;border-radius:50%" onclick="state.productModal.qty=Math.max(1,state.productModal.qty-1); render()">−</button>
+        <span style="font-weight:700;font-size:16px;min-width:16px;text-align:center">${m.qty}</span>
+        <button class="btn btn-ghost" style="width:44px;height:44px;padding:0;border-radius:50%" onclick="state.productModal.qty+=1; render()">+</button>
+      </div>
+    </div>
+    <div style="display:flex;gap:10px">
+      <button class="btn btn-outline" style="flex:1" onclick="closeModal()">Cancel</button>
+      <button class="btn btn-primary" style="flex:2" ${canAdd?'':'disabled'} onclick="confirmAddToCart()">Add ${money(unit*m.qty)}</button>
+    </div>
+  </div></div>`;
+}
+function selectChoice(groupId, choiceId, max){
+  const cur = state.productModal.choices[groupId] || [];
+  if (max <= 1) state.productModal.choices[groupId] = cur.includes(choiceId) ? [] : [choiceId];
+  else state.productModal.choices[groupId] = cur.includes(choiceId) ? cur.filter(x=>x!==choiceId) : (cur.length<max ? [...cur, choiceId] : cur);
+  render();
+}
+function closeModal(){ setState({ productModal: null }); }
+function confirmAddToCart(){
+  const m = state.productModal, p = m.product;
+  const sizes = (p.product_sizes||[]);
+  const size = sizes.find(s=>s.id===m.size);
+  const groups = (p.product_option_groups||[]);
+  let unit = Number(p.base_price) + Number(size?.price_modifier||0);
+  let choiceObjs = [];
+  groups.forEach(g=>{ (m.choices[g.id]||[]).forEach(cid=>{ const ch = g.product_option_choices.find(c=>c.id===cid); if(ch){ unit += Number(ch.price_modifier); choiceObjs.push({ name: ch.name, price_modifier: Number(ch.price_modifier) }); }}); });
+  addToCart({ product_id: p.id, name: p.name, size_name: size?.name||null, size_mod: Number(size?.price_modifier||0), unit_price: unit, choices: choiceObjs, qty: m.qty, notes: m.notes });
+}
+
+// ================= CART / CHECKOUT =================
+function renderCartSheet(fresh){
+  const subtotal = cartSubtotal();
+  return `<div class="scrim" onclick="if(event.target===this) setState({cartOpen:false})"><div class="sheet ${fresh?'':'no-anim'}">
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px">
+      <h2 class="display" style="margin:0;font-size:22px">Your Cart</h2>
+      <button class="btn btn-ghost" style="padding:6px 10px" onclick="setState({cartOpen:false})">✕</button>
+    </div>
+    ${state.cart.length===0 ? `<div style="text-align:center;padding:40px 0;color:var(--coffee-500)">Your cart is empty. Add something delicious!</div>` : `
+      <div style="display:flex;flex-direction:column;gap:12px;margin-bottom:18px">
+        ${state.cart.map((item,idx)=>`
+          <div class="card" style="padding:12px;display:flex;justify-content:space-between;gap:10px">
+            <div>
+              <div style="font-weight:700;font-size:14px">${item.qty}× ${esc(item.name)} ${item.size_name?`(${esc(item.size_name)})`:''}</div>
+              ${item.choices.length?`<div style="font-size:12px;color:var(--coffee-500)">${item.choices.map(c=>esc(c.name)).join(', ')}</div>`:''}
+              ${item.notes?`<div style="font-size:12px;color:var(--coffee-500);font-style:italic">"${esc(item.notes)}"</div>`:''}
+            </div>
+            <div style="text-align:right">
+              <div style="font-weight:700;font-size:14px">${money(cartLineTotal(item))}</div>
+              <button class="link" style="font-size:11px;color:var(--danger);text-decoration:none" onclick="removeFromCart(${idx})">Remove</button>
+            </div>
+          </div>`).join('')}
+      </div>
+      <div style="display:flex;justify-content:space-between;font-weight:700;font-size:16px;padding-top:12px;border-top:1px solid var(--line);margin-bottom:16px">
+        <span>Subtotal</span><span>${money(subtotal)}</span>
+      </div>
+      <button class="btn btn-primary" style="width:100%" onclick="openCheckout()">Continue to Checkout</button>
+    `}
+  </div></div>`;
+}
+
+async function openCheckout(){
+  setState({ cartOpen: false, checkoutOpen: true, slotLoads: {} });
+  try {
+    const today = new Date(); const tomorrow = new Date(); tomorrow.setDate(today.getDate()+1);
+    const [r1, r2, r3] = await Promise.all([
+      sb.rpc('get_slot_load', { p_date: localDateStr(today) }),
+      sb.rpc('get_slot_load', { p_date: localDateStr(tomorrow) }),
+      sb.from('payout_details').select('*').maybeSingle(),
+    ]);
+    const loads = {};
+    (r1.data||[]).forEach(row => loads[`${localDateStr(today)}|${row.slot_time.slice(0,5)}`] = Number(row.order_count));
+    (r2.data||[]).forEach(row => loads[`${localDateStr(tomorrow)}|${row.slot_time.slice(0,5)}`] = Number(row.order_count));
+    state.slotLoads = loads;
+    state.payoutDetails = r3.data || {};
+    render();
+  } catch (e) { /* non-critical — checkout still works without load data */ }
+}
+function localDateStr(d){ return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`; }
+function pickupSlotOptions(){
+  const open = state.settings?.open_time || '07:00', close = state.settings?.close_time || '19:00';
+  const interval = state.settings?.pickup_slot_interval_minutes || 15;
+  const buffer = state.settings?.order_prep_buffer_minutes || 5;
+  const maxPerSlot = state.settings?.max_orders_per_slot || 4;
+  const now = new Date();
+  const slots = [];
+  for (let d=0; d<2; d++){
+    const date = new Date(now); date.setDate(now.getDate()+d);
+    const dateStr = localDateStr(date);
+    let [oh,om] = open.split(':').map(Number), [ch,cm] = close.split(':').map(Number);
+    let cur = new Date(date); cur.setHours(oh,om,0,0);
+    const end = new Date(date); end.setHours(ch,cm,0,0);
+    const earliest = new Date(now.getTime() + buffer*60000);
+    while (cur < end) {
+      if (d>0 || cur >= earliest) {
+        const timeStr = cur.toTimeString().slice(0,5);
+        const load = (state.slotLoads||{})[`${dateStr}|${timeStr}`] || 0;
+        slots.push({ date: dateStr, time: timeStr, label: `${d===0?'Today':'Tomorrow'} · ${cur.toLocaleTimeString([], {hour:'numeric',minute:'2-digit'})}`, load });
+      }
+      cur = new Date(cur.getTime() + interval*60000);
+    }
+  }
+  const candidates = slots.slice(0, 24);
+  const quietest = candidates.filter(s=>s.load < maxPerSlot).sort((a,b)=>a.load-b.load)[0];
+  return candidates.map(s => ({ ...s, recommended: quietest && s.date===quietest.date && s.time===quietest.time }));
+}
+function renderCheckoutSheet(fresh){
+  const subtotal = cartSubtotal();
+  const slots = pickupSlotOptions();
+  const loyaltyValue = Number(state.settings?.loyalty_point_value || 0.01);
+  const maxRedeemable = Math.min(state.profile?.loyalty_points||0, Math.floor(subtotal/loyaltyValue));
+  const discount = (state.promoResult?Number(state.promoResult.calculated_discount):0) + state.redeemPoints*loyaltyValue;
+  const taxable = Math.max(subtotal-discount,0);
+  const tax = taxable * Number(state.settings?.tax_rate||0);
+  const total = taxable+tax;
+  return `<div class="scrim" onclick="if(event.target===this) setState({checkoutOpen:false})"><div class="sheet ${fresh?'':'no-anim'}">
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px">
+      <h2 class="display" style="margin:0;font-size:22px">Checkout</h2>
+      <button class="btn btn-ghost" style="padding:6px 10px" onclick="setState({checkoutOpen:false})">✕</button>
+    </div>
+    <label class="small">Pickup Time</label>
+    <select class="input" id="pickup-slot" style="margin:8px 0 4px">
+      ${slots.map(s=>`<option value="${s.date}|${s.time}">${s.label}${s.recommended?' — ⭐ Quiet, ready fastest':s.load>=(state.settings?.max_orders_per_slot||4)?' — Busy':''}</option>`).join('')}
+    </select>
+    ${slots.some(s=>s.recommended) ? `<p style="font-size:11.5px;color:var(--sage);margin:0 0 16px">⭐ We've marked the quietest upcoming slot — pick it for the fastest turnaround.</p>` : `<div style="margin-bottom:16px"></div>`}
+
+    <label class="small">Promo Code</label>
+    <div style="display:flex;gap:8px;margin:8px 0 6px">
+      <input class="input" id="promo-input" placeholder="Enter code" value="${esc(state.promoCode)}" style="flex:1">
+      <button class="btn btn-outline" onclick="applyPromo()">Apply</button>
+    </div>
+    ${state.promoResult ? `<div style="font-size:12.5px;color:var(--sage);margin-bottom:10px">✓ Promo applied: −${money(state.promoResult.calculated_discount)}</div>` : ''}
+
+    ${maxRedeemable>0 ? `<label class="small">Redeem Loyalty Points (You have ${state.profile?.loyalty_points||0})</label>
+    <div style="display:flex;align-items:center;gap:10px;margin:8px 0 16px">
+      <input type="range" min="0" max="${maxRedeemable}" value="${state.redeemPoints}" style="flex:1" oninput="state.redeemPoints=Number(this.value); document.getElementById('pts-label').textContent=this.value; document.getElementById('checkout-summary').innerHTML=checkoutSummaryHtml()">
+      <span id="pts-label" style="font-weight:700;font-size:13px;min-width:50px;text-align:right">${state.redeemPoints} pts</span>
+    </div>` : ''}
+
+    <label class="small">Order Notes</label>
+    <textarea class="input" id="order-notes" style="margin:8px 0 16px;min-height:50px" placeholder="Anything else we should know?"></textarea>
+
+    ${state.payoutDetails?.show_to_customers ? `<div class="card" style="padding:14px;margin-bottom:16px;background:#FBF2E1">
+      <div style="font-weight:700;font-size:13px;margin-bottom:6px">🏦 Prefer to pay by bank transfer?</div>
+      <div style="font-size:12.5px;color:var(--coffee-700);line-height:1.6">
+        ${state.payoutDetails.bank_name?`${esc(state.payoutDetails.bank_name)}<br>`:''}
+        ${state.payoutDetails.account_title?`${esc(state.payoutDetails.account_title)}<br>`:''}
+        ${state.payoutDetails.account_number?`Acct: ${esc(state.payoutDetails.account_number)}<br>`:''}
+        ${state.payoutDetails.iban?`IBAN: ${esc(state.payoutDetails.iban)}<br>`:''}
+        ${state.payoutDetails.notes?`<span style="color:var(--coffee-500)">${esc(state.payoutDetails.notes)}</span>`:''}
+      </div>
+    </div>` : ''}
+
+    <div id="checkout-summary">${checkoutSummaryHtml()}</div>
+
+    <button class="btn btn-primary" style="width:100%;margin-top:16px" id="place-order-btn" onclick="submitOrder()">Place Order · ${money(total)}</button>
+  </div></div>`;
+}
+function checkoutSummaryHtml(){
+  const subtotal = cartSubtotal();
+  const loyaltyValue = Number(state.settings?.loyalty_point_value || 0.01);
+  const loyaltyDiscount = state.redeemPoints*loyaltyValue;
+  const promoDiscount = state.promoResult?Number(state.promoResult.calculated_discount):0;
+  const discount = promoDiscount+loyaltyDiscount;
+  const taxable = Math.max(subtotal-discount,0);
+  const tax = taxable * Number(state.settings?.tax_rate||0);
+  const total = taxable+tax;
+  return `<div class="card" style="padding:14px;font-size:13.5px">
+    <div style="display:flex;justify-content:space-between;margin-bottom:6px"><span>Subtotal</span><span>${money(subtotal)}</span></div>
+    ${discount>0?`<div style="display:flex;justify-content:space-between;margin-bottom:6px;color:var(--sage)"><span>Discount</span><span>−${money(discount)}</span></div>`:''}
+    ${tax>0?`<div style="display:flex;justify-content:space-between;margin-bottom:6px"><span>Tax</span><span>${money(tax)}</span></div>`:''}
+    <div style="display:flex;justify-content:space-between;font-weight:700;font-size:15px;padding-top:8px;border-top:1px solid var(--line)"><span>Total</span><span>${money(total)}</span></div>
+  </div>`;
+}
+async function applyPromo(){
+  const code = document.getElementById('promo-input').value.trim();
+  if (!code) return;
+  const { data, error } = await sb.rpc('validate_promo', { p_code: code, p_subtotal: cartSubtotal() });
+  if (error) { showToast(error.message.replace(/^.*?: /,'')); return; }
+  state.promoCode = code; state.promoResult = data[0];
+  showToast('Promo applied!');
+  render();
+}
+async function submitOrder(){
+  const btn = document.getElementById('place-order-btn');
+  if (btn) { btn.disabled = true; btn.innerHTML = `<div class="spinner"></div>`; }
+  const slotVal = document.getElementById('pickup-slot').value.split('|');
+  const notes = document.getElementById('order-notes').value.trim();
+  if (!slotVal[0] || !slotVal[1]) { showToast('Please choose a pickup time', 'err'); if (btn) { btn.disabled = false; btn.textContent = 'Place Order'; } return; }
+  if (state.settings && state.settings.is_accepting_orders === false) { showToast("Sorry, we're not taking orders right now.", 'err'); if (btn) { btn.disabled = false; btn.textContent = 'Place Order'; } return; }
+  let order = null;
+  try { order = await placeOrder({ pickupDate: slotVal[0], pickupTime: slotVal[1], notes }); }
+  catch (e) { showToast('Order failed: ' + (e.message || e), 'err'); }
+  if (!order) { const b = document.getElementById('place-order-btn'); if (b) { b.disabled = false; b.textContent = 'Place Order — try again'; } }
+}
+
+// ================= ORDERS TAB =================
+const STATUS_STEPS = ['pending','accepted','preparing','ready','completed'];
+function statusProgress(status){ const i = STATUS_STEPS.indexOf(status); return status==='cancelled'?0:((i+1)/STATUS_STEPS.length*100); }
+function pastOrdersHtml(){
+  const q = (state.orderSearch||'').toLowerCase();
+  const past = state.orders.filter(o=>['completed','cancelled'].includes(o.status))
+    .filter(o => !q || String(o.order_number).includes(q));
+  return past.length ? past.map(o=>renderOrderCard(o,false)).join('') : `<div style="text-align:center;padding:30px 0;color:var(--coffee-500)">${q?'No orders match.':'No past orders yet.'}</div>`;
+}
+window.filterPastOrders = function(){
+  const el = document.getElementById('past-orders-list');
+  if (el) el.innerHTML = pastOrdersHtml();
+};
+function renderOrdersTab(){
+  const active = state.orders.filter(o=>['pending','accepted','preparing','ready'].includes(o.status));
+  return `<div style="padding:16px 18px">
+    ${active.length ? `<h3 style="margin:0 0 10px;font-size:15px">Active Orders</h3>${active.map(o=>renderOrderCard(o,true)).join('')}` : ''}
+    <h3 style="margin:${active.length?'20px':'0'} 0 10px;font-size:15px">Order History</h3>
+    ${state.orders.some(o=>['completed','cancelled'].includes(o.status)) ? `<input class="input" placeholder="Search by order #" value="${esc(state.orderSearch||'')}" oninput="state.orderSearch=this.value; filterPastOrders()" style="margin-bottom:12px">` : ''}
+    <div id="past-orders-list">${pastOrdersHtml()}</div>
+  </div>`;
+}
+function renderOrderCard(o, active){
+  return `<div class="card" style="padding:14px;margin-bottom:12px;cursor:pointer" onclick="setState({orderDetailId:'${o.id}'})">
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px">
+      <div style="font-weight:700;font-size:14.5px">Order #${o.order_number}</div>
+      <span class="badge ${o.status}">${o.status.toUpperCase()}</span>
+    </div>
+    <div style="font-size:12.5px;color:var(--coffee-500);margin-bottom:${active?'10px':'0'}">${new Date(o.created_at).toLocaleString([], {month:'short',day:'numeric',hour:'numeric',minute:'2-digit'})} · ${o.order_items?.length||0} items · ${money(o.total)}</div>
+    ${active ? `<div class="progress-track"><div class="progress-fill" style="width:${statusProgress(o.status)}%"></div></div>` : `<button class="btn btn-outline" style="margin-top:8px;padding:6px 12px;font-size:12px" onclick="event.stopPropagation(); reorder('${o.id}')">Reorder</button>`}
+  </div>`;
+}
+function reorder(orderId){
+  const o = state.orders.find(x=>x.id===orderId); if (!o) return;
+  (o.order_items||[]).forEach(oi=>{
+    state.cart.push({ product_id: oi.product_id, name: oi.product_name, size_name: oi.size_name, size_mod: Number(oi.size_price_modifier||0), unit_price: Number(oi.unit_price), choices: (oi.order_item_options||[]).map(c=>({name:c.choice_name,price_modifier:Number(c.price_modifier)})), qty: oi.quantity, notes: oi.special_instructions||'' });
+  });
+  setState({ cartOpen: true, tab: 'menu' });
+  showToast('Items added to cart');
+}
+function renderOrderTimeline(o){
+  if (o.status === 'cancelled') {
+    return `<div class="card" style="padding:12px;background:#EFD3CD;color:var(--danger);font-size:13px;font-weight:600">✕ Cancelled${o.cancelled_at?' at '+new Date(o.cancelled_at).toLocaleTimeString([],{hour:'numeric',minute:'2-digit'}):''}</div>`;
+  }
+  const steps = [
+    { label: 'Order Placed', time: o.created_at, done: true },
+    { label: 'Accepted', time: o.accepted_at, done: !!o.accepted_at },
+    { label: 'Preparing', time: o.preparing_at, done: !!o.preparing_at },
+    { label: 'Ready for Pickup', time: o.ready_at, done: !!o.ready_at },
+    { label: 'Completed', time: o.completed_at, done: !!o.completed_at },
+  ];
+  return `<div style="display:flex;flex-direction:column">
+    ${steps.map((s,i) => `<div style="display:flex;gap:12px">
+      <div style="display:flex;flex-direction:column;align-items:center">
+        <div style="width:20px;height:20px;border-radius:50%;background:${s.done?'var(--caramel-dark)':'var(--line)'};color:${s.done?'#fff':'transparent'};display:flex;align-items:center;justify-content:center;font-size:11px;flex-shrink:0">✓</div>
+        ${i<steps.length-1?`<div style="width:2px;flex:1;min-height:22px;background:${steps[i+1].done?'var(--caramel-dark)':'var(--line)'}"></div>`:''}
+      </div>
+      <div style="padding-bottom:20px">
+        <div style="font-size:13px;font-weight:${s.done?'700':'500'};color:${s.done?'var(--coffee-900)':'var(--coffee-500)'}">${s.label}</div>
+        ${s.time?`<div style="font-size:11.5px;color:var(--coffee-500)">${new Date(s.time).toLocaleString([],{month:'short',day:'numeric',hour:'numeric',minute:'2-digit'})}</div>`:''}
+      </div>
+    </div>`).join('')}
+  </div>`;
+}
+
+function renderOrderDetailSheet(fresh){
+  const o = state.orders.find(x=>x.id===state.orderDetailId) || state.workerOrders.find(x=>x.id===state.orderDetailId) || (state.customerProfile?.orders||[]).find(x=>x.id===state.orderDetailId);
+  if (!o) return '';
+  return `<div class="scrim" onclick="if(event.target===this) setState({orderDetailId:null})"><div class="sheet ${fresh?'':'no-anim'}">
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px">
+      <h2 class="display" style="margin:0;font-size:22px">Order #${o.order_number}</h2>
+      <button class="btn btn-ghost" style="padding:6px 10px" onclick="setState({orderDetailId:null})">✕</button>
+    </div>
+    <span class="badge ${o.status}">${o.status.toUpperCase()}</span>
+    <span class="badge ${o.payment_confirmed?'ready':'pending'}" style="margin-left:6px">${o.payment_confirmed?'✓ PAID':'PAYMENT PENDING'}</span>
+    <div style="margin:16px 0">${renderOrderTimeline(o)}</div>
+    ${o.status==='cancelled' && o.cancel_reason ? `<div style="font-size:12.5px;color:var(--danger);margin-bottom:12px"><b>Cancelled:</b> ${esc(o.cancel_reason)}</div>` : ''}
+    ${canCancel(o) ? `<button class="link-danger" style="margin:0 0 16px" onclick="cancelOrder('${o.id}')">Cancel this order</button>` : ''}
+    <div style="font-size:12.5px;color:var(--coffee-500);margin-bottom:16px">Pickup: ${o.pickup_date||''} ${o.pickup_time||''}</div>
+    ${state.profile?.role==='admin' ? `<div class="card" style="padding:14px;margin-bottom:16px;background:${o.payment_confirmed?'#EAF2E9':'#FBF2E1'}">
+      <div style="display:flex;justify-content:space-between;align-items:center;gap:10px">
+        <div>
+          <div style="font-weight:700;font-size:13.5px">${o.payment_confirmed?'Payment confirmed':'Waiting for payment confirmation'}</div>
+          <div style="font-size:11.5px;color:var(--coffee-500)">${o.payment_confirmed?'Loyalty points have been credited to this customer.':'Confirm once you have collected payment — this releases their loyalty points.'}</div>
+        </div>
+        ${!o.payment_confirmed ? `<button class="btn btn-primary" style="white-space:nowrap;font-size:12px;padding:9px 14px" onclick="confirmPayment('${o.id}')">Confirm paid</button>` : ''}
+      </div>
+    </div>` : ''}
+    <div style="display:flex;flex-direction:column;gap:10px;margin-bottom:16px">
+      ${(o.order_items||[]).map(oi=>`<div class="card" style="padding:12px">
+        <div style="display:flex;justify-content:space-between;align-items:flex-start;gap:8px">
+          <div style="font-weight:700;font-size:13.5px">${oi.quantity}× ${esc(oi.product_name)} ${oi.size_name?`(${esc(oi.size_name)})`:''}</div>
+          ${o.status==='completed' && oi.product_id ? `<button class="btn btn-ghost" style="padding:4px 8px;font-size:11px;white-space:nowrap" onclick="openReviewModal('${oi.product_id}','${esc(oi.product_name)}','${o.id}')">★ Rate</button>` : ''}
+        </div>
+        ${(oi.order_item_options||[]).length?`<div style="font-size:12px;color:var(--coffee-500)">${oi.order_item_options.map(c=>esc(c.choice_name)).join(', ')}</div>`:''}
+        ${oi.special_instructions?`<div style="font-size:12px;font-style:italic;color:var(--coffee-500)">"${esc(oi.special_instructions)}"</div>`:''}
+        <div style="text-align:right;font-weight:700;font-size:13px;margin-top:4px">${money(oi.line_total)}</div>
+      </div>`).join('')}
+    </div>
+    <div class="card" style="padding:14px;font-size:13.5px">
+      <div style="display:flex;justify-content:space-between;margin-bottom:6px"><span>Subtotal</span><span>${money(o.subtotal)}</span></div>
+      ${o.discount_amount>0?`<div style="display:flex;justify-content:space-between;margin-bottom:6px;color:var(--sage)"><span>Discount</span><span>−${money(o.discount_amount)}</span></div>`:''}
+      ${o.tax_amount>0?`<div style="display:flex;justify-content:space-between;margin-bottom:6px"><span>Tax</span><span>${money(o.tax_amount)}</span></div>`:''}
+      <div style="display:flex;justify-content:space-between;font-weight:700;font-size:15px;padding-top:8px;border-top:1px solid var(--line)"><span>Total</span><span>${money(o.total)}</span></div>
+      ${o.loyalty_points_earned>0?`<div style="margin-top:8px;font-size:12px;color:var(--caramel-dark)">★ ${o.payment_confirmed?`Earned ${o.loyalty_points_earned} points`:`Will earn ${o.loyalty_points_earned} points once payment is confirmed`}</div>`:''}
+    </div>
+    ${o.special_instructions?`<div style="margin-top:12px;font-size:12.5px;color:var(--coffee-500)"><b>Notes:</b> ${esc(o.special_instructions)}</div>`:''}
+  </div></div>`;
+}
+async function confirmPayment(orderId){
+  const { error } = await sb.from('orders').update({ payment_confirmed: true }).eq('id', orderId);
+  if (error) { showToast(error.message, 'err'); return; }
+  showToast('Payment confirmed — points released to customer', 'ok');
+  await loadWorkerOrders();
+  render();
+}
+
+// ================= REVIEWS =================
+function openReviewModal(productId, productName, orderId){
+  setState({ reviewModal: { productId, productName, orderId, rating: 5, comment: '' } });
+}
+function renderReviewModal(fresh){
+  const m = state.reviewModal;
+  return `<div class="scrim" onclick="if(event.target===this) setState({reviewModal:null})"><div class="sheet ${fresh?'':'no-anim'}" style="max-width:400px">
+    <h2 class="display" style="margin:0 0 4px;font-size:20px">Rate ${esc(m.productName)}</h2>
+    <p style="color:var(--coffee-500);font-size:13px;margin:0 0 16px">How was it?</p>
+    <div class="star-row" style="margin-bottom:16px;justify-content:center">
+      ${[1,2,3,4,5].map(i=>`<span class="star ${i<=m.rating?'filled':''}" onclick="state.reviewModal.rating=${i}; render()">★</span>`).join('')}
+    </div>
+    <textarea class="input" placeholder="Tell us more (optional)" style="min-height:70px;margin-bottom:16px" oninput="state.reviewModal.comment=this.value">${esc(m.comment)}</textarea>
+    <div style="display:flex;gap:10px">
+      <button class="btn btn-outline" style="flex:1" onclick="setState({reviewModal:null})">Cancel</button>
+      <button class="btn btn-primary" style="flex:2" onclick="submitReview()">Submit Review</button>
+    </div>
+  </div></div>`;
+}
+async function submitReview(){
+  const m = state.reviewModal;
+  const { error } = await sb.from('reviews').insert({ customer_id: state.session.user.id, product_id: m.productId, order_id: m.orderId, rating: m.rating, comment: m.comment || null });
+  if (error) { showToast(error.message.includes('duplicate') ? "You've already rated this item for this order" : error.message, 'err'); return; }
+  setState({ reviewModal: null });
+  showToast('Thanks for the feedback! ★', 'ok');
+  refreshProducts();
+}
+
+// ================= AI CHAT ASSISTANT =================
+function fallbackAnswer(question){
+  const q = question.toLowerCase();
+  const phone = state.settings?.support_phone || '03014022888';
+  if (/hour|open|close|time.*open/.test(q)) return `We're open from ${state.settings?.open_time||'07:00'} to ${state.settings?.close_time||'19:00'} daily.`;
+  if (/phone|contact|number|whatsapp|call/.test(q)) return `You can reach us at ${phone}.`;
+  if (/menu|drink|have|price|cost|rs\b/.test(q)) {
+    const lines = state.products.filter(p=>p.is_available).map(p=>`${p.name} — ${money(p.base_price)}`);
+    return `Here's what we have:\n${lines.join('\n')}`;
+  }
+  if (/point|loyalty|reward|gift/.test(q)) return `You earn 1 point for every Rs ${Math.round(1/(state.settings?.loyalty_points_per_currency||0.1))} spent, credited once your payment is confirmed. Check the Rewards tab for gifts you can unlock!`;
+  if (/pickup|order|how.*work/.test(q)) return `Browse the menu, add items to your cart, pick a pickup time, and pay in person when you collect your order.`;
+  return `I'm not sure about that one — for anything specific, message us directly at ${phone}.`;
+}
+function renderChatBubble(){
+  return `<button class="btn btn-primary" style="position:fixed;bottom:calc(80px + env(safe-area-inset-bottom));right:max(16px,calc(50vw - 224px));width:52px;height:52px;border-radius:50%;padding:0;font-size:22px;box-shadow:var(--shadow);z-index:35" onclick="toggleChat()">💬</button>`;
+}
+function toggleChat(){
+  setState({ chatOpen: !state.chatOpen });
+  if (state.chatOpen && !state.chatMessages.length) {
+    state.chatMessages.push({ role: 'assistant', content: `Hi! I'm the Filter assistant. Ask me about the menu, prices, hours, or how ordering works.` });
+    render();
+  }
+}
+function renderChatSheet(fresh){
+  return `<div class="scrim" onclick="if(event.target===this) setState({chatOpen:false})"><div class="sheet ${fresh?'':'no-anim'}" style="display:flex;flex-direction:column;height:70vh;max-height:600px;padding-bottom:12px">
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px">
+      <h2 class="display" style="margin:0;font-size:19px">☕ Filter Assistant</h2>
+      <button class="btn btn-ghost" style="padding:6px 10px" onclick="setState({chatOpen:false})">✕</button>
+    </div>
+    <div id="chat-scroll" style="flex:1;overflow-y:auto;display:flex;flex-direction:column;gap:10px;margin-bottom:12px;padding-right:2px">
+      ${state.chatMessages.map(m=>`<div style="align-self:${m.role==='user'?'flex-end':'flex-start'};max-width:82%;background:${m.role==='user'?'var(--coffee-900)':'var(--card)'};color:${m.role==='user'?'var(--cream-2)':'var(--coffee-900)'};border:${m.role==='user'?'none':'1px solid var(--line)'};padding:10px 13px;border-radius:16px;font-size:13.5px;white-space:pre-wrap">${esc(m.content)}</div>`).join('')}
+      ${state.chatBusy ? `<div style="align-self:flex-start;padding:10px 13px"><div class="spinner"></div></div>` : ''}
+    </div>
+    <form onsubmit="return handleChatSubmit(event)" style="display:flex;gap:8px">
+      <input class="input" id="chat-input" placeholder="Ask about the menu, hours..." autocomplete="off" ${state.chatBusy?'disabled':''}>
+      <button class="btn btn-primary" type="submit" style="padding:12px 16px" ${state.chatBusy?'disabled':''}>➤</button>
+    </form>
+  </div></div>`;
+}
+function handleChatSubmit(e){
+  e.preventDefault();
+  const input = document.getElementById('chat-input');
+  const text = input.value.trim();
+  if (!text || state.chatBusy) return false;
+  input.value = ''; delete _typed['chat-input'];
+  sendChatMessage(text);
+  return false;
+}
+async function sendChatMessage(text){
+  state.chatMessages.push({ role: 'user', content: text });
+  state.chatBusy = true;
+  render();
+  scrollChatToBottom();
+  try {
+    const resp = await fetch(`${SUPABASE_URL}/functions/v1/ai-chat`, {
+      method: 'POST',
+      headers: { 'Authorization': `Bearer ${state.session.access_token}`, 'Content-Type': 'application/json' },
+      body: JSON.stringify({ messages: state.chatMessages.map(m => ({ role: m.role, content: m.content })) }),
+    });
+    const json = await parseJsonSafe(resp);
+    if (json?.not_configured) {
+      state.chatConfigured = false;
+      state.chatMessages.push({ role: 'assistant', content: fallbackAnswer(text) });
+    } else if (json?.reply) {
+      state.chatConfigured = true;
+      state.chatMessages.push({ role: 'assistant', content: json.reply });
+    } else {
+      state.chatMessages.push({ role: 'assistant', content: fallbackAnswer(text) });
+    }
+  } catch (e) {
+    state.chatMessages.push({ role: 'assistant', content: fallbackAnswer(text) });
+  }
+  state.chatBusy = false;
+  render();
+  scrollChatToBottom();
+}
+function scrollChatToBottom(){ setTimeout(() => { const el = document.getElementById('chat-scroll'); if (el) el.scrollTop = el.scrollHeight; }, 30); }
+
+// ================= MEMBERSHIP CARD =================
+function memberTier(paidCount){
+  if (paidCount >= 10) return 'Gold Member';
+  if (paidCount >= 5) return 'Silver Member';
+  return 'Member';
+}
+function renderMembershipCardModal(fresh){
+  const p = state.profile;
+  const paidCount = p?.paid_orders_count || 0;
+  const code = p?.referral_code || '——';
+  const bars = Array.from({length: 40}, (_, i) => `<div style="width:${(i%5===0)?3:1.5}px;height:100%;background:#F6F0E4;opacity:${(i%3===0)?0.9:0.5}"></div>`).join('');
+  return `<div class="scrim" onclick="if(event.target===this) setState({membershipCardOpen:false})"><div class="sheet ${fresh?'':'no-anim'}" style="max-width:420px">
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px">
+      <h2 class="display" style="margin:0;font-size:20px">Membership Card</h2>
+      <button class="btn btn-ghost" style="padding:6px 10px" onclick="setState({membershipCardOpen:false})">✕</button>
+    </div>
+    <div class="wallet-card">
+      <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:28px">
+        <div style="display:flex;align-items:center;gap:10px">
+          <img src="./icon.svg" style="width:34px;height:34px;border-radius:9px">
+          <div class="display" style="font-size:18px">Filter</div>
+        </div>
+        <div style="font-size:10.5px;font-weight:700;letter-spacing:.05em;background:rgba(255,255,255,.15);padding:4px 10px;border-radius:99px">${memberTier(paidCount).toUpperCase()}</div>
+      </div>
+      <div style="font-size:11px;opacity:.7;margin-bottom:2px">MEMBER</div>
+      <div style="font-size:18px;font-weight:700;margin-bottom:18px">${esc(p?.full_name||'Filter Customer')}</div>
+      <div style="display:flex;justify-content:space-between;align-items:flex-end">
+        <div>
+          <div style="font-size:11px;opacity:.7">POINTS BALANCE</div>
+          <div class="display" style="font-size:26px">${p?.loyalty_points||0}</div>
+        </div>
+        <div style="text-align:right">
+          <div style="font-size:11px;opacity:.7">MEMBER ID</div>
+          <div style="font-family:monospace;font-size:14px;letter-spacing:.05em">${esc(code)}</div>
+        </div>
+      </div>
+      <div style="display:flex;gap:2px;height:34px;margin-top:18px;align-items:center">${bars}</div>
+    </div>
+    <p style="font-size:12px;color:var(--coffee-500);text-align:center;margin:14px 0 4px">Show this card at pickup, or tell staff your Member ID: <b>${esc(code)}</b></p>
+  </div></div>`;
+}
+
+// ================= FAVORITES / REWARDS / PROFILE =================
+function renderFavoritesTab(){
+  const favs = state.products.filter(p=>state.favorites.has(p.id));
+  return `<div style="padding:16px 18px">
+    <h3 style="margin:0 0 14px;font-size:15px">Your Favorites</h3>
+    ${favs.length ? `<div style="display:grid;grid-template-columns:1fr 1fr;gap:12px">${favs.map(p=>renderProductCard(p)).join('')}</div>` : `<div class="card empty" style="margin-top:8px"><b style="display:block;color:var(--coffee-900);font-size:15px;margin-bottom:4px">No favourites yet</b>Tap the ♡ on any drink to keep it here for quick reordering.</div>`}
+  </div>`;
+}
+function renderRewardsTab(){
+  const paidCount = state.profile?.paid_orders_count || 0;
+  const nextMilestones = (state.milestones||[]).filter(m=>m.is_active).map(m => {
+    const remainder = paidCount % m.orders_required;
+    const remaining = remainder === 0 && paidCount > 0 ? 0 : m.orders_required - remainder;
+    return { ...m, remaining, progress: ((m.orders_required - remaining) / m.orders_required) * 100 };
+  });
+  return `<div style="padding:16px 18px">
+    <div class="card" style="padding:20px;text-align:center;margin-bottom:20px;background:linear-gradient(135deg,var(--coffee-900),var(--coffee-700));color:var(--cream-2)">
+      <div style="font-size:12px;opacity:.8">YOUR BALANCE</div>
+      <div class="display" style="font-size:34px;margin:4px 0">${state.profile?.loyalty_points||0} pts</div>
+      <div style="font-size:12px;opacity:.8;margin-bottom:14px">Earn 1 point for every Rs ${Math.round(1/(state.settings?.loyalty_points_per_currency||0.1))} spent · ${paidCount} paid order${paidCount===1?'':'s'} so far</div>
+      <button class="btn" style="background:rgba(255,255,255,.15);color:var(--cream-2);width:100%" onclick="setState({membershipCardOpen:true})">🎫 View Membership Card</button>
+    </div>
+
+    ${(state.myGifts||[]).length ? `<div class="card" style="padding:16px;margin-bottom:20px;background:#FBF2E1">
+      <h3 style="margin:0 0 10px;font-size:15px">🎁 Ready to Claim</h3>
+      ${state.myGifts.map(g=>`<div style="padding:8px 0;border-bottom:1px solid var(--line);font-size:13.5px"><b>${esc(g.loyalty_milestones?.gift_name||'Gift')}</b><br><span style="font-size:12px;color:var(--coffee-500)">${esc(g.loyalty_milestones?.gift_description||'')} — mention this next time you order</span></div>`).join('')}
+    </div>` : ''}
+
+    ${nextMilestones.length ? `<div class="card" style="padding:16px;margin-bottom:20px">
+      <h3 style="margin:0 0 12px;font-size:15px">🎁 Free Gifts</h3>
+      ${nextMilestones.map(m=>`<div style="margin-bottom:14px">
+        <div style="display:flex;justify-content:space-between;font-size:13px;margin-bottom:6px"><b>${esc(m.gift_name)}</b><span style="color:var(--coffee-500)">${m.remaining===0?'Unlocked!':`${m.remaining} order${m.remaining===1?'':'s'} to go`}</span></div>
+        <div class="progress-track"><div class="progress-fill" style="width:${m.progress}%"></div></div>
+      </div>`).join('')}
+    </div>` : ''}
+
+    ${(state.missions||[]).length ? `<div class="card" style="padding:16px;margin-bottom:20px">
+      <h3 style="margin:0 0 12px;font-size:15px">🏆 Missions</h3>
+      ${state.missions.map(m=>{
+        const pct = Math.min(100, (m.myProgress / m.goal_target) * 100);
+        const label = m.goal_type === 'order_count' ? `${Math.floor(m.myProgress)}/${m.goal_target} orders` : `${money(m.myProgress)} of ${money(m.goal_target)}`;
+        return `<div style="margin-bottom:14px">
+          <div style="display:flex;justify-content:space-between;font-size:13px;margin-bottom:6px"><b>${esc(m.title)}${m.completed?' ✓':''}</b><span style="color:var(--coffee-500)">${m.completed?`+${m.reward_points} pts earned`:label}</span></div>
+          <div class="progress-track"><div class="progress-fill" style="width:${pct}%;background:${m.completed?'var(--sage)':'linear-gradient(90deg,var(--caramel),var(--caramel-dark))'}"></div></div>
+        </div>`;
+      }).join('')}
+    </div>` : ''}
+
+    <h3 style="margin:0 0 12px;font-size:15px">Redeem Rewards</h3>
+    <div style="display:flex;flex-direction:column;gap:10px;margin-bottom:24px">
+      ${state.rewards.map(r=>{
+        const can = (state.profile?.loyalty_points||0) >= r.points_cost;
+        return `<div class="card" style="padding:14px;display:flex;justify-content:space-between;align-items:center">
+          <div><div style="font-weight:700;font-size:14px">${esc(r.name)}</div><div style="font-size:12px;color:var(--coffee-500)">${esc(r.description||'')}</div></div>
+          <button class="btn ${can?'btn-primary':'btn-ghost'}" style="font-size:12px;white-space:nowrap" ${can?'':'disabled'} onclick="redeemRewardUI('${r.id}')">${r.points_cost} pts</button>
+        </div>`;
+      }).join('')}
+    </div>
+    <h3 style="margin:0 0 12px;font-size:15px">Promo Codes</h3>
+    <div style="display:flex;flex-direction:column;gap:10px">
+      ${state.promotions.map(p=>`<div class="card" style="padding:14px">
+        <div style="font-weight:700;font-size:14px">${esc(p.code)}</div>
+        <div style="font-size:12px;color:var(--coffee-500)">${esc(p.description||'')}</div>
+      </div>`).join('') || `<div class="card" style="padding:16px;color:var(--coffee-500);font-size:14px">No promos running right now — check back soon.</div>`}
+    </div>
+  </div>`;
+}
+async function redeemRewardUI(rewardId){
+  const { error } = await sb.rpc('redeem_reward', { p_reward_id: rewardId });
+  if (error) { showToast(error.message.replace(/^.*?: /,'')); return; }
+  await loadProfile(); showToast('Reward redeemed! Show this at pickup.'); render();
+}
+function computeTasteProfile(){
+  const counts = {}; let hot = 0, cold = 0;
+  state.orders.forEach(o => (o.order_items||[]).forEach(oi => {
+    counts[oi.product_name] = (counts[oi.product_name]||0) + oi.quantity;
+    const prod = state.products.find(p => p.name === oi.product_name);
+    if (prod?.is_iced) cold += oi.quantity; else if (prod?.is_hot) hot += oi.quantity;
+  }));
+  const sorted = Object.entries(counts).sort((a,b)=>b[1]-a[1]);
+  if (!sorted.length) return null;
+  const total = hot + cold;
+  return { favorite: sorted[0][0], favoriteCount: sorted[0][1], hotPct: total?Math.round(hot/total*100):50, coldPct: total?Math.round(cold/total*100):50 };
+}
+function renderProfileTab(){
+  const p = state.profile;
+  const supported = pushSupported();
+  const taste = computeTasteProfile();
+  return `<div style="padding:16px 18px">
+    <div class="card" style="padding:18px;margin-bottom:16px">
+      <div style="font-weight:700;font-size:17px">${esc(p?.full_name||'')}</div>
+      <div style="font-size:13px;color:var(--coffee-500)">${esc(state.session?.user?.email||'')}</div>
+      <div style="font-size:13px;color:var(--coffee-500);margin-top:4px">${esc(p?.phone||'No phone on file')}</div>
+      <div style="margin-top:10px;font-size:12px;color:var(--caramel-dark)">Referral Code: <b>${esc(p?.referral_code||'')}</b> — share for bonus points</div>
+      <button class="btn btn-outline" style="width:100%;margin-top:12px" onclick="shareReferral()">📤 Invite a Friend</button>
+    </div>
+    ${taste ? `<div class="card" style="padding:18px;margin-bottom:16px">
+      <h3 style="margin:0 0 10px;font-size:15px">☕ Your Taste Profile</h3>
+      <div style="font-size:13px;margin-bottom:10px">Your go-to: <b>${esc(taste.favorite)}</b> (${taste.favoriteCount}× ordered)</div>
+      <div style="display:flex;height:8px;border-radius:99px;overflow:hidden;margin-bottom:6px">
+        <div style="width:${taste.hotPct}%;background:var(--caramel-dark)"></div>
+        <div style="width:${taste.coldPct}%;background:#8FB8D9"></div>
+      </div>
+      <div style="display:flex;justify-content:space-between;font-size:11px;color:var(--coffee-500)"><span>🔥 Hot ${taste.hotPct}%</span><span>🧊 Cold ${taste.coldPct}%</span></div>
+    </div>` : ''}
+    <div class="card" style="padding:18px;margin-bottom:16px">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:4px">
+        <h3 style="margin:0;font-size:15px">Push Notifications</h3>
+        <span style="font-size:11px;font-weight:700;color:${state.pushEnabled?'var(--sage)':'var(--coffee-500)'}">${state.pushEnabled?'● ON':'○ OFF'}</span>
+      </div>
+      <p style="font-size:12.5px;color:var(--coffee-500);margin:0 0 12px">Get a real phone notification the moment your order status changes — even when Filter isn't open.</p>
+      ${!supported ? `<div style="font-size:12px;color:var(--coffee-500);background:var(--line);padding:10px 12px;border-radius:10px">Not available in this window. Install Filter to your Home Screen (Share → Add to Home Screen), then open it from there to enable notifications.</div>` :
+        state.pushEnabled ? `<button class="btn btn-ghost" style="width:100%" onclick="disablePushNotifications()">Turn Off Notifications</button>`
+        : `<button class="btn btn-primary" style="width:100%" onclick="enablePushNotifications()">🔔 Enable Push Notifications</button>`}
+      ${state.pushEnabled ? `<div style="margin-top:14px;padding-top:14px;border-top:1px solid var(--line)">
+        <label style="display:flex;justify-content:space-between;align-items:center;font-size:13px;margin-bottom:10px"><span>Promos & Drops</span><input type="checkbox" ${p?.notify_promos?'checked':''} onchange="toggleNotifPref('notify_promos', this.checked)"></label>
+        <label style="display:flex;justify-content:space-between;align-items:center;font-size:13px"><span>Loyalty & Gifts</span><input type="checkbox" ${p?.notify_loyalty?'checked':''} onchange="toggleNotifPref('notify_loyalty', this.checked)"></label>
+        <p style="font-size:11px;color:var(--coffee-500);margin:8px 0 0">Order status alerts always stay on so you never miss a pickup.</p>
+      </div>` : ''}
+    </div>
+    <div class="card" style="padding:18px;margin-bottom:16px">
+      <h3 style="margin:0 0 10px;font-size:15px">Recent Activity</h3>
+      ${state.notifications.length ? state.notifications.slice(0,8).map(n=>`<div style="padding:8px 0;border-bottom:1px solid var(--line);font-size:13px">
+        <b>${esc(n.title)}</b><br><span style="color:var(--coffee-500);font-size:12px">${esc(n.body||'')}</span>
+      </div>`).join('') : `<div style="color:var(--coffee-500);font-size:13px">No notifications yet.</div>`}
+    </div>
+    <button class="btn btn-outline" style="width:100%;margin-bottom:10px" onclick="showToast('Call or WhatsApp us: ${esc(state.settings?.support_phone||'03014022888')}')">💬 Customer Support</button>
+    <button class="btn btn-danger" style="width:100%" onclick="signOut()">Sign Out</button>
+  </div>`;
+}
+
+// ================= WORKER VIEW =================
+function orderUrgencyMinutes(o){
+  if (!o.pickup_date || !o.pickup_time) return 999;
+  const target = new Date(`${o.pickup_date}T${o.pickup_time}`);
+  return Math.round((target - new Date()) / 60000);
+}
+function sortByUrgency(orders){
+  return [...orders].sort((a,b) => orderUrgencyMinutes(a) - orderUrgencyMinutes(b));
+}
+function renderWorker(){
+  const pending = sortByUrgency(state.workerOrders.filter(o=>o.status==='pending'));
+  const accepted = sortByUrgency(state.workerOrders.filter(o=>o.status==='accepted'));
+  const preparing = sortByUrgency(state.workerOrders.filter(o=>o.status==='preparing'));
+  const ready = sortByUrgency(state.workerOrders.filter(o=>o.status==='ready'));
+  const columns = [['🆕 New', pending, '#FBF2E1'], ['✓ Accepted', accepted, '#EDE0C8'], ['🔥 Preparing', preparing, '#F3D9B1'], ['✅ Ready', ready, '#CFE7DC']];
+  return `<div class="app-frame-wide" style="min-height:100vh">
+    <div class="topbar" style="display:flex;justify-content:space-between;align-items:center">
+      <div><div class="display" style="font-size:19px">Filter — Kitchen</div><div style="font-size:11px;color:var(--coffee-500)">${esc(state.profile?.full_name||'')}</div></div>
+      <div style="display:flex;align-items:center;gap:8px">
+        ${renderInstallIconBtn()}
+        ${renderBell()}
+        ${!state.pushEnabled && pushSupported() ? `<button class="btn btn-ghost btn-sm" onclick="enablePushNotifications()">Alerts</button>` : ''}
+        <button class="btn btn-ghost btn-sm" onclick="signOut()">Sign out</button>
+      </div>
+    </div>
+    ${state.notifPanelOpen ? renderNotifPanel() : ''}
+    <div style="padding:16px 0 16px 18px;overflow-x:auto">
+      <div style="display:flex;gap:14px;padding-right:18px">
+        ${columns.map(([title, orders, bg]) => `<div style="min-width:270px;max-width:270px;flex-shrink:0">
+          <div style="background:${bg};border-radius:16px 16px 0 0;padding:12px 16px;font-weight:700;font-size:14px;display:flex;justify-content:space-between">
+            <span>${title}</span><span>${orders.length}</span>
+          </div>
+          <div style="display:flex;flex-direction:column;gap:10px;background:rgba(230,217,194,.45);padding:10px;border-radius:0 0 16px 16px;min-height:80px">
+            ${orders.length ? orders.map(o=>renderWorkerOrderCard(o)).join('') : `<div style="text-align:center;padding:20px 8px;color:var(--coffee-500);font-size:13px">Nothing here</div>`}
+          </div>
+        </div>`).join('')}
+      </div>
+    </div>
+  </div>`;
+}
+function renderWorkerOrderCard(o){
+  const nextStatus = { pending: 'accepted', accepted: 'preparing', preparing: 'ready', ready: 'completed' }[o.status];
+  const nextLabel = { pending: 'Accept', accepted: 'Start Preparing', preparing: 'Mark Ready', ready: 'Complete' }[o.status];
+  const urgency = orderUrgencyMinutes(o);
+  const urgent = urgency <= 10 && o.status !== 'ready';
+  return `<div class="card" data-order-id="${o.id}" style="padding:12px;${urgent?'border-color:var(--danger)':''}">
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px">
+      <div style="font-weight:700;font-size:14px">#${o.order_number}</div>
+      ${urgent ? `<span class="badge cancelled">⏱ ${urgency<=0?'DUE NOW':urgency+'m'}</span>` : `<span style="font-size:11px;color:var(--coffee-500)">${o.pickup_time||''}</span>`}
+    </div>
+    <div style="font-size:12px;color:var(--coffee-500);margin-bottom:8px">${esc(o.profiles?.full_name||'Customer')}</div>
+    <div style="font-size:12.5px;margin-bottom:8px">${(o.order_items||[]).map(oi=>`${oi.quantity}× ${esc(oi.product_name)}${oi.size_name?` (${esc(oi.size_name)})`:''}${(oi.order_item_options||[]).length?' — '+oi.order_item_options.map(c=>esc(c.choice_name)).join(', '):''}`).join('<br>')}</div>
+    ${o.special_instructions?`<div style="font-size:11.5px;font-style:italic;color:var(--caramel-dark);margin-bottom:8px">"${esc(o.special_instructions)}"</div>`:''}
+    <div style="display:flex;gap:6px">
+      <button class="btn btn-outline" style="flex:1;font-size:11px;padding:7px" onclick="setState({orderDetailId:'${o.id}'})">Details</button>
+      ${nextStatus ? `<button class="btn btn-primary" style="flex:2;font-size:11px;padding:7px" onclick="updateOrderStatus('${o.id}','${nextStatus}')">${nextLabel}</button>` : ''}
+      ${canCancel(o) ? `<button class="btn btn-ghost" style="font-size:16px;padding:0;min-width:44px;color:var(--danger);background:rgba(230,217,194,.5)" aria-label="Cancel order" title="Cancel order" onclick="cancelOrder('${o.id}')">✕</button>` : ''}
+    </div>
+  </div>`;
+}
+function canCancel(o){
+  const role = state.profile?.role;
+  return (role === 'admin' || role === 'worker') && o && o.status !== 'completed' && o.status !== 'cancelled';
+}
+async function cancelOrder(id){
+  const o = state.workerOrders.find(x => x.id === id);
+  if (!confirm(`Cancel order #${o?.order_number || ''}? The customer will be notified${o?.payment_confirmed ? ' and any points from this order will be taken back' : ''}.`)) return;
+  const reasonRaw = prompt('Reason for cancelling (optional, shown to the customer):', '');
+  if (reasonRaw === null) return;
+  const reason = reasonRaw.trim().slice(0, 200);
+  // Optimistic: fade the card out and drop it from active lists right away.
+  const prev = o ? { status: o.status, cancel_reason: o.cancel_reason } : null;
+  document.querySelectorAll(`[data-order-id="${id}"]`).forEach(el => el.classList.add('fade-out'));
+  if (o) { o.status = 'cancelled'; o.cancel_reason = reason || null; }
+  if (state.orderDetailId === id) state.orderDetailId = null;
+  setTimeout(() => render(), 220);
+  const { error } = await sb.from('orders').update({ status: 'cancelled', cancel_reason: reason || null }).eq('id', id);
+  if (error) {
+    if (o && prev) Object.assign(o, prev);
+    showToast(error.message, 'err'); render(); return;
+  }
+  showToast(`Order #${o?.order_number || ''} cancelled`, 'ok');
+  await loadWorkerOrders(); render();
+}
+async function updateOrderStatus(id, status){
+  const { error } = await sb.from('orders').update({ status, assigned_worker_id: state.session.user.id }).eq('id', id);
+  if (error) return showToast(error.message);
+  await loadWorkerOrders(); render();
+}
+
+// ================= ADMIN VIEW =================
+function renderAdminMoreSheet(tabs){
+  const fresh = !state._moreShown; state._moreShown = true;
+  return `<div class="scrim" onclick="if(event.target===this) closeAdminMore()"><div class="sheet ${fresh?'':'no-anim'}" style="max-width:480px">
+    <div style="display:flex;justify-content:space-between;align-items:center"><div class="display" style="font-size:22px">All sections</div><button class="btn btn-ghost btn-sm" onclick="closeAdminMore()" aria-label="Close">Close</button></div>
+    <div class="admin-more-grid">${tabs.map(([k,l,i])=>`<button class="admin-more-tile ${state.adminTab===k?'active':''}" onclick="closeAdminMore('${k}')"><span class="ic">${i}</span>${l}</button>`).join('')}</div>
+  </div></div>`;
+}
+function closeAdminMore(tab){ state._moreShown=false; const u={adminMoreOpen:false}; if(tab) u.adminTab=tab; setState(u); window.scrollTo(0,0); }
+function renderAdmin(){
+  const tabs = [['dashboard','Today','☕'],['orders','Orders','🧾'],['menu','Menu','📋'],['insights','Insights','📈'],['users','Customers','👥'],['promos','Promos','🏷️'],['rewards','Rewards','⭐'],['gifts','Gifts','🎁'],['missions','Missions','🎯'],['settings','Settings','⚙️']];
+  const primary = tabs.slice(0,3); const cur = tabs.find(t=>t[0]===state.adminTab)||tabs[0]; const inMore = !primary.some(t=>t[0]===state.adminTab);
+  let body = '';
+  if (state.adminTab==='dashboard') body = renderAdminDashboard();
+  else if (state.adminTab==='insights') body = renderAdminInsights();
+  else if (state.adminTab==='menu') body = renderAdminMenu();
+  else if (state.adminTab==='orders') body = renderAdminOrders();
+  else if (state.adminTab==='promos') body = renderAdminPromos();
+  else if (state.adminTab==='rewards') body = renderAdminRewards();
+  else if (state.adminTab==='gifts') body = renderAdminGifts();
+  else if (state.adminTab==='missions') body = renderAdminMissions();
+  else if (state.adminTab==='users') body = renderAdminUsers();
+  else if (state.adminTab==='settings') body = renderAdminSettings();
+  return `<div class="app-frame-wide" style="min-height:100vh">
+    <div class="topbar" style="display:flex;justify-content:space-between;align-items:center">
+      <div style="min-width:0"><div class="display" style="font-size:19px;line-height:1.2;white-space:nowrap">Filter <span style="color:var(--coffee-500);font-weight:500">Owner</span></div><div class="meta">${esc(state.profile?.full_name||'')} <span class="ver">v${APP_BUILD.slice(5)}</span></div></div>
+      <div style="display:flex;align-items:center;gap:8px">
+        ${renderInstallIconBtn()}
+        ${renderBell()}
+        ${!state.pushEnabled && pushSupported() ? `<button class="btn btn-ghost btn-sm" onclick="enablePushNotifications()">Alerts</button>` : ''}
+        <button class="btn btn-ghost btn-sm" onclick="signOut()">Sign out</button>
+      </div>
+    </div>
+    ${state.notifPanelOpen ? renderNotifPanel() : ''}
+    <nav class="admin-nav" aria-label="Admin sections">${primary.map(([k,l,i])=>`<button class="admin-nav-btn ${state.adminTab===k?'active':''}" ${state.adminTab===k?'aria-current="page"':''} onclick="setState({adminTab:'${k}'})"><span class="ic">${i}</span>${l}</button>`).join('')}<button class="admin-nav-btn ${inMore?'active':''}" onclick="setState({adminMoreOpen:true})"><span class="ic">${inMore?cur[2]:'☰'}</span>${inMore?cur[1]:'More'}</button></nav>
+    ${state.adminMoreOpen ? renderAdminMoreSheet(tabs) : ''}
+    <div class="admin-body">${body}</div>
+  </div>`;
+}
+function renderAdminDashboard(){
+  const orders = state.workerOrders;
+  const completed = orders.filter(o=>o.status==='completed');
+  const totalSales = completed.reduce((s,o)=>s+Number(o.total),0);
+  const today = localDateStr(new Date());
+  const todayOrders = orders.filter(o=>localDateStr(new Date(o.created_at))===today);
+  const productCounts = {};
+  completed.forEach(o=>(o.order_items||[]).forEach(oi=>{ productCounts[oi.product_name]=(productCounts[oi.product_name]||0)+oi.quantity; }));
+  const topProducts = Object.entries(productCounts).sort((a,b)=>b[1]-a[1]).slice(0,5);
+  const last7 = {};
+  for(let i=6;i>=0;i--){ const d=new Date(); d.setDate(d.getDate()-i); last7[localDateStr(d)]=0; }
+  completed.forEach(o=>{ const d=localDateStr(new Date(o.created_at)); if(d in last7) last7[d]+=Number(o.total); });
+  const maxDay = Math.max(...Object.values(last7),1);
+  const hr=new Date().getHours(); const greet = hr<12?'Good morning':hr<17?'Good afternoon':'Good evening';
+  return `
+    <div style="margin:4px 0 16px"><div class="meta">${new Date().toLocaleDateString([],{weekday:'long',day:'numeric',month:'long'})}</div><div class="display" style="font-size:24px;margin-top:2px">${greet}, ${esc((state.profile?.full_name||'').split(' ')[0]||'there')}</div></div>
+    <div class="stat-grid" style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:16px">
+      ${statCard('Total sales', money(totalSales))}
+      ${statCard('All orders', orders.length)}
+      ${statCard("Today", todayOrders.length)}
+      ${statCard('In progress', orders.filter(o=>['pending','accepted','preparing'].includes(o.status)).length)}
+    </div>
+    <div class="card" style="padding:16px;margin-bottom:16px">
+      <h3 class="display" style="margin:0 0 16px;font-size:17px">Last 7 days</h3>
+      <div style="display:flex;align-items:flex-end;gap:6px;height:100px">
+        ${Object.entries(last7).map(([d,v])=>`<div style="flex:1;display:flex;flex-direction:column;align-items:center;gap:4px">
+          <div style="width:100%;background:${d===today?'var(--coffee-900)':'var(--caramel)'};opacity:${v?1:.35};border-radius:6px 6px 2px 2px;height:${Math.max(4,v/maxDay*80)}px"></div>
+          <span style="font-size:11px;color:var(--coffee-500);font-weight:${d===today?700:500}">${new Date(d+'T12:00').toLocaleDateString([],{weekday:'short'})}</span>
+        </div>`).join('')}
+      </div>
+    </div>
+    <div class="card" style="padding:16px">
+      <h3 class="display" style="margin:0 0 8px;font-size:17px">Most popular</h3>
+      ${topProducts.length ? topProducts.map(([name,qty],i)=>`<div style="display:flex;justify-content:space-between;padding:10px 0;${i<topProducts.length-1?'border-bottom:1px solid var(--line)':''};font-size:14px"><span>${i+1}. ${esc(name)}</span><b>${qty} sold</b></div>`).join('') : `<div style="color:var(--coffee-500);font-size:13px">No completed orders yet.</div>`}
+    </div>`;
+}
+function statCard(label,val){ return `<div class="card" style="padding:16px"><div style="font-size:12px;color:var(--coffee-500);font-weight:600">${label}</div><div class="display" style="font-size:26px;margin-top:6px">${val}</div></div>`; }
+
+// ================= FILTER INSIGHTS =================
+function renderAdminInsights(){
+  const orders = state.workerOrders.filter(o=>o.payment_confirmed);
+  if (!orders.length) return `<div class="card" style="padding:24px;text-align:center;color:var(--coffee-500)">Insights will appear here once you have a few paid orders.</div>`;
+
+  const avgOrder = orders.reduce((s,o)=>s+Number(o.total),0) / orders.length;
+  const byDay = {};
+  const byHour = Array(24).fill(0);
+  const byCustomer = {};
+  orders.forEach(o => {
+    const d = new Date(o.created_at);
+    const day = d.toLocaleDateString([], { weekday: 'long' });
+    byDay[day] = (byDay[day]||0) + Number(o.total);
+    byHour[d.getHours()] += 1;
+    const cust = o.customer_id;
+    byCustomer[cust] = (byCustomer[cust]||0) + 1;
+  });
+  const bestDay = Object.entries(byDay).sort((a,b)=>b[1]-a[1])[0];
+  const worstDay = Object.entries(byDay).sort((a,b)=>a[1]-b[1])[0];
+  const peakHourIdx = byHour.indexOf(Math.max(...byHour));
+  const quietHourIdx = byHour.findIndex((v,i) => v === Math.min(...byHour.filter((x,j)=>byHour[j]>0 || true)) );
+  const repeatCustomers = Object.values(byCustomer).filter(c=>c>1).length;
+  const totalCustomers = Object.keys(byCustomer).length;
+  const repeatRate = totalCustomers ? Math.round(repeatCustomers/totalCustomers*100) : 0;
+
+  const productCounts = {};
+  orders.forEach(o => (o.order_items||[]).forEach(oi => productCounts[oi.product_name] = (productCounts[oi.product_name]||0) + oi.quantity));
+  const topProducts = Object.entries(productCounts).sort((a,b)=>b[1]-a[1]);
+  const slowProduct = topProducts[topProducts.length-1];
+
+  const recommendations = [];
+  if (worstDay && bestDay && worstDay[0] !== bestDay[0]) recommendations.push(`${worstDay[0]}s are your slowest — consider a small promo or drop that day to even out demand.`);
+  if (topProducts[0]) recommendations.push(`${topProducts[0][0]} is your best seller — feature it prominently or bundle it with slower items.`);
+  if (slowProduct && topProducts.length > 3) recommendations.push(`${slowProduct[0]} sells the least — consider a limited-time discount to move it, or retire it.`);
+  if (repeatRate < 30 && totalCustomers >= 5) recommendations.push(`Only ${repeatRate}% of customers have ordered more than once — a loyalty mission or gift milestone could help bring them back.`);
+  if (peakHourIdx >= 0) recommendations.push(`Your busiest hour is around ${peakHourIdx}:00 — make sure pickup slots have enough capacity then.`);
+
+  const hr=new Date().getHours(); const greet = hr<12?'Good morning':hr<17?'Good afternoon':'Good evening';
+  return `
+    <div style="margin:4px 0 16px"><div class="meta">${new Date().toLocaleDateString([],{weekday:'long',day:'numeric',month:'long'})}</div><div class="display" style="font-size:24px;margin-top:2px">${greet}, ${esc((state.profile?.full_name||'').split(' ')[0]||'there')}</div></div>
+    <div class="stat-grid" style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:16px">
+      ${statCard('Avg Order Value', money(avgOrder))}
+      ${statCard('Repeat Customer Rate', repeatRate+'%')}
+      ${statCard('Best Day', bestDay?bestDay[0]:'—')}
+      ${statCard('Peak Hour', peakHourIdx>=0?peakHourIdx+':00':'—')}
+    </div>
+    <div class="card" style="padding:16px;margin-bottom:16px">
+      <h3 style="margin:0 0 12px;font-size:14px">Orders by Hour</h3>
+      <div style="display:flex;align-items:flex-end;gap:2px;height:70px">
+        ${byHour.map((v,i)=>`<div style="flex:1;background:${i===peakHourIdx?'var(--caramel-dark)':'var(--caramel-light)'};border-radius:2px 2px 0 0;height:${v?Math.max(4,v/Math.max(...byHour)*60):2}px" title="${i}:00 — ${v} orders"></div>`).join('')}
+      </div>
+      <div style="display:flex;justify-content:space-between;font-size:9px;color:var(--coffee-500);margin-top:4px"><span>12am</span><span>12pm</span><span>11pm</span></div>
+    </div>
+    <div class="card" style="padding:16px;margin-bottom:16px">
+      <h3 style="margin:0 0 10px;font-size:14px">💡 Recommendations</h3>
+      ${recommendations.length ? recommendations.map(r=>`<div style="padding:8px 0;border-bottom:1px solid var(--line);font-size:13px;color:var(--coffee-700)">${esc(r)}</div>`).join('') : `<div style="font-size:13px;color:var(--coffee-500)">Not enough data yet for recommendations.</div>`}
+    </div>`;
+}
+
+// ================= MISSIONS (admin) =================
+async function refreshAdminMissions(){ const { data } = await sb.from('missions').select('*').order('created_at', { ascending: false }); state.adminMissions = data || []; }
+function renderAdminMissions(){
+  setTimeout(async () => { await refreshAdminMissions(); const el = document.getElementById('missions-body'); if (el) el.outerHTML = adminMissionsBodyHtml(); }, 0);
+  return `<div id="missions-body">${adminMissionsBodyHtml()}</div>`;
+}
+function adminMissionsBodyHtml(){
+  return `<div class="card" style="padding:16px;margin-bottom:16px">
+    <h3 style="margin:0 0 4px;font-size:15px">🏆 Loyalty Missions</h3>
+    <p style="font-size:12.5px;color:var(--coffee-500);margin:0 0 14px">Bonus-point challenges customers can complete — e.g. "Order 3 times this month" or "Spend Rs 1000 total."</p>
+    <div style="display:flex;flex-direction:column;gap:8px;margin-bottom:14px">
+      ${(state.adminMissions||[]).map(m=>`<div class="card" style="padding:12px;display:flex;justify-content:space-between;align-items:center">
+        <div><b>${esc(m.title)}</b><div style="font-size:12px;color:var(--coffee-500)">${m.goal_type==='order_count'?m.goal_target+' orders':'Spend Rs '+m.goal_target} · +${m.reward_points} pts</div></div>
+        <div style="display:flex;gap:6px">
+          <button class="btn ${m.is_active?'btn-ghost':'btn-outline'}" style="font-size:11px;padding:6px 10px" onclick="toggleMission('${m.id}',${m.is_active})">${m.is_active?'Pause':'Activate'}</button>
+          <button class="btn btn-sm link-danger" style="padding:0 8px" onclick="deleteMission(\'${m.id}\')">Delete</button>
+        </div>
+      </div>`).join('') || `<div style="font-size:13px;color:var(--coffee-500)">No missions yet — add one below.</div>`}
+    </div>
+    <div style="display:flex;flex-direction:column;gap:10px">
+      <input class="input" id="ms2-title" placeholder="Mission title (e.g. Weekly Regular)">
+      <select class="input" id="ms2-type"><option value="order_count">Orders placed</option><option value="spend_amount">Total Rs spent</option></select>
+      <input class="input" id="ms2-target" type="number" min="1" placeholder="Target (e.g. 3 orders, or 1000 Rs)">
+      <input class="input" id="ms2-reward" type="number" min="0" placeholder="Bonus points reward">
+      <button class="btn btn-primary" style="width:100%" onclick="createMission()">+ Add Mission</button>
+    </div>
+  </div>`;
+}
+async function createMission(){
+  const title = document.getElementById('ms2-title').value.trim();
+  const goal_type = document.getElementById('ms2-type').value;
+  const goal_target = Number(document.getElementById('ms2-target').value);
+  const reward_points = Number(document.getElementById('ms2-reward').value) || 0;
+  if (!title || !goal_target) { showToast('Enter a title and target', 'err'); return; }
+  const { error } = await sb.from('missions').insert({ title, goal_type, goal_target, reward_points });
+  if (error) { showToast(error.message, 'err'); return; }
+  showToast('Mission added', 'ok');
+  await refreshAdminMissions();
+  const el = document.getElementById('missions-body'); if (el) el.outerHTML = adminMissionsBodyHtml();
+}
+async function toggleMission(id, cur){
+  await sb.from('missions').update({ is_active: !cur }).eq('id', id);
+  await refreshAdminMissions();
+  const el = document.getElementById('missions-body'); if (el) el.outerHTML = adminMissionsBodyHtml();
+}
+async function deleteMission(id){
+  if (!confirm('Delete this mission?')) return;
+  await sb.from('missions').delete().eq('id', id);
+  await refreshAdminMissions();
+  const el = document.getElementById('missions-body'); if (el) el.outerHTML = adminMissionsBodyHtml();
+}
+
+function renderAdminMenu(){
+  return `<button class="btn btn-primary" style="margin-bottom:16px" onclick="openAdminProductEditor(null)">+ Add Product</button>
+    <div style="display:flex;flex-direction:column;gap:10px">
+      ${state.products.map(p=>`<div class="card" style="padding:12px;display:flex;justify-content:space-between;align-items:center;gap:10px">
+        <div>
+          <div style="font-weight:700;font-size:14px">${esc(p.name)} ${!p.is_available?'<span style=\"color:var(--danger);font-size:11px\">(unavailable)</span>':''}</div>
+          <div style="font-size:12px;color:var(--coffee-500)">${esc(state.categories.find(c=>c.id===p.category_id)?.name||'Uncategorized')} · ${money(p.base_price)}</div>
+        </div>
+        <div style="display:flex;gap:8px;align-items:center;flex-shrink:0">
+          <button class="btn btn-ghost btn-sm" onclick="toggleAvailability('${p.id}',${p.is_available})">${p.is_available?'Hide':'Show'}</button>
+          <button class="btn btn-outline btn-sm" onclick="openAdminProductEditor('${p.id}')">Edit</button>
+          <button class="btn btn-sm link-danger" style="padding:0 8px" onclick="deleteProduct(\'${p.id}\')">Delete</button>
+        </div>
+      </div>`).join('')}
+    </div>
+    <h3 style="margin:24px 0 10px;font-size:14px">Categories</h3>
+    <div style="display:flex;gap:8px;margin-bottom:10px">
+      <input class="input" id="new-cat" placeholder="New category name">
+      <button class="btn btn-outline" onclick="addCategory()">Add</button>
+    </div>
+    <div class="scrollx">${state.categories.map(c=>`<span class="chip">${esc(c.name)} <button onclick="deleteCategory('${c.id}')" style="border:none;background:none;color:var(--danger);margin-left:4px;cursor:pointer">✕</button></span>`).join('')}</div>`;
+}
+async function toggleAvailability(id, cur){ await sb.from('products').update({ is_available: !cur }).eq('id', id); await refreshProducts(); render(); }
+async function deleteProduct(id){ if(!confirm('Delete this product permanently?'))return; await sb.from('products').delete().eq('id', id); await refreshProducts(); render(); }
+async function addCategory(){ const v=document.getElementById('new-cat').value.trim(); if(!v)return; await sb.from('categories').insert({name:v, sort_order: state.categories.length+1}); await refreshCategories(); render(); }
+async function deleteCategory(id){ if(!confirm('Delete category?'))return; await sb.from('categories').delete().eq('id', id); await refreshCategories(); render(); }
+
+function openAdminProductEditor(id){
+  const p = id ? state.products.find(x=>x.id===id) : { name:'',description:'',base_price:0,category_id:state.categories[0]?.id,image_url:'',is_available:true,is_featured:false,is_hot:false,is_iced:false,prep_time_minutes:5,product_sizes:[],product_option_groups:[] };
+  state.adminEditProduct = { ...p, id };
+  render();
+  document.body.insertAdjacentHTML('beforeend', adminProductEditorHtml());
+}
+function adminProductEditorHtml(){
+  const p = state.adminEditProduct;
+  return `<div class="scrim" id="pe-scrim" onclick="if(event.target===this) closeAdminEditor()"><div class="sheet">
+    <h2 class="display" style="margin:0 0 16px;font-size:20px">${p.id?'Edit':'New'} Product</h2>
+
+    <label class="small">Photo</label>
+    <div style="margin:8px 0 16px">
+      <div id="pe-img-preview-wrap" style="height:140px;border-radius:16px;background:${p.image_url?`url('${esc(p.image_url)}') center/cover`:'linear-gradient(135deg,#EFE0C4,var(--caramel-light))'};display:flex;align-items:center;justify-content:center;margin-bottom:8px;position:relative;overflow:hidden">
+        ${!p.image_url ? `<span style="font-size:32px;opacity:.6">📷</span>` : ''}
+        <div id="pe-upload-spinner" style="display:none;position:absolute;inset:0;background:rgba(42,24,15,.4);align-items:center;justify-content:center"><div class="spinner" style="border-color:rgba(255,255,255,.4);border-top-color:#fff"></div></div>
+      </div>
+      <input type="hidden" id="pe-img" value="${esc(p.image_url||'')}">
+      <div style="display:flex;gap:8px">
+        <label class="btn btn-outline" style="flex:1;text-align:center;cursor:pointer">
+          📤 ${p.image_url?'Change Photo':'Upload Photo'}
+          <input type="file" id="pe-img-file" accept="image/*" style="display:none" onchange="handleProductImageChange(this)">
+        </label>
+        ${p.image_url?`<button class="btn btn-ghost" onclick="clearProductImage()">Remove</button>`:''}
+      </div>
+    </div>
+
+    <label class="small">Name</label><input class="input" id="pe-name" value="${esc(p.name)}" oninput="state.adminEditProduct.name=this.value" style="margin:6px 0 12px">
+    <label class="small">Description</label><textarea class="input" id="pe-desc" oninput="state.adminEditProduct.description=this.value" style="margin:6px 0 12px" placeholder="A short, appetizing line about this drink">${esc(p.description||'')}</textarea>
+    <label class="small">Category</label><select class="input" id="pe-cat" onchange="state.adminEditProduct.category_id=this.value" style="margin:6px 0 12px">${state.categories.map(c=>`<option value="${c.id}" ${c.id===p.category_id?'selected':''}>${esc(c.name)}</option>`).join('')}</select>
+    <label class="small">Base Price (Rs)</label><input class="input" id="pe-price" type="number" step="1" min="0" value="${p.base_price}" oninput="state.adminEditProduct.base_price=this.value" style="margin:6px 0 12px">
+    <div style="display:flex;gap:14px;margin-bottom:4px;font-size:13px;flex-wrap:wrap">
+      <label><input type="checkbox" id="pe-avail" ${p.is_available?'checked':''} onchange="state.adminEditProduct.is_available=this.checked"> Available</label>
+      <label><input type="checkbox" id="pe-feat" ${p.is_featured?'checked':''} onchange="state.adminEditProduct.is_featured=this.checked"> Featured</label>
+      <label><input type="checkbox" id="pe-hot" ${p.is_hot?'checked':''} onchange="state.adminEditProduct.is_hot=this.checked"> Served Hot</label>
+      <label><input type="checkbox" id="pe-iced" ${p.is_iced?'checked':''} onchange="state.adminEditProduct.is_iced=this.checked"> Served Iced</label>
+    </div>
+    <p style="font-size:11px;color:var(--coffee-500);margin:0 0 12px">Leave "Served Hot/Iced" unchecked for food items — they only affect the 🔥/🧊 filters on drinks.</p>
+
+    ${p.id ? `<div style="margin:20px 0 4px;padding-top:16px;border-top:1px solid var(--line)">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:4px">
+        <label class="small">Add-ons & Options</label>
+        <button class="btn btn-ghost" style="padding:5px 10px;font-size:11px" onclick="promptAddOptionGroup()">+ New Group</button>
+      </div>
+      <p style="font-size:11.5px;color:var(--coffee-500);margin:0 0 12px">e.g. Milk Type, Sweetness, Extra Shot. Customers choose these when ordering — prices here add on top of the base price.</p>
+      ${(p.product_option_groups||[]).length ? p.product_option_groups.map(g=>`
+        <div class="card" style="padding:12px;margin-bottom:10px">
+          <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px">
+            <b style="font-size:13px">${esc(g.name)}${g.is_required?' · Required':' · Optional'}</b>
+            <button class="btn btn-danger" style="padding:4px 8px;font-size:11px" onclick="deleteOptionGroup('${g.id}')">Delete Group</button>
+          </div>
+          ${(g.product_option_choices||[]).map(c=>`
+            <div style="display:flex;align-items:center;gap:8px;margin-bottom:8px">
+              <span style="flex:1;font-size:12.5px">${esc(c.name)}${c.is_default?' <span style=\"color:var(--sage)\">(default)</span>':''}</span>
+              <span style="font-size:11px;color:var(--coffee-500)">+Rs</span>
+              <input class="input" type="number" step="1" value="${c.price_modifier}" style="width:76px;padding:7px 8px;font-size:12px" onchange="updateChoicePrice('${c.id}', this.value)">
+              <button class="btn btn-ghost" style="padding:5px 8px;font-size:11px" onclick="deleteOptionChoice('${c.id}')">✕</button>
+            </div>`).join('')}
+          <button class="btn btn-outline" style="width:100%;margin-top:4px;padding:7px;font-size:11.5px" onclick="promptAddOptionChoice('${g.id}')">+ Add Choice</button>
+        </div>`).join('') : `<div style="font-size:12.5px;color:var(--coffee-500);margin-bottom:8px">No add-on groups yet — try "Milk Type" or "Sweetness".</div>`}
+    </div>` : `<p style="font-size:11.5px;color:var(--coffee-500);margin:16px 0 4px">Save this product first, then reopen it to add customization options like Milk Type.</p>`}
+
+    <div style="display:flex;gap:10px;margin-top:16px">
+      <button class="btn btn-outline" style="flex:1" onclick="closeAdminEditor()">Cancel</button>
+      <button class="btn btn-primary" style="flex:2" id="pe-save-btn" onclick="saveAdminProduct()">Save Product</button>
+    </div>
+  </div></div>`;
+}
+async function uploadProductImage(file){
+  const ext = ((file.name.split('.').pop() || 'jpg').toLowerCase().replace(/[^a-z0-9]/g, '')) || 'jpg';
+  const path = `products/${Date.now()}-${Math.random().toString(36).slice(2, 8)}.${ext}`;
+  const resp = await doFetch(`${SUPABASE_URL}/storage/v1/object/product-images/${path}`, {
+    method: 'POST',
+    headers: { 'apikey': SUPABASE_KEY, 'Authorization': `Bearer ${state.session.access_token}`, 'Content-Type': file.type || 'application/octet-stream', 'x-upsert': 'true' },
+    body: file,
+  });
+  if (!resp.ok) { const j = await parseJsonSafe(resp); throw new Error((j && (j.message || j.error)) || 'Upload failed'); }
+  return `${SUPABASE_URL}/storage/v1/object/public/product-images/${path}`;
+}
+async function handleProductImageChange(input){
+  const file = input.files[0]; if (!file) return;
+  if (!file.type.startsWith('image/')) { showToast('Please choose an image file', 'err'); return; }
+  if (file.size > 8 * 1024 * 1024) { showToast('Image must be under 8MB', 'err'); return; }
+  const spinner = document.getElementById('pe-upload-spinner');
+  const wrap = document.getElementById('pe-img-preview-wrap');
+  if (spinner) spinner.style.display = 'flex';
+  try {
+    const url = await uploadProductImage(file);
+    document.getElementById('pe-img').value = url;
+    state.adminEditProduct.image_url = url;
+    if (wrap) { wrap.style.background = `url('${url}') center/cover`; wrap.querySelector('span')?.remove(); }
+    showToast('Photo uploaded', 'ok');
+  } catch (e) { showToast('Upload failed: ' + e.message, 'err'); }
+  finally { if (spinner) spinner.style.display = 'none'; }
+}
+function clearProductImage(){
+  document.getElementById('pe-img').value = ''; delete _typed['pe-img'];
+  state.adminEditProduct.image_url = '';
+  const wrap = document.getElementById('pe-img-preview-wrap');
+  if (wrap) { wrap.style.background = 'linear-gradient(135deg,#EFE0C4,var(--caramel-light))'; if (!wrap.querySelector('span')) wrap.insertAdjacentHTML('afterbegin', `<span style="font-size:32px;opacity:.6">📷</span>`); }
+}
+function closeAdminEditor(){ const el = document.getElementById('pe-scrim'); if (el) el.remove(); state.adminEditProduct=null; }
+async function refreshEditingProduct(){
+  const id = state.adminEditProduct.id;
+  const { data } = await sb.from('products').select('product_sizes(*), product_option_groups(*, product_option_choices(*))').eq('id', id).single();
+  // Only refresh the add-ons/sizes data (the thing that actually just changed).
+  // Name/description/price/etc are left untouched in case they're mid-edit.
+  if (data) {
+    state.adminEditProduct.product_sizes = data.product_sizes;
+    state.adminEditProduct.product_option_groups = data.product_option_groups;
+  }
+}
+async function reopenEditor(){
+  await refreshEditingProduct();
+  const el = document.getElementById('pe-scrim');
+  if (el) el.outerHTML = adminProductEditorHtml();
+  await refreshProducts();
+}
+async function promptAddOptionGroup(){
+  const name = prompt('Group name (e.g. Milk Type, Sweetness):'); if (!name) return;
+  const required = confirm('Should customers be required to pick one? (OK = yes, Cancel = optional)');
+  const { error } = await sb.from('product_option_groups').insert({ product_id: state.adminEditProduct.id, name, is_required: required, max_selections: 1, sort_order: (state.adminEditProduct.product_option_groups||[]).length + 1 });
+  if (error) { showToast(error.message, 'err'); return; }
+  await reopenEditor();
+  showToast('Group added', 'ok');
+}
+async function deleteOptionGroup(id){
+  if (!confirm('Delete this whole group and its choices?')) return;
+  await sb.from('product_option_groups').delete().eq('id', id);
+  await reopenEditor();
+  showToast('Group deleted', 'ok');
+}
+async function promptAddOptionChoice(groupId){
+  const name = prompt('Choice name (e.g. Oat Milk):'); if (!name) return;
+  const price = Number(prompt('Extra price (Rs, 0 if free):', '0')) || 0;
+  const { error } = await sb.from('product_option_choices').insert({ group_id: groupId, name, price_modifier: price });
+  if (error) { showToast(error.message, 'err'); return; }
+  await reopenEditor();
+  showToast('Choice added', 'ok');
+}
+async function updateChoicePrice(id, value){
+  const price = Number(value) || 0;
+  const { error } = await sb.from('product_option_choices').update({ price_modifier: price }).eq('id', id);
+  if (error) { showToast(error.message, 'err'); return; }
+  await refreshProducts();
+  showToast('Price updated', 'ok');
+}
+async function deleteOptionChoice(id){
+  await sb.from('product_option_choices').delete().eq('id', id);
+  await reopenEditor();
+  showToast('Choice removed', 'ok');
+}
+async function saveAdminProduct(){
+  const btn = document.getElementById('pe-save-btn');
+  if (btn) { btn.disabled = true; btn.innerHTML = `<div class="spinner" style="border-color:rgba(255,255,255,.35);border-top-color:#fff"></div>`; }
+  const payload = {
+    name: document.getElementById('pe-name').value.trim(),
+    description: document.getElementById('pe-desc').value.trim(),
+    category_id: document.getElementById('pe-cat').value,
+    base_price: Number(document.getElementById('pe-price').value)||0,
+    image_url: document.getElementById('pe-img').value.trim(),
+    is_available: document.getElementById('pe-avail').checked,
+    is_featured: document.getElementById('pe-feat').checked,
+    is_hot: document.getElementById('pe-hot').checked,
+    is_iced: document.getElementById('pe-iced').checked,
+  };
+  if (!payload.name) { showToast('Please enter a name', 'err'); if (btn) { btn.disabled=false; btn.textContent='Save Product'; } return; }
+  const id = state.adminEditProduct.id;
+  const { error } = id ? await sb.from('products').update(payload).eq('id', id) : await sb.from('products').insert(payload);
+  if (error) { showToast(error.message, 'err'); if (btn) { btn.disabled=false; btn.textContent='Save Product'; } return; }
+  closeAdminEditor(); await refreshProducts(); showToast('Saved','ok'); render();
+}
+
+function adminOrdersListHtml(){
+  const q = (state.adminOrderSearch||'').toLowerCase();
+  const statusFilter = state.adminOrderStatusFilter || 'all';
+  const filtered = state.workerOrders.filter(o => {
+    if (statusFilter !== 'all' && o.status !== statusFilter) return false;
+    if (statusFilter === 'all' && o.status === 'cancelled') return false; // findable under the Cancelled chip
+    if (q && !String(o.order_number).includes(q) && !(o.profiles?.full_name||'').toLowerCase().includes(q)) return false;
+    return true;
+  });
+  return filtered.length ? filtered.map(o=>{
+    const ns={pending:'accepted',accepted:'preparing',preparing:'ready',ready:'completed'}[o.status];
+    const nl={pending:'Accept order',accepted:'Start preparing',preparing:'Mark ready',ready:'Complete order'}[o.status];
+    const who = esc(o.profiles?.full_name||(o.customer_id?'Customer':'Deleted customer'));
+    return `<div class="card order-card" data-order-id="${o.id}">
+      <div class="oc-head">
+        <div style="min-width:0">
+          <div class="oc-title"><span style="cursor:pointer" onclick="setState({orderDetailId:'${o.id}'})">#${o.order_number}</span> ${o.customer_id?`<button class="oc-who linkish" onclick="openCustomerProfile('${o.customer_id}')">${who}</button>`:`<span class="oc-who">${who}</span>`}</div>
+          <div class="meta" style="cursor:pointer" onclick="setState({orderDetailId:'${o.id}'})">${new Date(o.created_at).toLocaleString([],{month:'short',day:'numeric',hour:'numeric',minute:'2-digit'})}${o.pickup_time?` · pickup ${String(o.pickup_time).slice(0,5)}`:''} · details ›</div>
+        </div>
+        <div class="oc-total">${money(o.total)}</div>
+      </div>
+      <div class="oc-badges"><span class="badge ${o.status}">${o.status.charAt(0).toUpperCase()+o.status.slice(1)}</span><span class="badge ${o.payment_confirmed?'ready':'pending'}">${o.payment_confirmed?'Paid':'Unpaid'}</span></div>
+      ${(ns || (!o.payment_confirmed && o.status!=='cancelled')) ? `<div class="oc-actions">
+        ${ns ? `<button class="btn btn-primary btn-sm" style="flex:1" onclick="updateOrderStatus('${o.id}','${ns}')">${nl}</button>` : ''}
+        ${!o.payment_confirmed && o.status!=='cancelled' ? `<button class="btn btn-outline btn-sm" style="flex:1" onclick="confirmPayment('${o.id}')">Confirm paid</button>` : ''}
+      </div>` : ''}
+      ${canCancel(o) ? `<button class="link-danger" onclick="event.stopPropagation(); cancelOrder('${o.id}')">Cancel order</button>` : ''}
+    </div>`; }).join('') : `<div class="empty">No orders match.</div>`;
+}
+window.filterAdminOrders = function(){
+  const el = document.getElementById('admin-orders-list');
+  if (el) el.innerHTML = adminOrdersListHtml();
+};
+function renderAdminOrders(){
+  const unpaid = state.workerOrders.filter(o=>!o.payment_confirmed && o.status!=='cancelled').length;
+  const statusFilter = state.adminOrderStatusFilter || 'all';
+  const statuses = ['all','pending','accepted','preparing','ready','completed','cancelled'];
+  return `
+    ${unpaid>0 ? `<div class="card" style="padding:12px 14px;margin-bottom:14px;background:#FBF2E1;font-size:12.5px;font-weight:600;color:var(--caramel-dark)">${unpaid} order${unpaid>1?'s':''} awaiting payment confirmation</div>` : ''}
+    <input class="input" placeholder="Search by order # or customer name" value="${esc(state.adminOrderSearch||'')}" oninput="state.adminOrderSearch=this.value; filterAdminOrders()" style="margin-bottom:10px">
+    <div class="scrollx" style="margin-bottom:14px">
+      ${statuses.map(s=>`<button class="chip ${statusFilter===s?'active':''}" onclick="state.adminOrderStatusFilter='${s}'; render()">${s==='all'?'All':s.charAt(0).toUpperCase()+s.slice(1)}</button>`).join('')}
+    </div>
+    ${!state.workerOrders.some(o=>o.status!=='completed'&&o.status!=='cancelled') ? `<div class="meta" style="margin-bottom:8px">No active orders right now.</div>` : ''}
+    <div id="admin-orders-list" style="display:flex;flex-direction:column;gap:10px">${adminOrdersListHtml()}</div>
+  `;
+}
+
+function renderAdminPromos(){
+  return `<button class="btn btn-primary" style="margin-bottom:16px" onclick="promptNewPromo()">+ New Promo Code</button>
+    <div style="display:flex;flex-direction:column;gap:10px">
+      ${state.promotions.map(p=>`<div class="card" style="padding:12px;display:flex;justify-content:space-between;align-items:center">
+        <div><b>${esc(p.code)}</b><div style="font-size:12px;color:var(--coffee-500)">${p.discount_type==='percent'?p.discount_value+'% off':money(p.discount_value)+' off'} · min ${money(p.min_order_amount)} · used ${p.uses_count}${p.max_uses?'/'+p.max_uses:''}</div></div>
+        <button class="btn ${p.is_active?'btn-ghost':'btn-outline'}" style="font-size:11px" onclick="togglePromo('${p.id}',${p.is_active})">${p.is_active?'Deactivate':'Activate'}</button>
+      </div>`).join('')}
+    </div>`;
+}
+async function promptNewPromo(){
+  const code = prompt('Promo code (e.g. SUMMER20):'); if(!code) return;
+  const type = confirm('OK = percent off, Cancel = fixed Rs off') ? 'percent' : 'fixed';
+  const value = Number(prompt('Discount value (number only):','10'));
+  const min = Number(prompt('Minimum order amount (Rs):','0'))||0;
+  const isDrop = confirm('Feature this as a ⚡ Limited-Time Drop banner on the menu? (OK = yes)');
+  let endsAt = null;
+  if (isDrop) {
+    const hours = Number(prompt('How many hours should the drop banner run for?', '24')) || 24;
+    endsAt = new Date(Date.now() + hours * 3600000).toISOString();
+  }
+  await sb.from('promotions').insert({ code: code.toUpperCase(), discount_type: type, discount_value: value, min_order_amount: min, description: `${type==='percent'?value+'% off':'Rs '+value+' off'}`, is_drop: isDrop, ends_at: endsAt });
+  await refreshPromotions(); showToast('Promo created','ok'); render();
+}
+async function togglePromo(id, cur){ await sb.from('promotions').update({ is_active: !cur }).eq('id', id); await refreshPromotions(); render(); }
+
+function renderAdminRewards(){
+  return `<button class="btn btn-primary" style="margin-bottom:16px" onclick="promptNewReward()">+ New Reward</button>
+    <div style="display:flex;flex-direction:column;gap:10px">
+      ${state.rewards.map(r=>`<div class="card" style="padding:12px;display:flex;justify-content:space-between;align-items:center">
+        <div><b>${esc(r.name)}</b><div style="font-size:12px;color:var(--coffee-500)">${r.points_cost} pts</div></div>
+        <button class="btn btn-danger" style="font-size:11px" onclick="deleteReward('${r.id}')">Delete</button>
+      </div>`).join('')}
+    </div>`;
+}
+async function promptNewReward(){
+  const name = prompt('Reward name:'); if(!name) return;
+  const cost = Number(prompt('Points cost:','100'))||100;
+  await sb.from('rewards').insert({ name, points_cost: cost });
+  await refreshRewards(); showToast('Reward created','ok'); render();
+}
+async function deleteReward(id){ await sb.from('rewards').delete().eq('id', id); await refreshRewards(); render(); }
+
+// ================= GIFT MILESTONES (staff-side) =================
+async function refreshMilestones(){ const { data } = await sb.from('loyalty_milestones').select('*').order('sort_order'); state.milestones = data || []; }
+function renderAdminGifts(){
+  setTimeout(async () => { await refreshMilestones(); await loadPendingGiftClaims(); const el = document.getElementById('admin-gifts-body'); if (el) el.outerHTML = adminGiftsBodyHtml(); }, 0);
+  return `<div id="admin-gifts-body">${adminGiftsBodyHtml()}</div>`;
+}
+function adminGiftsBodyHtml(){
+  return `
+    <div class="card" style="padding:16px;margin-bottom:18px">
+      <h3 style="margin:0 0 4px;font-size:15px">🎁 Free Gift Milestones</h3>
+      <p style="font-size:12.5px;color:var(--coffee-500);margin:0 0 14px">Reward loyal customers automatically: once a customer's paid orders reach a number you choose, they unlock a free gift you define.</p>
+      <div style="display:flex;flex-direction:column;gap:8px;margin-bottom:14px">
+        ${(state.milestones||[]).map(m=>`<div class="card" style="padding:12px;display:flex;justify-content:space-between;align-items:center">
+          <div><b>${esc(m.gift_name)}</b><div style="font-size:12px;color:var(--coffee-500)">Every ${m.orders_required} paid orders${m.gift_description?' · '+esc(m.gift_description):''}</div></div>
+          <div style="display:flex;gap:6px">
+            <button class="btn ${m.is_active?'btn-ghost':'btn-outline'}" style="font-size:11px;padding:6px 10px" onclick="toggleMilestone('${m.id}',${m.is_active})">${m.is_active?'Pause':'Activate'}</button>
+            <button class="btn btn-sm link-danger" style="padding:0 8px" onclick="deleteMilestone(\'${m.id}\')">Delete</button>
+          </div>
+        </div>`).join('') || `<div style="font-size:13px;color:var(--coffee-500)">No gift tiers yet — add one below.</div>`}
+      </div>
+      <div style="display:flex;flex-direction:column;gap:10px">
+        <input class="input" id="ms-orders" type="number" min="1" placeholder="Orders required (e.g. 5)">
+        <input class="input" id="ms-gift-name" placeholder="Gift name (e.g. Free Pastry)">
+        <input class="input" id="ms-gift-desc" placeholder="Gift description (optional)">
+        <button class="btn btn-primary" style="width:100%" onclick="createMilestone()">+ Add Gift Tier</button>
+      </div>
+    </div>
+    <div class="card" style="padding:16px">
+      <h3 style="margin:0 0 4px;font-size:15px">Unclaimed Gifts</h3>
+      <p style="font-size:12.5px;color:var(--coffee-500);margin:0 0 14px">Customers who've unlocked a gift but haven't picked it up yet. Mark it given once they collect it.</p>
+      ${(state.pendingGiftClaims||[]).length ? state.pendingGiftClaims.map(g=>`<div class="card" style="padding:12px;margin-bottom:8px;display:flex;justify-content:space-between;align-items:center">
+        <div><b>${esc(g.profiles?.full_name||'Customer')}</b><div style="font-size:12px;color:var(--coffee-500)">${esc(g.loyalty_milestones?.gift_name||'Gift')} · earned ${new Date(g.granted_at).toLocaleDateString()}</div></div>
+        <button class="btn btn-primary" style="font-size:11px;padding:6px 10px" onclick="markGiftClaimed('${g.id}')">Mark Given</button>
+      </div>`).join('') : `<div style="font-size:13px;color:var(--coffee-500)">No pending gifts right now.</div>`}
+    </div>`;
+}
+async function createMilestone(){
+  const orders_required = Number(document.getElementById('ms-orders').value);
+  const gift_name = document.getElementById('ms-gift-name').value.trim();
+  const gift_description = document.getElementById('ms-gift-desc').value.trim();
+  if (!orders_required || orders_required < 1 || !gift_name) { showToast('Enter how many orders are required and the gift name', 'err'); return; }
+  const { error } = await sb.from('loyalty_milestones').insert({ orders_required, gift_name, gift_description: gift_description || null, name: gift_name, sort_order: (state.milestones||[]).length + 1 });
+  if (error) { showToast(error.message, 'err'); return; }
+  showToast('Gift tier added', 'ok');
+  await refreshMilestones();
+  const el = document.getElementById('admin-gifts-body'); if (el) el.outerHTML = adminGiftsBodyHtml();
+}
+async function toggleMilestone(id, cur){
+  await sb.from('loyalty_milestones').update({ is_active: !cur }).eq('id', id);
+  await refreshMilestones();
+  const el = document.getElementById('admin-gifts-body'); if (el) el.outerHTML = adminGiftsBodyHtml();
+}
+async function deleteMilestone(id){
+  if (!confirm('Delete this gift tier?')) return;
+  await sb.from('loyalty_milestones').delete().eq('id', id);
+  await refreshMilestones();
+  const el = document.getElementById('admin-gifts-body'); if (el) el.outerHTML = adminGiftsBodyHtml();
+}
+async function loadPendingGiftClaims(){
+  const { data } = await sb.from('milestone_redemptions').select('*, profiles(full_name), loyalty_milestones(gift_name)').eq('claimed', false).order('granted_at', { ascending: false });
+  state.pendingGiftClaims = data || [];
+}
+async function markGiftClaimed(id){
+  await sb.from('milestone_redemptions').update({ claimed: true, claimed_at: new Date().toISOString(), claimed_by: state.session.user.id }).eq('id', id);
+  showToast('Gift marked as given', 'ok');
+  await loadPendingGiftClaims();
+  const el = document.getElementById('admin-gifts-body'); if (el) el.outerHTML = adminGiftsBodyHtml();
+}
+
+function renderAdminUsers(){
+  setTimeout(loadAdminUsers, 0);
+  return `
+    <div class="card" style="padding:16px;margin-bottom:18px">
+      <h3 style="margin:0 0 4px;font-size:15px">➕ Add a Worker or Admin</h3>
+      <p style="font-size:12.5px;color:var(--coffee-500);margin:0 0 14px">Creates a ready-to-use staff login instantly — no email required, so this never hits any email limits.</p>
+      <div style="display:flex;flex-direction:column;gap:10px">
+        <input class="input" id="staff-name" placeholder="Full name">
+        <input class="input" id="staff-email" type="email" placeholder="Email">
+        <input class="input" id="staff-pass" type="password" placeholder="Temporary password (min 6 characters)">
+        <select class="input" id="staff-role">
+          <option value="worker">Worker</option>
+          <option value="admin">Admin (full owner access)</option>
+        </select>
+        <button class="btn btn-primary" style="width:100%" id="create-staff-btn" onclick="createStaffAccount()">Create Staff Login</button>
+      </div>
+    </div>
+    <h3 style="margin:0 0 10px;font-size:15px">All Accounts</h3>
+    <input class="input" id="admin-user-search" placeholder="Search by name or phone" value="${esc(state.adminUserSearch||'')}" oninput="state.adminUserSearch=this.value; renderAdminUsersList()" style="margin-bottom:10px">
+    <div id="admin-users-list">Loading users...</div>`;
+}
+async function createStaffAccount(){
+  const name = document.getElementById('staff-name').value.trim();
+  const email = document.getElementById('staff-email').value.trim();
+  const pass = document.getElementById('staff-pass').value;
+  const role = document.getElementById('staff-role').value;
+  if (!name || !email || !pass) { showToast('Fill in name, email, and password', 'err'); return; }
+  if (pass.length < 6) { showToast('Password must be at least 6 characters', 'err'); return; }
+  const btn = document.getElementById('create-staff-btn');
+  btn.disabled = true; btn.innerHTML = `<div class="spinner" style="border-color:rgba(255,255,255,.35);border-top-color:#fff"></div>`;
+  try {
+    const resp = await fetch(`${SUPABASE_URL}/functions/v1/create-staff-account`, {
+      method: 'POST',
+      headers: { 'Authorization': `Bearer ${state.session.access_token}`, 'Content-Type': 'application/json' },
+      body: JSON.stringify({ email, password: pass, full_name: name, role }),
+    });
+    const json = await parseJsonSafe(resp);
+    if (!resp.ok) { showToast(json?.error || 'Could not create account', 'err'); return; }
+    showToast(`${name} can now sign in as ${role} — share their email and password with them.`, 'ok');
+    document.getElementById('staff-name').value = ''; document.getElementById('staff-email').value = ''; document.getElementById('staff-pass').value = ''; forgetTyped('staff-');
+    loadAdminUsers();
+  } catch (e) { showToast('Network error: ' + e.message, 'err'); }
+  finally { if (btn) { btn.disabled = false; btn.textContent = 'Create Staff Login'; } }
+}
+let _adminUsers = [];
+// ---- Admin: read-only customer profile sheet ----
+async function openCustomerProfile(id){
+  if (state.profile?.role !== 'admin' || !id) return;
+  setState({ customerProfile: { id, loading: true } });
+  const [pr, ords, favs, revs, email, push] = await Promise.all([
+    sb.from('profiles').select('*').eq('id', id).maybeSingle(),
+    sb.from('orders').select('*, order_items(*, order_item_options(*))').eq('customer_id', id).order('created_at', { ascending: false }),
+    sb.from('favorites').select('product_id').eq('customer_id', id),
+    sb.from('reviews').select('*').eq('customer_id', id).order('created_at', { ascending: false }),
+    sb.rpc('admin_get_user_email', { p_user_id: id }),
+    sb.from('push_subscriptions').select('id').eq('user_id', id),
+  ]);
+  if (!state.customerProfile || state.customerProfile.id !== id) return;
+  if (!pr.data) { showToast(pr.error?.message || 'Could not load this profile', 'err'); setState({ customerProfile: null }); return; }
+  setState({ customerProfile: { id, loading: false, profile: pr.data, orders: ords.data || [], favorites: (favs.data || []).map(f => f.product_id), reviews: revs.data || [], email: typeof email.data === 'string' ? email.data : '', pushOn: (push.data || []).length > 0 } });
+}
+function renderCustomerProfileSheet(fresh){
+  const c = state.customerProfile;
+  const close = `<button class="btn btn-ghost btn-sm" aria-label="Close" onclick="setState({customerProfile:null})">✕</button>`;
+  if (c.loading) return `<div class="scrim" onclick="if(event.target===this) setState({customerProfile:null})"><div class="sheet ${fresh?'':'no-anim'}"><div style="display:flex;justify-content:space-between;align-items:center"><h2 class="display" style="margin:0;font-size:22px">Customer</h2>${close}</div><div style="display:flex;justify-content:center;padding:32px"><div class="spinner"></div></div></div></div>`;
+  const u = c.profile, paid = c.orders.filter(o => o.payment_confirmed && o.status !== 'cancelled');
+  const spent = paid.reduce((t, o) => t + Number(o.total || 0), 0);
+  const counts = {}; c.orders.forEach(o => (o.order_items || []).forEach(oi => { counts[oi.product_name] = (counts[oi.product_name] || 0) + oi.quantity; }));
+  const top = Object.entries(counts).sort((a, b) => b[1] - a[1]).slice(0, 3);
+  const favNames = c.favorites.map(id => state.products.find(p => p.id === id)?.name).filter(Boolean);
+  const prodName = id => state.products.find(p => p.id === id)?.name || 'Item';
+  const kv = (k, v) => `<div class="kv"><span class="meta" style="font-size:13px">${k}</span><span style="text-align:right;min-width:0;overflow-wrap:anywhere">${v}</span></div>`;
+  return `<div class="scrim" onclick="if(event.target===this) setState({customerProfile:null})"><div class="sheet ${fresh?'':'no-anim'}">
+    <div style="display:flex;justify-content:space-between;align-items:flex-start;gap:8px">
+      <div style="min-width:0"><h2 class="display" style="margin:0;font-size:22px">${esc(u.full_name || '(no name)')}</h2>
+        <div class="meta">${esc(memberTier(u.paid_orders_count || 0))} · ${u.role}</div></div>${close}
+    </div>
+    <div class="stat-row">
+      <div class="stat"><b>${u.loyalty_points || 0}</b><span class="meta">points</span></div>
+      <div class="stat"><b>${c.orders.length}</b><span class="meta">orders</span></div>
+      <div class="stat"><b>${money(spent)}</b><span class="meta">spent (paid)</span></div>
+    </div>
+    <div class="card" style="padding:0 16px">
+      ${kv('Phone', u.phone ? `<a href="tel:${esc(u.phone)}" style="color:inherit">${esc(u.phone)}</a>` : '—')}
+      ${kv('Email', c.email ? esc(c.email) : '—')}
+      ${kv('Joined', u.created_at ? new Date(u.created_at).toLocaleDateString([], { year: 'numeric', month: 'short', day: 'numeric' }) : '—')}
+      ${kv('Paid orders', u.paid_orders_count || 0)}
+      ${kv('Push notifications', c.pushOn ? 'On' : 'Off')}
+      ${kv('Promo / loyalty messages', `${u.notify_promos === false ? 'Off' : 'On'} / ${u.notify_loyalty === false ? 'Off' : 'On'}`)}
+    </div>
+    <div class="sec-title">Favourite items</div>
+    <div class="meta" style="font-size:13px">${favNames.length ? favNames.map(esc).join(', ') : 'None saved'}${top.length ? `<br>Most ordered: ${top.map(([n, q]) => `${esc(n)} ×${q}`).join(', ')}` : ''}</div>
+    <div class="sec-title">Recent orders</div>
+    ${c.orders.length ? `<div class="card" style="padding:0 16px">${c.orders.slice(0, 10).map(o => `<button class="user-main kv" style="width:100%;display:flex" onclick="setState({orderDetailId:'${o.id}'})">
+      <span><b>#${o.order_number}</b> <span class="meta">${new Date(o.created_at).toLocaleDateString([], { month: 'short', day: 'numeric' })} · ${o.status}${o.payment_confirmed ? ' · paid' : ''}</span></span><span>${money(o.total)} ›</span></button>`).join('')}</div>` : '<div class="meta">No orders yet</div>'}
+    <div class="sec-title">Reviews</div>
+    ${c.reviews.length ? c.reviews.slice(0, 5).map(r => `<div style="margin-bottom:8px;font-size:13px"><b>${esc(prodName(r.product_id))}</b> <span style="color:var(--caramel-dark)">${'★'.repeat(Math.max(0, Math.min(5, r.rating || 0)))}</span>${r.comment ? `<div class="meta">${esc(r.comment)}</div>` : ''}</div>`).join('') : '<div class="meta">No reviews yet</div>'}
+    ${u.role !== 'admin' && u.id !== state.session.user.id ? `<div style="margin-top:24px;padding-top:8px;border-top:1px solid rgba(230,217,194,.6)"><button class="link-danger" onclick="deleteUserAccount('${u.id}')">Delete account</button></div>` : ''}
+  </div></div>`;
+}
+async function loadAdminUsers(){
+  const { data } = await sb.from('profiles').select('*').order('created_at', { ascending: false });
+  _adminUsers = data || [];
+  renderAdminUsersList();
+}
+function renderAdminUsersList(){
+  const el = document.getElementById('admin-users-list');
+  if (!el) return;
+  const q = (state.adminUserSearch || '').toLowerCase().trim();
+  const list = _adminUsers.filter(u => !q || (u.full_name||'').toLowerCase().includes(q) || (u.phone||'').includes(q));
+  el.innerHTML = list.length ? `<div class="card user-list">` + list.map(u=>`<div class="user-row">
+    <button class="user-main" onclick="openCustomerProfile('${u.id}')">
+      <div class="user-name">${esc(u.full_name||'(no name)')}${u.id===state.session.user.id?' <span class="meta">(you)</span>':''}</div>
+      <div class="meta">${u.phone?esc(u.phone)+' · ':''}${u.loyalty_points} pts · view profile ›</div>
+    </button>
+    ${u.role !== 'admin' && u.id !== state.session.user.id ? `<button class="link-danger" style="font-size:12px;padding:0 4px" aria-label="Delete account" title="Delete account" onclick="deleteUserAccount('${u.id}')">Delete</button>` : ''}
+    <select class="input role-select" onchange="changeUserRole('${u.id}', this.value)" ${u.id===state.session.user.id?'disabled title="You cannot change your own role"':''}>
+      <option value="customer" ${u.role==='customer'?'selected':''}>Customer</option>
+      <option value="worker" ${u.role==='worker'?'selected':''}>Worker</option>
+      <option value="admin" ${u.role==='admin'?'selected':''}>Admin</option>
+    </select>
+  </div>`).join('') + `</div>` : '<div class="empty">No accounts match.</div>';
+}
+async function deleteUserAccount(id){
+  const u = _adminUsers.find(x => x.id === id) || (state.customerProfile?.id === id ? state.customerProfile.profile : null);
+  if (!u) return;
+  const typed = prompt(`Permanently delete ${u.full_name || 'this account'} (${u.role})?\n\nTheir login, favorites, points and notifications will be removed. Past orders stay in your sales history as "Deleted customer". This cannot be undone.\n\nType DELETE to confirm:`);
+  if (typed === null) return;
+  if (typed.trim() !== 'DELETE') { showToast('Not deleted — you must type DELETE', 'err'); return; }
+  try {
+    const resp = await fetch(`${SUPABASE_URL}/functions/v1/delete-user`, {
+      method: 'POST',
+      headers: { 'Authorization': `Bearer ${state.session.access_token}`, 'apikey': SUPABASE_KEY, 'Content-Type': 'application/json' },
+      body: JSON.stringify({ user_id: id }),
+    });
+    const json = await parseJsonSafe(resp);
+    if (!resp.ok || !json?.success) { showToast(json?.error || 'Could not delete account', 'err'); return; }
+    showToast(`${u.full_name || 'Account'} deleted`, 'ok');
+    state.customerProfile = null;
+    await loadAdminUsers();
+    await loadWorkerOrders(); render();
+  } catch (e) { showToast('Network error: ' + e.message, 'err'); }
+}
+async function changeUserRole(id, role){ await sb.from('profiles').update({ role }).eq('id', id); showToast('Role updated', 'ok'); }
+
+function renderAdminSettings(){
+  // Settings form reads from an isolated draft, NOT from state.settings directly.
+  // state.settings gets silently refreshed by background polling every few
+  // seconds (customers need that to see your changes) — but this draft is only
+  // ever created once per visit to this tab and never auto-overwritten, so a
+  // background refresh can never erase something you're in the middle of typing.
+  if (!state.settingsDraft) state.settingsDraft = { ...(state.settings || {}) };
+  const s = state.settingsDraft;
+  setTimeout(async () => { await loadStaffCodes(); const el = document.getElementById('staff-codes-body'); if (el) el.outerHTML = staffCodesBodyHtml(); }, 0);
+  setTimeout(async () => { await loadPayoutDetails(); const el = document.getElementById('payout-body'); if (el) el.outerHTML = payoutDetailsBodyHtml(); }, 0);
+  return `<div class="card" style="padding:16px;margin-bottom:16px">
+    <label class="small">Business Name</label><input class="input" id="s-name" value="${esc(s.business_name||'')}" oninput="state.settingsDraft.business_name=this.value" style="margin:6px 0 12px">
+    <label class="small">Tagline</label><input class="input" id="s-tag" value="${esc(s.tagline||'')}" oninput="state.settingsDraft.tagline=this.value" style="margin:6px 0 12px">
+    <label class="small">Contact / WhatsApp Number</label><input class="input" id="s-phone" value="${esc(s.support_phone||'')}" oninput="state.settingsDraft.support_phone=this.value" style="margin:6px 0 12px">
+    <label class="small">Support Email</label><input class="input" id="s-email" name="support_email" type="email" inputmode="email" autocomplete="off" autocapitalize="off" spellcheck="false" value="${esc(s.support_email||'')}" oninput="state.settingsDraft.support_email=this.value" onchange="state.settingsDraft.support_email=this.value" style="margin:6px 0 12px">
+    <div style="display:flex;gap:10px">
+      <div style="flex:1"><label class="small">Open Time</label><input class="input" id="s-open" type="time" value="${s.open_time||'07:00'}" onchange="state.settingsDraft.open_time=this.value" style="margin:6px 0 12px"></div>
+      <div style="flex:1"><label class="small">Close Time</label><input class="input" id="s-close" type="time" value="${s.close_time||'19:00'}" onchange="state.settingsDraft.close_time=this.value" style="margin:6px 0 12px"></div>
+    </div>
+    <label class="small">Tax Rate (e.g. 0.05 = 5%)</label><input class="input" id="s-tax" type="number" step="0.001" value="${s.tax_rate||0}" oninput="state.settingsDraft.tax_rate=this.value" style="margin:6px 0 12px">
+    <label class="small">Loyalty Points per Rs 1 Spent</label><input class="input" id="s-lpp" type="number" step="0.01" value="${s.loyalty_points_per_currency||0.1}" oninput="state.settingsDraft.loyalty_points_per_currency=this.value" style="margin:6px 0 12px">
+    <label class="small">Banner Text</label><input class="input" id="s-banner" value="${esc(s.banner_text||'')}" oninput="state.settingsDraft.banner_text=this.value" style="margin:6px 0 12px">
+    <label style="font-size:13px"><input type="checkbox" id="s-banner-active" ${s.banner_active?'checked':''} onchange="state.settingsDraft.banner_active=this.checked"> Show banner</label>
+    <label style="font-size:13px;display:block;margin-top:8px"><input type="checkbox" id="s-accepting" ${s.is_accepting_orders?'checked':''} onchange="state.settingsDraft.is_accepting_orders=this.checked"> Currently accepting orders</label>
+    <button class="btn btn-primary" style="width:100%;margin-top:16px" onclick="saveSettings()">Save Settings</button>
+  </div>
+  <div id="payout-body">${payoutDetailsBodyHtml()}</div>
+  <div id="staff-codes-body" style="margin-top:16px">${staffCodesBodyHtml()}</div>`;
+}
+async function loadPayoutDetails(){
+  const { data } = await sb.from('payout_details').select('*').maybeSingle();
+  state.payoutDetails = data || {};
+  if (!state.payoutDraft) state.payoutDraft = { ...state.payoutDetails };
+}
+function payoutDetailsBodyHtml(){
+  // Same draft-isolation pattern as Settings above — bank details are never
+  // auto-overwritten mid-edit by a background refresh.
+  if (!state.payoutDraft) state.payoutDraft = { ...(state.payoutDetails || {}) };
+  const b = state.payoutDraft;
+  return `<div class="card" style="padding:16px">
+    <h3 style="margin:0 0 4px;font-size:15px">🏦 Bank / Payout Details</h3>
+    <p style="font-size:12.5px;color:var(--coffee-500);margin:0 0 14px">Kept private to you and your staff unless you choose to show it to customers — useful if someone wants to pay by bank transfer before pickup.</p>
+    <label class="small">Bank Name</label><input class="input" id="pd-bank" value="${esc(b.bank_name||'')}" oninput="state.payoutDraft.bank_name=this.value" style="margin:6px 0 12px">
+    <label class="small">Account Title</label><input class="input" id="pd-title" value="${esc(b.account_title||'')}" oninput="state.payoutDraft.account_title=this.value" style="margin:6px 0 12px">
+    <label class="small">Account Number</label><input class="input" id="pd-number" value="${esc(b.account_number||'')}" oninput="state.payoutDraft.account_number=this.value" style="margin:6px 0 12px">
+    <label class="small">IBAN (optional)</label><input class="input" id="pd-iban" value="${esc(b.iban||'')}" oninput="state.payoutDraft.iban=this.value" style="margin:6px 0 12px">
+    <label class="small">Notes (optional)</label><input class="input" id="pd-notes" value="${esc(b.notes||'')}" oninput="state.payoutDraft.notes=this.value" placeholder="e.g. send payment screenshot on WhatsApp" style="margin:6px 0 12px">
+    <label style="font-size:13px;display:block;margin-bottom:12px"><input type="checkbox" id="pd-show" ${b.show_to_customers?'checked':''} onchange="state.payoutDraft.show_to_customers=this.checked"> Show these details to signed-in customers at checkout</label>
+    <button class="btn btn-primary" style="width:100%" onclick="savePayoutDetails()">Save Bank Details</button>
+  </div>`;
+}
+async function savePayoutDetails(){
+  const d = state.payoutDraft || {};
+  const payload = {
+    bank_name: (d.bank_name||'').trim(),
+    account_title: (d.account_title||'').trim(),
+    account_number: (d.account_number||'').trim(),
+    iban: (d.iban||'').trim(),
+    notes: (d.notes||'').trim(),
+    show_to_customers: !!d.show_to_customers,
+  };
+  const { error } = await sb.from('payout_details').update(payload).eq('id', true);
+  if (error) { showToast(error.message, 'err'); return; }
+  showToast('Bank details saved', 'ok');
+  await loadPayoutDetails();
+  state.payoutDraft = { ...state.payoutDetails };
+}
+async function loadStaffCodes(){
+  const { data } = await sb.from('app_config').select('*').in('key', ['admin_signup_code','worker_signup_code']);
+  state.staffCodes = Object.fromEntries((data||[]).map(r=>[r.key, r.value]));
+}
+function staffCodesBodyHtml(){
+  const codes = state.staffCodes || {};
+  const workerOn = !!(codes.worker_signup_code && codes.worker_signup_code.trim());
+  return `<div class="card" style="padding:16px">
+    <h3 style="margin:0 0 4px;font-size:15px">🔑 Staff Access Codes</h3>
+    <p style="font-size:12.5px;color:var(--coffee-500);margin:0 0 16px">Anyone with a code can create their own login at Staff Sign In → Register with a Staff Code. Set any value you like, and change it anytime — the old code stops working immediately.</p>
+
+    <div style="margin-bottom:18px">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px">
+        <label class="small">Admin Origin Code</label>
+        <span style="font-size:11px;font-weight:700;color:var(--sage)">● ACTIVE</span>
+      </div>
+      <p style="font-size:11.5px;color:var(--coffee-500);margin:0 0 8px">Your master code — keep this private, it grants full owner access.</p>
+      <div style="display:flex;gap:8px">
+        <input class="input" id="code-admin" value="${esc(codes.admin_signup_code||'')}" placeholder="Set an admin code">
+        <button class="btn btn-outline" style="padding:10px 12px" onclick="copyCode('code-admin')">⧉</button>
+      </div>
+      <button class="btn btn-primary" style="width:100%;margin-top:8px" onclick="saveStaffCode('admin_signup_code','code-admin')">Save Admin Code</button>
+    </div>
+
+    <div>
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px">
+        <label class="small">Worker Code</label>
+        <span style="font-size:11px;font-weight:700;color:${workerOn?'var(--sage)':'var(--coffee-500)'}">${workerOn?'● ACTIVE':'○ NOT SET'}</span>
+      </div>
+      <p style="font-size:11.5px;color:var(--coffee-500);margin:0 0 8px">${workerOn?'Workers can self-register with this code right now.':'Empty — worker self-registration is off until you set one.'}</p>
+      <div style="display:flex;gap:8px">
+        <input class="input" id="code-worker" value="${esc(codes.worker_signup_code||'')}" placeholder="Leave blank to disable">
+        <button class="btn btn-outline" style="padding:10px 12px" onclick="copyCode('code-worker')">⧉</button>
+      </div>
+      <button class="btn btn-primary" style="width:100%;margin-top:8px" onclick="saveStaffCode('worker_signup_code','code-worker')">Save Worker Code</button>
+    </div>
+  </div>`;
+}
+function copyCode(inputId){
+  const el = document.getElementById(inputId);
+  if (!el || !el.value) { showToast('Nothing to copy yet', 'err'); return; }
+  navigator.clipboard?.writeText(el.value).then(() => showToast('Copied', 'ok')).catch(() => showToast('Could not copy', 'err'));
+}
+async function saveStaffCode(key, inputId){
+  const value = document.getElementById(inputId).value.trim();
+  const { error } = await sb.from('app_config').update({ value }).eq('key', key);
+  if (error) { showToast(error.message, 'err'); return; }
+  await loadStaffCodes();
+  const el = document.getElementById('staff-codes-body'); if (el) el.outerHTML = staffCodesBodyHtml();
+  showToast(value ? 'Code saved' : 'Code cleared — registration disabled', 'ok');
+}
+async function saveSettings(){
+  // Save exactly what is on screen. The draft is only updated by input
+  // events, and autofill / keyboard suggestions / paste on some phones fill
+  // a field without firing one. The draft then still held the old value,
+  // so "Save" wrote the old email back. The visible fields win.
+  const d = Object.assign({}, state.settingsDraft || {});
+  const fieldMap = { 's-name':'business_name', 's-tag':'tagline', 's-phone':'support_phone', 's-email':'support_email', 's-open':'open_time', 's-close':'close_time', 's-tax':'tax_rate', 's-lpp':'loyalty_points_per_currency', 's-banner':'banner_text' };
+  Object.entries(fieldMap).forEach(([id, key]) => { const el = document.getElementById(id); if (el) d[key] = el.value; });
+  const ba = document.getElementById('s-banner-active'); if (ba) d.banner_active = ba.checked;
+  const ac = document.getElementById('s-accepting'); if (ac) d.is_accepting_orders = ac.checked;
+  d.support_email = String(d.support_email || '').trim();
+  if (d.support_email && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(d.support_email)) { showToast('Please enter a valid email address', 'err'); return; }
+  const payload = {
+    business_name: d.business_name || '',
+    tagline: d.tagline || '',
+    support_phone: d.support_phone || '',
+    support_email: d.support_email || '',
+    open_time: d.open_time || '07:00',
+    close_time: d.close_time || '19:00',
+    tax_rate: Number(d.tax_rate) || 0,
+    loyalty_points_per_currency: Number(d.loyalty_points_per_currency) || 1,
+    banner_text: d.banner_text || '',
+    banner_active: !!d.banner_active,
+    is_accepting_orders: !!d.is_accepting_orders,
+  };
+  const { data: saved, error } = await sb.from('business_settings').update(payload).eq('id', true);
+  if (error) { showToast(error.message, 'err'); return; }
+  const row = Array.isArray(saved) ? saved[0] : saved;
+  if (row && (row.support_email || '') !== payload.support_email) { showToast('Email did not save — please try again', 'err'); return; }
+  await refreshSettings();
+  state.settingsDraft = { ...state.settings };
+  forgetTyped('s-');
+  showToast('Settings saved','ok'); render();
+}
+
+init();
+</script>
+</body>
+</html>

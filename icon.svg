@@ -1,0 +1,14 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 200" width="200" height="200">
+  <rect width="200" height="200" rx="40" fill="#2A180F"/>
+  <!-- saucer -->
+  <ellipse cx="100" cy="148" rx="52" ry="7" fill="#F6F0E4" opacity="0.35"/>
+  <!-- cup -->
+  <path d="M62 78h72v52c0 12-9 21-21 21H83c-12 0-21-9-21-21z" fill="none" stroke="#F6F0E4" stroke-width="7" stroke-linejoin="round"/>
+  <!-- handle -->
+  <path d="M134 90c16-2 24 8 22 20-2 11-13 17-24 16" fill="none" stroke="#F6F0E4" stroke-width="7" stroke-linecap="round"/>
+  <!-- coffee line -->
+  <line x1="66" y1="92" x2="130" y2="92" stroke="#F6F0E4" stroke-width="4" opacity="0.5"/>
+  <!-- steam -->
+  <path d="M88 52c-5 6 5 10 0 18" fill="none" stroke="#F6F0E4" stroke-width="4.5" stroke-linecap="round" opacity="0.8"/>
+  <path d="M108 52c-5 6 5 10 0 18" fill="none" stroke="#F6F0E4" stroke-width="4.5" stroke-linecap="round" opacity="0.8"/>
+</svg>
