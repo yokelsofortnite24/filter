@@ -241,6 +241,29 @@ select.input{padding-right:40px;text-overflow:ellipsis;white-space:nowrap;overfl
 .qs-row{display:flex;align-items:center;gap:12px;width:100%;text-align:left;background:none;border:none;border-bottom:1px solid rgba(230,217,194,.6);padding:10px 14px;font:inherit;color:inherit;min-height:52px;cursor:pointer}
 .qs-row:last-child{border-bottom:none}
 .qs-ic{width:32px;height:32px;border-radius:10px;background:#F1E6D2;display:flex;align-items:center;justify-content:center;flex-shrink:0}
+/* ---- v12 receipt ---- */
+.receipt{background:var(--card);border-radius:18px;padding:24px 20px;box-shadow:var(--soft);border:1px solid rgba(230,217,194,.7);font-size:13px;color:var(--coffee-900)}
+.rc-head{text-align:center}
+.rc-logo{width:56px;height:56px;border-radius:50%;display:block;margin:0 auto 8px}
+.rc-biz{font-family:'Fraunces',serif;font-size:24px;font-weight:600}
+.rc-tag{font-size:13px;color:var(--coffee-500);margin-bottom:4px}
+.rc-small{font-size:12px;color:var(--coffee-500);line-height:1.5}
+.rc-sep{border-top:1.5px dashed #D9C7A8;margin:12px 0}
+.rc-row{display:flex;justify-content:space-between;gap:12px;padding:3px 0}
+.rc-row span:last-child{text-align:right;white-space:nowrap}
+.rc-item{padding:2px 0 6px}.rc-item .rc-row{font-weight:600;font-size:14px}
+.rc-opts{font-size:12px;color:#8A6A52;padding-left:12px}
+.rc-total{font-weight:700;font-size:17px;padding-top:8px}
+.rc-pay{margin:12px auto 0;width:max-content;padding:6px 18px;border-radius:999px;background:#F6E7CC;color:#8A5A1E;font-weight:700;font-size:13px}
+.rc-pay.paid{background:#E3EEDF;color:#3F6B3A}
+.rc-thanks{font-family:'Fraunces',serif;font-size:17px;text-align:center;font-weight:600}
+@media print{
+  body.printing-receipt #root > *:not(.scrim), body.printing-receipt .scrim > .sheet > .no-print, body.printing-receipt .tabbar, body.printing-receipt #loadbar{display:none !important}
+  body.printing-receipt .scrim{position:static !important;background:none !important;display:block !important}
+  body.printing-receipt .sheet{box-shadow:none !important;max-height:none !important;overflow:visible !important;padding:0 !important;animation:none !important;background:#fff !important;margin:0 auto}
+  body.printing-receipt .receipt{box-shadow:none;border:none}
+  body.printing-receipt{background:#fff !important}
+}
 </style>
 </head>
 <body>
@@ -250,7 +273,7 @@ select.input{padding-right:40px;text-overflow:ellipsis;white-space:nowrap;overfl
 // Bumped on every real deploy. Lets a running tab/installed PWA detect a
 // newer version is live on the server and prompt to refresh, instead of
 // silently running stale code forever (a common PWA gotcha).
-const APP_BUILD = '2026-10-10-11';
+const APP_BUILD = '2026-10-10-12';
 async function checkForUpdate(){
   try {
     const resp = await fetch('./index.html?_=' + Date.now(), { cache: 'no-store' });
@@ -464,7 +487,7 @@ async function init(){
     if (ok) {
       await loadProfile();
       if (pushSupported()) { const sub = await currentPushSubscription(); state.pushEnabled = !!sub; }
-      setState({ view: state.profile?.role || 'customer' });
+      setState({ view: state.profile?.role || 'customer' }); maybeOpenReceiptFromUrl();
       startPolling();
       startUpdateChecks();
       return;
@@ -489,7 +512,7 @@ async function onLoginSuccess(session){
   await loadPublicData();
   await loadProfile();
   if (pushSupported()) { const sub = await currentPushSubscription(); state.pushEnabled = !!sub; }
-  setState({ view: state.profile?.role || 'customer' });
+  setState({ view: state.profile?.role || 'customer' }); maybeOpenReceiptFromUrl();
   if ((state.profile?.role === 'admin' || state.profile?.role === 'worker') && pushSupported() && !state.pushEnabled) {
     setTimeout(() => showToast('🔔 Tap "Enable Alerts" up top so you get notified the moment an order comes in', 'info'), 1200);
   }
@@ -697,7 +720,7 @@ function pollSignature(){
 }
 // A customizer/sheet the person is using is never rebuilt by background data;
 // it picks up fresh data the next time they interact.
-function modalInUse(){ return !!(state.customerProfile || state.productModal || state.checkoutOpen || state.cartOpen || state.reviewModal || state.chatOpen || state.membershipCardOpen || state.orderDetailId || state.iosInstallModal || state.adminMoreOpen); }
+function modalInUse(){ return !!(state.customerProfile || state.productModal || state.checkoutOpen || state.cartOpen || state.reviewModal || state.chatOpen || state.membershipCardOpen || state.orderDetailId || state.iosInstallModal || state.adminMoreOpen || state.receiptOrderId); }
 async function pollTick(){
     if (_polling) return;
     if (!state.session || !state.profile) return;
@@ -842,6 +865,7 @@ function render(){
   if (state.checkoutOpen) html += renderCheckoutSheet(justOpened('checkout', true)); else justOpened('checkout', false);
   if (state.customerProfile) html += renderCustomerProfileSheet(justOpened('custProfile', true)); else justOpened('custProfile', false);
   if (state.orderDetailId) html += renderOrderDetailSheet(justOpened('orderDetail', true)); else justOpened('orderDetail', false);
+  if (state.receiptOrderId) html += renderReceiptSheet();
   if (state.reviewModal) html += renderReviewModal(justOpened('review', true)); else justOpened('review', false);
   if (state.iosInstallModal) html += renderIosInstallModal(justOpened('ios', true)); else justOpened('ios', false);
   if (state.chatOpen) html += renderChatSheet(justOpened('chat', true)); else justOpened('chat', false);
@@ -1059,7 +1083,7 @@ function renderNotifPanel(){
     ${state.notifications.length ? state.notifications.slice(0,20).map(n=>{
       const relatedOrder = n.related_order_id ? state.workerOrders.find(o=>o.id===n.related_order_id) : null;
       return `<div class="notif-row ${!n.is_read?'unread':''}">
-      <div onclick="${n.related_order_id?`setState({orderDetailId:'${n.related_order_id}', notifPanelOpen:false})`:''}" style="cursor:${n.related_order_id?'pointer':'default'}">
+      <div onclick="${n.related_order_id?(/^Your receipt for order/.test(n.title)?`state.notifPanelOpen=false; openReceipt('${n.related_order_id}')`:`setState({orderDetailId:'${n.related_order_id}', notifPanelOpen:false})`):''}" style="cursor:${n.related_order_id?'pointer':'default'}">
         <b>${esc(n.title)}</b><br><span style="color:var(--coffee-500)">${esc(n.body||'')}</span><br>
         <span style="color:var(--coffee-500);font-size:11px">${new Date(n.created_at).toLocaleString([],{month:'short',day:'numeric',hour:'numeric',minute:'2-digit'})}</span>
       </div>
@@ -1133,6 +1157,156 @@ function waNumber(ph){ let d=String(ph||'').replace(/\D/g,''); if(!d) return '';
 function findAnyOrder(id){ return state.workerOrders.find(x=>x.id===id)||state.orders.find(x=>x.id===id)||(state.customerProfile?.orders||[]).find(x=>x.id===id); }
 function shareOrderWhatsApp(id){ const o=findAnyOrder(id); if(!o) return; const n=waNumber(o.profiles?.phone); window.open(`https://wa.me/${n}?text=${encodeURIComponent(orderSummaryText(o))}`,'_blank'); }
 async function copyOrderSummary(id){ const o=findAnyOrder(id); if(!o) return; const t=orderSummaryText(o); try{ if(navigator.share){ await navigator.share({title:'Order #'+o.order_number,text:t}); return; } await navigator.clipboard.writeText(t); showToast('Order summary copied','ok'); }catch(e){ if(e&&e.name!=='AbortError') showToast('Could not share','err'); } }
+// ================= RECEIPTS (v12) =================
+function receiptData(o){
+  const st = state.settings || {};
+  const items = (o.order_items||[]).map(oi => {
+    const opts = (oi.order_item_options||[]).map(c => c.choice_name + (Number(c.price_modifier) ? ` (+${money(c.price_modifier)})` : ''));
+    if (oi.size_name) opts.unshift(oi.size_name);
+    const line = Number(oi.line_total ?? (Number(oi.unit_price)*oi.quantity));
+    return { name: `${oi.quantity}× ${oi.product_name}`, opts: opts.join(', '), price: line };
+  });
+  const sub = Number(o.subtotal||0), promo = Number(o.discount_amount||0) - Number(o.loyalty_discount_amount||0), pts = Number(o.loyalty_discount_amount||0);
+  return {
+    biz: st.business_name || 'Filter', tagline: st.tagline || 'Coffee & Tea', phone: st.support_phone || '', address: st.address || '',
+    num: o.order_number, placed: new Date(o.created_at),
+    pickup: `${o.pickup_date ? new Date(o.pickup_date+'T12:00').toLocaleDateString([],{weekday:'short',day:'numeric',month:'short'}) : ''}${o.pickup_time ? ' · ' + fmtTime12(o.pickup_time.slice(0,5)) : ''}`,
+    items, sub, promo: promo > 0 ? promo : 0, ptsRedeemed: Number(o.loyalty_points_redeemed||0), ptsDiscount: pts,
+    tax: Number(o.tax_amount||0), total: Number(o.total||0), paid: !!o.payment_confirmed,
+    earned: Number(o.loyalty_points_earned||0), customer: o.profiles?.full_name || (o.customer_id===state.session?.user?.id ? state.profile?.full_name : '') || '',
+    notes: o.special_instructions || '', status: o.status
+  };
+}
+async function openReceipt(id){
+  let o = findAnyOrder(id);
+  if (!o || !o.order_items) {
+    const { data } = await sb.from('orders').select('*, order_items(*, order_item_options(*)), profiles!orders_customer_id_fkey(full_name, phone)').eq('id', id).maybeSingle();
+    o = data;
+  }
+  if (!o) { showToast("Couldn't find that receipt", 'err'); return; }
+  state._receiptOrder = o; state._receiptShown = false;
+  setState({ receiptOrderId: id, orderDetailId: null, notifPanelOpen: false });
+}
+function maybeOpenReceiptFromUrl(){ try { const rid = new URLSearchParams(location.search).get('receipt'); if (rid) { history.replaceState(null, '', location.pathname); setTimeout(() => openReceipt(rid), 600); } } catch (e) {} }
+function closeReceipt(){ state._receiptOrder = null; setState({ receiptOrderId: null }); }
+function receiptHtml(d){
+  const row = (l, v, cls='') => `<div class="rc-row ${cls}"><span>${l}</span><span>${v}</span></div>`;
+  return `<div class="receipt" id="receipt-paper">
+    <div class="rc-head"><img src="./icon-192.png" alt="" class="rc-logo"><div class="rc-biz">${esc(d.biz)}</div><div class="rc-tag">${esc(d.tagline)}</div>
+      ${d.address?`<div class="rc-small">${esc(d.address)}</div>`:''}${d.phone?`<div class="rc-small">${esc(d.phone)}</div>`:''}</div>
+    <div class="rc-sep"></div>
+    ${row('Order', `<b>#${d.num}</b>`)}
+    ${row('Placed', d.placed.toLocaleDateString([],{day:'numeric',month:'short',year:'numeric'})+' · '+d.placed.toLocaleTimeString([],{hour:'numeric',minute:'2-digit'}))}
+    ${row('Pickup', esc(d.pickup))}
+    ${d.customer?row('Customer', esc(d.customer)):''}
+    <div class="rc-sep"></div>
+    ${d.items.map(i=>`<div class="rc-item"><div class="rc-row"><span>${esc(i.name)}</span><span>${money(i.price)}</span></div>${i.opts?`<div class="rc-opts">${esc(i.opts)}</div>`:''}</div>`).join('')}
+    <div class="rc-sep"></div>
+    ${row('Subtotal', money(d.sub))}
+    ${d.promo?row('Promo discount', '−'+money(d.promo)):''}
+    ${d.ptsDiscount?row(`Points redeemed (${d.ptsRedeemed})`, '−'+money(d.ptsDiscount)):''}
+    ${d.tax?row('Tax', money(d.tax)):''}
+    ${row('Total', money(d.total), 'rc-total')}
+    <div class="rc-pay ${d.paid?'paid':''}">${d.paid?'✓ Paid':'Payment pending'}</div>
+    ${d.earned?`<div class="rc-small" style="text-align:center;margin-top:8px">⭐ ${d.earned} loyalty points ${d.paid?'earned':'on payment'}</div>`:''}
+    ${d.notes?`<div class="rc-small" style="margin-top:8px">Notes: ${esc(d.notes)}</div>`:''}
+    <div class="rc-sep"></div>
+    <div class="rc-thanks">Thank you for choosing ${esc(d.biz)} ☕</div>
+    <div class="rc-small" style="text-align:center">See you again soon!</div>
+  </div>`;
+}
+function renderReceiptSheet(){
+  const o = state._receiptOrder; if (!o) return '';
+  const fresh = !state._receiptShown; state._receiptShown = true;
+  return `<div class="scrim" onclick="if(event.target===this) closeReceipt()"><div class="sheet ${fresh?'':'no-anim'}" style="max-width:440px">
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px" class="no-print"><div class="display" style="font-size:22px">Receipt</div><button class="btn btn-ghost btn-sm" onclick="closeReceipt()" aria-label="Close">Close</button></div>
+    ${receiptHtml(receiptData(o))}
+    <div class="no-print" style="display:flex;gap:8px;margin-top:16px">
+      <button class="btn btn-primary btn-sm" style="flex:1.3" onclick="saveReceiptImage()">Save receipt</button>
+      <button class="btn btn-ghost btn-sm" style="flex:1" onclick="shareReceipt()">Share</button>
+      <button class="btn btn-ghost btn-sm" style="flex:1" onclick="printReceipt()">Print</button>
+    </div>
+  </div></div>`;
+}
+function loadImg(src){ return new Promise(res => { const i = new Image(); i.onload = () => res(i); i.onerror = () => res(null); i.src = src; }); }
+async function drawReceiptCanvas(d){
+  const W = 420, S = 3, P = 28; const lines = [];
+  const c = document.createElement('canvas'); const x = c.getContext('2d');
+  const serif = "600 26px Fraunces, Georgia, serif", sans = n => `${n} 'Inter', -apple-system, Helvetica, Arial, sans-serif`;
+  // pre-layout to compute height
+  const wrap = (text, font, maxW) => { x.font = font; const words = String(text).split(' '); const out = []; let cur = ''; for (const w of words) { const t = cur ? cur + ' ' + w : w; if (x.measureText(t).width > maxW && cur) { out.push(cur); cur = w; } else cur = t; } if (cur) out.push(cur); return out; };
+  const ops = []; let y = P;
+  const push = (h, fn) => { const yy = y; ops.push(() => fn(yy)); y += h; };
+  push(64, yy => {}); // logo
+  push(34, yy => { x.font = serif; x.fillStyle = '#2A180F'; x.textAlign = 'center'; x.fillText(d.biz, W/2, yy + 26); });
+  push(20, yy => { x.font = sans('500 13px'); x.fillStyle = '#6B4A34'; x.textAlign = 'center'; x.fillText(d.tagline, W/2, yy + 14); });
+  for (const t of [d.address, d.phone].filter(Boolean)) for (const l of wrap(t, sans('400 12px'), W - 2*P)) push(17, yy => { x.font = sans('400 12px'); x.fillStyle = '#6B4A34'; x.textAlign = 'center'; x.fillText(l, W/2, yy + 12); });
+  const sep = () => push(22, yy => { x.strokeStyle = '#D9C7A8'; x.setLineDash([4, 4]); x.beginPath(); x.moveTo(P, yy + 11); x.lineTo(W - P, yy + 11); x.stroke(); x.setLineDash([]); });
+  const row = (l, v, opt = {}) => push(opt.h || 22, yy => { x.font = sans(opt.w || '400 13px'); x.fillStyle = opt.c || '#2A180F'; x.textAlign = 'left'; x.fillText(l, P, yy + 15); x.textAlign = 'right'; x.font = sans(opt.vw || opt.w || '600 13px'); x.fillText(v, W - P, yy + 15); });
+  sep();
+  row('Order', '#' + d.num, { vw: '700 14px' });
+  row('Placed', d.placed.toLocaleDateString([], {day:'numeric',month:'short',year:'numeric'}) + ' · ' + d.placed.toLocaleTimeString([], {hour:'numeric',minute:'2-digit'}), {c:'#4A3020'});
+  row('Pickup', d.pickup, {c:'#4A3020'});
+  if (d.customer) row('Customer', d.customer, {c:'#4A3020'});
+  sep();
+  for (const i of d.items) {
+    const nl = wrap(i.name, sans('600 14px'), W - 2*P - 90);
+    nl.forEach((l, k) => push(20, yy => { x.font = sans('600 14px'); x.fillStyle = '#2A180F'; x.textAlign = 'left'; x.fillText(l, P, yy + 15); if (!k) { x.textAlign = 'right'; x.fillText(money(i.price), W - P, yy + 15); } }));
+    if (i.opts) wrap(i.opts, sans('400 12px'), W - 2*P - 12).forEach(l => push(17, yy => { x.font = sans('400 12px'); x.fillStyle = '#8A6A52'; x.textAlign = 'left'; x.fillText(l, P + 12, yy + 12); }));
+    y += 6;
+  }
+  sep();
+  row('Subtotal', money(d.sub), {c:'#4A3020'});
+  if (d.promo) row('Promo discount', '−' + money(d.promo), {c:'#4A3020'});
+  if (d.ptsDiscount) row(`Points redeemed (${d.ptsRedeemed})`, '−' + money(d.ptsDiscount), {c:'#4A3020'});
+  if (d.tax) row('Tax', money(d.tax), {c:'#4A3020'});
+  y += 4; row('Total', money(d.total), { w: '700 17px', h: 30 });
+  push(44, yy => { const bw = 150, bx = (W - bw)/2; x.fillStyle = d.paid ? '#E3EEDF' : '#F6E7CC'; x.beginPath(); x.roundRect ? x.roundRect(bx, yy + 6, bw, 30, 15) : x.rect(bx, yy + 6, bw, 30); x.fill(); x.font = sans('700 13px'); x.fillStyle = d.paid ? '#3F6B3A' : '#8A5A1E'; x.textAlign = 'center'; x.fillText(d.paid ? '✓ Paid' : 'Payment pending', W/2, yy + 26); });
+  if (d.earned) push(20, yy => { x.font = sans('500 12px'); x.fillStyle = '#6B4A34'; x.textAlign = 'center'; x.fillText(`★ ${d.earned} loyalty points ${d.paid ? 'earned' : 'on payment'}`, W/2, yy + 14); });
+  if (d.notes) wrap('Notes: ' + d.notes, sans('400 12px'), W - 2*P).forEach(l => push(17, yy => { x.font = sans('400 12px'); x.fillStyle = '#6B4A34'; x.textAlign = 'left'; x.fillText(l, P, yy + 12); }));
+  sep();
+  push(28, yy => { x.font = "600 18px Fraunces, Georgia, serif"; x.fillStyle = '#2A180F'; x.textAlign = 'center'; x.fillText(`Thank you for choosing ${d.biz}`, W/2, yy + 20); });
+  push(18, yy => { x.font = sans('400 12px'); x.fillStyle = '#6B4A34'; x.textAlign = 'center'; x.fillText('See you again soon!', W/2, yy + 12); });
+  const H = y + P;
+  c.width = W * S; c.height = H * S; x.scale(S, S);
+  // paper
+  x.fillStyle = '#F6F0E4'; x.fillRect(0, 0, W, H);
+  x.fillStyle = '#FFFDF9'; x.beginPath(); x.roundRect ? x.roundRect(10, 10, W - 20, H - 20, 18) : x.rect(10, 10, W - 20, H - 20); x.fill();
+  x.fillStyle = '#4A3020'; x.fillRect(10, 10, W - 20, 0); 
+  const logo = await loadImg('./icon-192.png'); if (logo) { x.save(); x.beginPath(); x.arc(W/2, P + 28, 28, 0, Math.PI*2); x.clip(); x.drawImage(logo, W/2 - 28, P, 56, 56); x.restore(); }
+  ops.forEach(f => f());
+  return c;
+}
+async function receiptBlob(){
+  const o = state._receiptOrder; if (!o) return null;
+  try { if (document.fonts && document.fonts.ready) await document.fonts.ready; } catch (e) {}
+  const c = await drawReceiptCanvas(receiptData(o));
+  return await new Promise(res => c.toBlob(res, 'image/png'));
+}
+async function saveReceiptImage(){
+  const o = state._receiptOrder; if (!o) return;
+  const blob = await receiptBlob(); if (!blob) return showToast('Could not create the image', 'err');
+  const name = `filter-receipt-${o.order_number}.png`;
+  const file = new File([blob], name, { type: 'image/png' });
+  const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent) || (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
+  if (isIOS && navigator.canShare && navigator.canShare({ files: [file] })) {
+    try { await navigator.share({ files: [file], title: `Receipt #${o.order_number}` }); return; } catch (e) { if (e && e.name === 'AbortError') return; }
+  }
+  const url = URL.createObjectURL(blob); const a = document.createElement('a'); a.href = url; a.download = name; document.body.appendChild(a); a.click(); a.remove();
+  setTimeout(() => URL.revokeObjectURL(url), 4000);
+  showToast('Receipt saved', 'ok');
+}
+async function shareReceipt(){
+  const o = state._receiptOrder; if (!o) return;
+  try {
+    const blob = await receiptBlob(); const file = blob && new File([blob], `filter-receipt-${o.order_number}.png`, { type: 'image/png' });
+    if (file && navigator.canShare && navigator.canShare({ files: [file] })) { await navigator.share({ files: [file], title: `Receipt #${o.order_number}`, text: orderSummaryText(o) }); return; }
+    if (navigator.share) { await navigator.share({ title: `Receipt #${o.order_number}`, text: orderSummaryText(o) }); return; }
+    await navigator.clipboard.writeText(orderSummaryText(o)); showToast('Receipt copied', 'ok');
+  } catch (e) { if (!e || e.name !== 'AbortError') showToast('Could not share', 'err'); }
+}
+function printReceipt(){ document.body.classList.add('printing-receipt'); setTimeout(() => { window.print(); setTimeout(() => document.body.classList.remove('printing-receipt'), 500); }, 50); }
+
 function renderMenuTab(){
   const prods = filteredProducts();
   const featured = state.products.filter(p=>p.is_featured && p.is_available);
@@ -1483,7 +1657,7 @@ function renderOrderCard(o, active){
       <span class="badge ${o.status}">${o.status.toUpperCase()}</span>
     </div>
     <div style="font-size:12.5px;color:var(--coffee-500);margin-bottom:${active?'10px':'0'}">${new Date(o.created_at).toLocaleString([], {month:'short',day:'numeric',hour:'numeric',minute:'2-digit'})} · ${o.order_items?.length||0} items · ${money(o.total)}</div>
-    ${active ? `<div class="progress-track"><div class="progress-fill" style="width:${statusProgress(o.status)}%"></div></div>` : `<button class="btn btn-outline" style="margin-top:8px;padding:6px 12px;font-size:12px" onclick="event.stopPropagation(); reorder('${o.id}')">Reorder</button>`}
+    ${active ? `<div class="progress-track"><div class="progress-fill" style="width:${statusProgress(o.status)}%"></div></div>` : `<button class="btn btn-outline" style="margin-top:8px;padding:6px 12px;font-size:12px" onclick="event.stopPropagation(); reorder('${o.id}')">Reorder</button>${o.status!=='cancelled'?`<button class="btn btn-ghost" style="margin:8px 0 0 8px;padding:6px 12px;font-size:12px" onclick="event.stopPropagation(); openReceipt('${o.id}')">Receipt</button>`:''}`}
   </div>`;
 }
 function reorder(orderId){
@@ -1532,6 +1706,7 @@ function renderOrderDetailSheet(fresh){
     <div style="margin:16px 0">${renderOrderTimeline(o)}</div>
     ${o.status==='cancelled' && o.cancel_reason ? `<div style="font-size:12.5px;color:var(--danger);margin-bottom:12px"><b>Cancelled:</b> ${esc(o.cancel_reason)}</div>` : ''}
     ${['admin','worker'].includes(state.profile?.role) ? `<div style="display:flex;gap:8px;margin:0 0 12px"><button class="btn btn-ghost btn-sm" style="flex:1" onclick="shareOrderWhatsApp('${o.id}')">WhatsApp${o.profiles?.phone?' customer':''}</button><button class="btn btn-ghost btn-sm" style="flex:1" onclick="copyOrderSummary('${o.id}')">Share receipt</button></div>` : ''}
+    ${o.status!=='cancelled' ? `<button class="btn btn-outline btn-sm" style="width:100%;margin:0 0 12px" onclick="openReceipt('${o.id}')">🧾 View receipt</button>` : ''}
     ${canCancel(o) ? `<button class="link-danger" style="margin:0 0 16px" onclick="cancelOrder('${o.id}')">Cancel this order</button>` : ''}
     <div style="font-size:12.5px;color:var(--coffee-500);margin-bottom:16px">Pickup: ${o.pickup_date||''} ${o.pickup_time?fmtTime12(o.pickup_time.slice(0,5)):''}</div>
     ${state.profile?.role==='admin' && o.status!=='cancelled' ? `<div class="card" style="padding:14px;margin-bottom:16px;background:${o.payment_confirmed?'#EAF2E9':'#FBF2E1'}">
@@ -2659,6 +2834,7 @@ function renderAdminSettings(){
     <label class="small">Business Name</label><input class="input" id="s-name" value="${esc(s.business_name||'')}" oninput="state.settingsDraft.business_name=this.value" style="margin:6px 0 12px">
     <label class="small">Tagline</label><input class="input" id="s-tag" value="${esc(s.tagline||'')}" oninput="state.settingsDraft.tagline=this.value" style="margin:6px 0 12px">
     <label class="small">Contact / WhatsApp Number</label><input class="input" id="s-phone" value="${esc(s.support_phone||'')}" oninput="state.settingsDraft.support_phone=this.value" style="margin:6px 0 12px">
+    <label class="small">Address (shown on receipts)</label><input class="input" id="s-address" name="address" autocomplete="off" value="${esc(s.address||'')}" oninput="state.settingsDraft.address=this.value" onchange="state.settingsDraft.address=this.value" style="margin-bottom:12px" placeholder="e.g. House 12, Street 4, DHA Phase 6, Lahore">
     <label class="small">Support Email</label><input class="input" id="s-email" name="support_email" type="email" inputmode="email" autocomplete="off" autocapitalize="off" spellcheck="false" value="${esc(s.support_email||'')}" oninput="state.settingsDraft.support_email=this.value" onchange="state.settingsDraft.support_email=this.value" style="margin:6px 0 12px">
     <div style="display:flex;gap:10px">
       <div style="flex:1"><label class="small">Open Time</label><input class="input" id="s-open" type="time" value="${s.open_time||'07:00'}" onchange="state.settingsDraft.open_time=this.value" style="margin:6px 0 12px"></div>
@@ -2769,7 +2945,7 @@ async function saveSettings(){
   // a field without firing one. The draft then still held the old value,
   // so "Save" wrote the old email back. The visible fields win.
   const d = Object.assign({}, state.settingsDraft || {});
-  const fieldMap = { 's-name':'business_name', 's-tag':'tagline', 's-phone':'support_phone', 's-email':'support_email', 's-open':'open_time', 's-close':'close_time', 's-tax':'tax_rate', 's-lpp':'loyalty_points_per_currency', 's-banner':'banner_text' };
+  const fieldMap = { 's-name':'business_name', 's-tag':'tagline', 's-phone':'support_phone', 's-email':'support_email', 's-address':'address', 's-open':'open_time', 's-close':'close_time', 's-tax':'tax_rate', 's-lpp':'loyalty_points_per_currency', 's-banner':'banner_text' };
   Object.entries(fieldMap).forEach(([id, key]) => { const el = document.getElementById(id); if (el) d[key] = el.value; });
   const ba = document.getElementById('s-banner-active'); if (ba) d.banner_active = ba.checked;
   const ac = document.getElementById('s-accepting'); if (ac) d.is_accepting_orders = ac.checked;
@@ -2780,6 +2956,7 @@ async function saveSettings(){
     tagline: d.tagline || '',
     support_phone: d.support_phone || '',
     support_email: d.support_email || '',
+    address: (d.address||'').trim() || null,
     open_time: d.open_time || '07:00',
     close_time: d.close_time || '19:00',
     tax_rate: Number(d.tax_rate) || 0,
