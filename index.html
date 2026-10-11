@@ -278,6 +278,22 @@ select.input{padding-right:40px;text-overflow:ellipsis;white-space:nowrap;overfl
 .pill-toggle{display:inline-flex;align-items:center;gap:8px;min-height:36px;padding:0 14px;border-radius:999px;border:1px solid var(--line);background:#F6E7CC;color:#8A5A1E;font-weight:600;font-size:13px}
 .pill-toggle .dot{width:8px;height:8px;border-radius:50%;background:#B0896B}
 .pill-toggle.on{background:#E3EEDF;color:#3F6B3A}.pill-toggle.on .dot{background:#5E8C5A}
+/* ---- v15 options editor + announcement ---- */
+.opt-wrap{margin:20px 0 4px;padding-top:16px;border-top:1px solid var(--line)}
+.opt-head{display:flex;justify-content:space-between;align-items:baseline;margin-bottom:8px}
+.opt-group{background:var(--card);border:1px solid rgba(230,217,194,.8);border-radius:16px;padding:12px;margin-bottom:12px}
+.opt-group.new{background:transparent;border-style:dashed}
+.opt-gname{font-weight:700}
+.opt-choice{display:flex;align-items:center;gap:6px;margin-bottom:8px}
+.opt-choice .input{padding:10px 12px}
+.opt-choice .opt-price{flex:0 0 76px}
+.opt-choice.add{padding-top:8px;border-top:1px dashed var(--line);margin-bottom:0}
+.ann-card{position:relative;background:linear-gradient(145deg,#6B4A34,#2A180F);color:var(--cream-2);border-radius:18px;padding:16px 44px 16px 16px;margin-bottom:12px;box-shadow:var(--soft)}
+.ann-title{font-family:'Fraunces',serif;font-size:20px;font-weight:600;margin-top:2px}
+.ann-text{font-size:14px;line-height:1.45;opacity:.9;margin-top:4px}
+.ann-x{position:absolute;top:6px;right:6px;width:40px;height:40px;border:none;background:none;color:var(--cream-2);opacity:.7;font-size:15px}
+.ann-timer{display:inline-flex;align-items:center;min-height:32px;padding:0 12px;border-radius:999px;background:rgba(251,247,239,.14);font-size:13px;font-weight:700;font-variant-numeric:tabular-nums}
+.ann-btn{background:var(--cream-2);color:var(--coffee-900);min-height:36px}
 </style>
 </head>
 <body>
@@ -287,7 +303,7 @@ select.input{padding-right:40px;text-overflow:ellipsis;white-space:nowrap;overfl
 // Bumped on every real deploy. Lets a running tab/installed PWA detect a
 // newer version is live on the server and prompt to refresh, instead of
 // silently running stale code forever (a common PWA gotcha).
-const APP_BUILD = '2026-10-10-14';
+const APP_BUILD = '2026-10-11-01';
 async function checkForUpdate(){
   try {
     const resp = await fetch('./index.html?_=' + Date.now(), { cache: 'no-store' });
@@ -1070,7 +1086,7 @@ function renderCustomer(){
       </div>
     </div>
     ${state.notifPanelOpen ? renderNotifPanel() : ''}
-    ${state.settings?.banner_active && state.settings?.banner_text ? `<div style="background:var(--coffee-900);color:var(--cream-2);text-align:center;padding:9px;font-size:13px;font-weight:600">${esc(state.settings.banner_text)}</div>` : ''}
+
     <div style="flex:1" id="tab-content" class="${tabJustChanged(state.tab)?'tab-fresh':''}">${body}</div>
     <div class="tabbar">
       ${tabs.map(([k,label,icon])=>`<button class="tabbtn ${state.tab===k?'active':''}" onclick="setState({tab:'${k}'})"><span style="font-size:17px">${icon}</span>${label}</button>`).join('')}
@@ -1339,6 +1355,7 @@ function renderMenuTab(){
   const recommendation = taste ? state.products.find(p=>p.name===taste.favorite && p.is_available) : null;
   return `
   <div style="padding:16px 18px">
+    ${renderAnnouncement()}
     ${renderShopStatus()}
     ${renderLiveOrderBanner()}
     ${!state.search && state.activeCategory==='all' ? renderRatePrompt() + renderOrderAgain() : ''}
@@ -1420,14 +1437,16 @@ function openProduct(id){
   const p = state.products.find(x=>x.id===id); if (!p) return;
   const sizes = (p.product_sizes||[]).sort((a,b)=>a.sort_order-b.sort_order);
   const defaultSize = sizes.find(s=>s.is_default) || sizes[0];
-  setState({ productModal: { product: p, size: defaultSize?.id || null, choices: {}, qty: 1, notes: '' } });
+  const choices = {}; (p.product_option_groups||[]).forEach(g => { const d = (g.product_option_choices||[]).filter(c => c.is_default).map(c => c.id); if (d.length) choices[g.id] = d.slice(0, Math.max(1, g.max_selections||1)); });
+  setState({ productModal: { product: p, size: defaultSize?.id || null, choices, qty: 1, notes: '' } });
 }
 
 // ================= PRODUCT MODAL =================
 function renderProductModal(fresh){
   const m = state.productModal, p = m.product;
   const sizes = (p.product_sizes||[]).sort((a,b)=>a.sort_order-b.sort_order);
-  const groups = (p.product_option_groups||[]).sort((a,b)=>a.sort_order-b.sort_order);
+  // A group with no choices yet (half-set-up in the editor) must never block ordering.
+  const groups = (p.product_option_groups||[]).filter(g=>(g.product_option_choices||[]).length).sort((a,b)=>a.sort_order-b.sort_order);
   const size = sizes.find(s=>s.id===m.size);
   let unit = Number(p.base_price) + Number(size?.price_modifier||0);
   let choiceObjs = [];
@@ -1443,7 +1462,7 @@ function renderProductModal(fresh){
     </div>` : ''}
 
     ${groups.map(g=>`
-      <label class="small">${esc(g.name)}${g.is_required?' · Required':''}</label>
+      <label class="small">${esc(g.name)}<span style="font-weight:600;text-transform:none;letter-spacing:0;opacity:.8"> · ${g.max_selections>1?'pick any':'pick one'}${g.is_required?', required':''}</span></label>
       <div class="scrollx" style="margin:8px 0 16px">
         ${g.product_option_choices.sort((a,b)=>a.sort_order-b.sort_order).map(c=>{
           const sel = (m.choices[g.id]||[]).includes(c.id);
@@ -2439,28 +2458,7 @@ function adminProductEditorHtml(){
     </div>
     <p style="font-size:11px;color:var(--coffee-500);margin:0 0 12px">Leave "Served Hot/Iced" unchecked for food items — they only affect the 🔥/🧊 filters on drinks.</p>
 
-    ${p.id ? `<div style="margin:20px 0 4px;padding-top:16px;border-top:1px solid var(--line)">
-      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:4px">
-        <label class="small">Add-ons & Options</label>
-        <button class="btn btn-ghost" style="padding:5px 10px;font-size:11px" onclick="promptAddOptionGroup()">+ New Group</button>
-      </div>
-      <p style="font-size:11.5px;color:var(--coffee-500);margin:0 0 12px">e.g. Milk Type, Sweetness, Extra Shot. Customers choose these when ordering — prices here add on top of the base price.</p>
-      ${(p.product_option_groups||[]).length ? p.product_option_groups.map(g=>`
-        <div class="card" style="padding:12px;margin-bottom:10px">
-          <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px">
-            <b style="font-size:13px">${esc(g.name)}${g.is_required?' · Required':' · Optional'}</b>
-            <button class="btn btn-danger" style="padding:4px 8px;font-size:11px" onclick="deleteOptionGroup('${g.id}')">Delete Group</button>
-          </div>
-          ${(g.product_option_choices||[]).map(c=>`
-            <div style="display:flex;align-items:center;gap:8px;margin-bottom:8px">
-              <span style="flex:1;font-size:12.5px">${esc(c.name)}${c.is_default?' <span style=\"color:var(--sage)\">(default)</span>':''}</span>
-              <span style="font-size:11px;color:var(--coffee-500)">+Rs</span>
-              <input class="input" type="number" step="1" value="${c.price_modifier}" style="width:76px;padding:7px 8px;font-size:12px" onchange="updateChoicePrice('${c.id}', this.value)">
-              <button class="btn btn-ghost" style="padding:5px 8px;font-size:11px" onclick="deleteOptionChoice('${c.id}')">✕</button>
-            </div>`).join('')}
-          <button class="btn btn-outline" style="width:100%;margin-top:4px;padding:7px;font-size:11.5px" onclick="promptAddOptionChoice('${g.id}')">+ Add Choice</button>
-        </div>`).join('') : `<div style="font-size:12.5px;color:var(--coffee-500);margin-bottom:8px">No add-on groups yet — try "Milk Type" or "Sweetness".</div>`}
-    </div>` : `<p style="font-size:11.5px;color:var(--coffee-500);margin:16px 0 4px">Save this product first, then reopen it to add customization options like Milk Type.</p>`}
+    <div id="pe-options">${optionsEditorHtml(p)}</div>
 
     <div style="display:flex;gap:10px;margin-top:16px">
       <button class="btn btn-outline" style="flex:1" onclick="closeAdminEditor()">Cancel</button>
@@ -2512,47 +2510,104 @@ async function refreshEditingProduct(){
     state.adminEditProduct.product_option_groups = data.product_option_groups;
   }
 }
-async function reopenEditor(){
-  await refreshEditingProduct();
-  const el = document.getElementById('pe-scrim');
-  if (el) el.outerHTML = adminProductEditorHtml();
-  await refreshProducts();
+// ---- Item options editor (v15): inline forms, no prompt()/confirm() — those
+// dialogs are unreliable in the iOS home-screen app, so nothing ever saved.
+function optionsEditorHtml(p){
+  if (!p.id) return `<div class="opt-wrap"><div class="opt-head"><label class="small">Options & add-ons</label></div>
+    <p class="meta" style="margin:0 0 8px">Save the item once, then add choices like tea type, milk or sweetness — each with its own price.</p>
+    <button class="btn btn-outline btn-sm" style="width:100%" onclick="saveAdminProduct(true)">Save item & add options</button></div>`;
+  const groups = (p.product_option_groups||[]).slice().sort((a,b)=>a.sort_order-b.sort_order);
+  const f = state.optNewGroup || { multi:false, required:true };
+  return `<div class="opt-wrap">
+    <div class="opt-head"><label class="small">Options & add-ons</label><span class="meta">Prices add to ${money(p.base_price||0)}</span></div>
+    ${groups.map(g=>{ const ch=(g.product_option_choices||[]).slice().sort((a,b)=>a.sort_order-b.sort_order); const multi=(g.max_selections||1)>1; return `<div class="opt-group">
+      <div style="display:flex;gap:8px;align-items:center"><input class="input opt-gname" value="${esc(g.name)}" aria-label="Group name" onchange="updateOptionGroup('${g.id}',{name:this.value.trim()})">
+        <button class="link-danger" style="flex-shrink:0;min-height:36px;font-size:12px" onclick="armDelete(this, () => deleteOptionGroup('${g.id}'))">Delete</button></div>
+      <div style="display:flex;gap:8px;margin:8px 0">
+        <div class="seg" style="flex:1"><button class="${!multi?'on':''}" onclick="updateOptionGroup('${g.id}',{max_selections:1})">Pick one</button><button class="${multi?'on':''}" onclick="updateOptionGroup('${g.id}',{max_selections:${Math.max(2,ch.length||2)}})">Pick several</button></div>
+        <div class="seg" style="flex:1"><button class="${g.is_required?'on':''}" onclick="updateOptionGroup('${g.id}',{is_required:true})">Required</button><button class="${!g.is_required?'on':''}" onclick="updateOptionGroup('${g.id}',{is_required:false})">Optional</button></div>
+      </div>
+      ${ch.map(c=>`<div class="opt-choice"><input class="input" value="${esc(c.name)}" aria-label="Choice name" onchange="updateOptionChoice('${c.id}',{name:this.value.trim()})"><span class="meta">+Rs</span><input class="input opt-price" type="number" inputmode="numeric" min="0" step="1" value="${Number(c.price_modifier)||0}" aria-label="Extra price" onchange="updateOptionChoice('${c.id}',{price_modifier:Math.max(0,Number(this.value)||0)})"><button class="btn btn-ghost" style="min-width:40px;padding:0" aria-label="Remove choice" onclick="armDelete(this, () => deleteOptionChoice('${c.id}'))">✕</button></div>`).join('') || `<div class="meta" style="margin-bottom:8px">No choices yet.</div>`}
+      <div class="opt-choice add"><input class="input" id="nc-name-${g.id}" placeholder="New choice, e.g. Matcha"><span class="meta">+Rs</span><input class="input opt-price" id="nc-price-${g.id}" type="number" inputmode="numeric" min="0" placeholder="0"><button class="btn btn-primary btn-sm" style="padding:0 12px" onclick="addOptionChoice('${g.id}')">Add</button></div>
+    </div>`; }).join('')}
+    <div class="opt-group new">
+      <label class="small">New option group</label>
+      <input class="input" id="ng-name" placeholder="e.g. Tea type, Milk, Sweetness" style="margin:6px 0 8px">
+      <div style="display:flex;gap:8px">
+        <div class="seg" style="flex:1"><button class="${!f.multi?'on':''}" onclick="state.optNewGroup={...(state.optNewGroup||{required:true}),multi:false}; refreshOptionsSection()">Pick one</button><button class="${f.multi?'on':''}" onclick="state.optNewGroup={...(state.optNewGroup||{required:true}),multi:true}; refreshOptionsSection()">Pick several</button></div>
+        <div class="seg" style="flex:1"><button class="${f.required?'on':''}" onclick="state.optNewGroup={...(state.optNewGroup||{multi:false}),required:true}; refreshOptionsSection()">Required</button><button class="${!f.required?'on':''}" onclick="state.optNewGroup={...(state.optNewGroup||{multi:false}),required:false}; refreshOptionsSection()">Optional</button></div>
+      </div>
+      <button class="btn btn-outline btn-sm" style="width:100%;margin-top:8px" onclick="addOptionGroup()">+ Add group</button>
+    </div>
+  </div>`;
 }
-async function promptAddOptionGroup(){
-  const name = prompt('Group name (e.g. Milk Type, Sweetness):'); if (!name) return;
-  const required = confirm('Should customers be required to pick one? (OK = yes, Cancel = optional)');
-  const { error } = await sb.from('product_option_groups').insert({ product_id: state.adminEditProduct.id, name, is_required: required, max_selections: 1, sort_order: (state.adminEditProduct.product_option_groups||[]).length + 1 });
-  if (error) { showToast(error.message, 'err'); return; }
-  await reopenEditor();
-  showToast('Group added', 'ok');
+function armDelete(btn, fn){
+  if (btn.dataset.armed) { fn(); return; }
+  btn.dataset.armed = '1'; const old = btn.textContent; btn.textContent = old === '✕' ? 'Sure?' : 'Tap again to delete';
+  setTimeout(() => { if (btn.isConnected) { delete btn.dataset.armed; btn.textContent = old; } }, 3000);
+}
+function refreshOptionsSection(){
+  const el = document.getElementById('pe-options'); if (!el || !state.adminEditProduct) return;
+  // keep whatever is typed in the "new" inputs
+  const keep = {}; el.querySelectorAll('input[id^="ng-"],input[id^="nc-"]').forEach(i => keep[i.id] = i.value);
+  el.innerHTML = optionsEditorHtml(state.adminEditProduct);
+  Object.entries(keep).forEach(([id, v]) => { const i = document.getElementById(id); if (i) i.value = v; });
+}
+async function refreshEditingProduct(){
+  const id = state.adminEditProduct?.id; if (!id) return;
+  const { data } = await sb.from('products').select('product_sizes(*), product_option_groups(*, product_option_choices(*))').eq('id', id).single();
+  if (data && state.adminEditProduct) {
+    state.adminEditProduct.product_sizes = data.product_sizes;
+    state.adminEditProduct.product_option_groups = data.product_option_groups;
+  }
+}
+async function reopenEditor(){ await refreshEditingProduct(); refreshOptionsSection(); await refreshProducts(); }
+async function addOptionGroup(){
+  const name = (document.getElementById('ng-name')?.value || '').trim();
+  if (!name) return showToast('Give the group a name, e.g. Tea type', 'err');
+  const f = state.optNewGroup || { multi:false, required:true };
+  const { error } = await sb.from('product_option_groups').insert({ product_id: state.adminEditProduct.id, name, is_required: !!f.required, max_selections: f.multi ? 5 : 1, sort_order: (state.adminEditProduct.product_option_groups||[]).length + 1 });
+  if (error) return showToast('Not saved: ' + error.message, 'err');
+  const i = document.getElementById('ng-name'); if (i) i.value = '';
+  state.optNewGroup = null; await reopenEditor(); showToast('Group added — now add its choices', 'ok');
+}
+async function updateOptionGroup(id, patch){
+  if (patch.name === '') return showToast('Name can’t be empty', 'err');
+  const { data, error } = await sb.from('product_option_groups').update(patch).eq('id', id).select();
+  if (error || !data?.length) return showToast('Not saved: ' + (error?.message || 'no permission'), 'err');
+  await reopenEditor(); showToast('Saved', 'ok');
 }
 async function deleteOptionGroup(id){
-  if (!confirm('Delete this whole group and its choices?')) return;
-  await sb.from('product_option_groups').delete().eq('id', id);
-  await reopenEditor();
-  showToast('Group deleted', 'ok');
+  const { error } = await sb.from('product_option_choices').delete().eq('group_id', id);
+  const r2 = error ? { error } : await sb.from('product_option_groups').delete().eq('id', id);
+  if (r2.error) return showToast('Not deleted: ' + r2.error.message, 'err');
+  await reopenEditor(); showToast('Group deleted', 'ok');
 }
-async function promptAddOptionChoice(groupId){
-  const name = prompt('Choice name (e.g. Oat Milk):'); if (!name) return;
-  const price = Number(prompt('Extra price (Rs, 0 if free):', '0')) || 0;
-  const { error } = await sb.from('product_option_choices').insert({ group_id: groupId, name, price_modifier: price });
-  if (error) { showToast(error.message, 'err'); return; }
-  await reopenEditor();
-  showToast('Choice added', 'ok');
+async function addOptionChoice(groupId){
+  const name = (document.getElementById('nc-name-' + groupId)?.value || '').trim();
+  const price = Math.max(0, Number(document.getElementById('nc-price-' + groupId)?.value) || 0);
+  if (!name) return showToast('Type a choice name, e.g. Matcha', 'err');
+  const g = (state.adminEditProduct.product_option_groups||[]).find(x => x.id === groupId);
+  const { error } = await sb.from('product_option_choices').insert({ group_id: groupId, name, price_modifier: price, sort_order: (g?.product_option_choices||[]).length + 1 });
+  if (error) return showToast('Not saved: ' + error.message, 'err');
+  ['nc-name-','nc-price-'].forEach(k => { const i = document.getElementById(k + groupId); if (i) i.value = ''; });
+  await reopenEditor(); showToast(`${name} added`, 'ok');
+  document.getElementById('nc-name-' + groupId)?.focus();
 }
-async function updateChoicePrice(id, value){
-  const price = Number(value) || 0;
-  const { error } = await sb.from('product_option_choices').update({ price_modifier: price }).eq('id', id);
-  if (error) { showToast(error.message, 'err'); return; }
-  await refreshProducts();
-  showToast('Price updated', 'ok');
+async function updateOptionChoice(id, patch){
+  if (patch.name === '') return showToast('Name can’t be empty', 'err');
+  const { data, error } = await sb.from('product_option_choices').update(patch).eq('id', id).select();
+  if (error || !data?.length) return showToast('Not saved: ' + (error?.message || 'no permission'), 'err');
+  await reopenEditor(); showToast('Saved', 'ok');
 }
+async function updateChoicePrice(id, value){ return updateOptionChoice(id, { price_modifier: Math.max(0, Number(value) || 0) }); }
 async function deleteOptionChoice(id){
-  await sb.from('product_option_choices').delete().eq('id', id);
-  await reopenEditor();
-  showToast('Choice removed', 'ok');
+  const { error } = await sb.from('product_option_choices').delete().eq('id', id);
+  if (error) return showToast('Not deleted: ' + error.message, 'err');
+  await reopenEditor(); showToast('Choice removed', 'ok');
 }
-async function saveAdminProduct(){
+
+async function saveAdminProduct(keepOpen){
   const btn = document.getElementById('pe-save-btn');
   if (btn) { btn.disabled = true; btn.innerHTML = `<div class="spinner" style="border-color:rgba(255,255,255,.35);border-top-color:#fff"></div>`; }
   const payload = {
@@ -2568,8 +2623,13 @@ async function saveAdminProduct(){
   };
   if (!payload.name) { showToast('Please enter a name', 'err'); if (btn) { btn.disabled=false; btn.textContent='Save Product'; } return; }
   const id = state.adminEditProduct.id;
-  const { error } = id ? await sb.from('products').update(payload).eq('id', id) : await sb.from('products').insert(payload);
+  const { data: savedRows, error } = id ? await sb.from('products').update(payload).eq('id', id).select() : await sb.from('products').insert(payload).select();
   if (error) { showToast(error.message, 'err'); if (btn) { btn.disabled=false; btn.textContent='Save Product'; } return; }
+  if (keepOpen && savedRows && savedRows[0]) {
+    Object.assign(state.adminEditProduct, savedRows[0], { product_option_groups: [], product_sizes: [] });
+    if (btn) { btn.disabled=false; btn.textContent='Save Product'; }
+    await refreshProducts(); refreshOptionsSection(); showToast('Item saved — now add its options', 'ok'); return;
+  }
   closeAdminEditor(); await refreshProducts(); showToast('Saved','ok'); render();
 }
 
@@ -2919,12 +2979,12 @@ function renderAdminSettings(){
     </div>
     <label class="small">Tax Rate (e.g. 0.05 = 5%)</label><input class="input" id="s-tax" type="number" step="0.001" value="${s.tax_rate||0}" oninput="state.settingsDraft.tax_rate=this.value" style="margin:6px 0 12px">
     <label class="small">Loyalty Points per Rs 1 Spent</label><input class="input" id="s-lpp" type="number" step="0.01" value="${s.loyalty_points_per_currency||0.1}" oninput="state.settingsDraft.loyalty_points_per_currency=this.value" style="margin:6px 0 12px">
-    <label class="small">Banner Text</label><input class="input" id="s-banner" value="${esc(s.banner_text||'')}" oninput="state.settingsDraft.banner_text=this.value" style="margin:6px 0 12px">
-    <label style="font-size:13px"><input type="checkbox" id="s-banner-active" ${s.banner_active?'checked':''} onchange="state.settingsDraft.banner_active=this.checked"> Show banner</label>
+
     <label style="font-size:13px;display:block;margin-top:8px"><input type="checkbox" id="s-accepting" ${s.is_accepting_orders?'checked':''} onchange="state.settingsDraft.is_accepting_orders=this.checked"> Currently accepting orders</label>
     <button class="btn btn-primary" style="width:100%;margin-top:16px" onclick="saveSettings()">Save Settings</button>
   </div>
   <div id="payout-body">${payoutDetailsBodyHtml()}</div>
+  ${announcementEditorHtml()}
   <div id="staff-codes-body" style="margin-top:16px">${staffCodesBodyHtml()}</div>`;
 }
 async function loadPayoutDetails(){
@@ -2935,6 +2995,79 @@ async function loadPayoutDetails(){
   // Only seed the form from the DB when the admin hasn't started editing.
   if (!state.payoutDraft || !state._payoutDirty) state.payoutDraft = { ...state.payoutDetails };
 }
+// ---- Announcement / limited-time drop (v15) — stored on business_settings
+// (banner_text = message, banner_active = on/off, announce_* = title, item, end).
+function announcementEditorHtml(){
+  const s = state.settings || {};
+  const ends = s.announce_ends_at ? (() => { const d = new Date(s.announce_ends_at); return new Date(d.getTime() - d.getTimezoneOffset()*60000).toISOString().slice(0,16); })() : '';
+  return `<div class="card" style="padding:16px;margin-top:16px" id="ann-editor">
+    <h3 style="margin:0 0 4px;font-size:15px">📣 Announcement / limited-time drop</h3>
+    <p class="meta" style="margin:0 0 12px">Shown as a card at the top of the customer menu. Leave the end time empty to keep it up until you switch it off.</p>
+    <label class="small">Title</label><input class="input" id="ann-title" maxlength="60" value="${esc(s.announce_title||'')}" placeholder="e.g. Pistachio Latte is back" style="margin:6px 0 12px">
+    <label class="small">Message</label><textarea class="input" id="ann-text" maxlength="240" style="margin:6px 0 12px;min-height:64px" placeholder="e.g. This weekend only — Rs 50 off every iced drink.">${esc(s.banner_text||'')}</textarea>
+    <label class="small">Feature an item (optional)</label><select class="input" id="ann-prod" style="margin:6px 0 12px"><option value="">None</option>${state.products.map(p=>`<option value="${p.id}" ${s.announce_product_id===p.id?'selected':''}>${esc(p.name)}</option>`).join('')}</select>
+    <label class="small">Ends at (optional, shows a countdown)</label><input class="input" id="ann-ends" type="datetime-local" value="${ends}" style="margin:6px 0 12px">
+    <label style="font-size:14px;display:flex;gap:8px;align-items:center;margin-bottom:12px"><input type="checkbox" id="ann-on" ${s.banner_active?'checked':''}> Show it to customers</label>
+    <div style="display:flex;gap:8px"><button class="btn btn-primary btn-sm" style="flex:1.4" onclick="saveAnnouncement(false)">Save</button><button class="btn btn-ghost btn-sm" style="flex:1" onclick="saveAnnouncement(true)">Save & notify customers</button></div>
+  </div>`;
+}
+async function saveAnnouncement(notify){
+  const v = id => (document.getElementById(id)?.value || '').trim();
+  const endsRaw = v('ann-ends');
+  const payload = {
+    announce_title: v('ann-title') || null, banner_text: v('ann-text'), announce_product_id: v('ann-prod') || null,
+    announce_ends_at: endsRaw ? new Date(endsRaw).toISOString() : null, banner_active: !!document.getElementById('ann-on')?.checked,
+  };
+  if (payload.banner_active && !payload.banner_text) return showToast('Add a message first', 'err');
+  if (payload.announce_ends_at && new Date(payload.announce_ends_at) <= new Date() && payload.banner_active) return showToast('The end time is already in the past', 'err');
+  const s = state.settings || {};
+  const changed = (s.banner_text||'') !== payload.banner_text || (s.announce_title||null) !== payload.announce_title || (s.announce_product_id||null) !== payload.announce_product_id;
+  payload.announce_version = (s.announce_version||0) + (changed ? 1 : 0);
+  const { data, error } = await sb.from('business_settings').update(payload).eq('id', true).select();
+  if (error || !data?.length) return showToast('Not saved: ' + (error?.message || 'no permission'), 'err');
+  Object.assign(state.settings, data[0]); if (state.settingsDraft) Object.assign(state.settingsDraft, { banner_text: data[0].banner_text, banner_active: data[0].banner_active });
+  forgetTyped('ann-');
+  if (notify) {
+    if (!payload.banner_active) { showToast('Saved. Switch it on to notify customers', 'info'); return; }
+    const { data: n, error: e2 } = await sb.rpc('admin_notify_announcement');
+    if (e2) { showToast('Saved, but not sent: ' + e2.message, 'err'); return; }
+    showToast(`Saved and sent to ${n} customer${n===1?'':'s'}`, 'ok'); return;
+  }
+  showToast('Announcement saved', 'ok');
+}
+function annKey(s){ return `${s.announce_version||0}|${(s.banner_text||'').length}`; }
+function activeAnnouncement(){
+  const s = state.settings || {};
+  if (!s.banner_active || !(s.banner_text||'').trim()) return null;
+  if (s.announce_ends_at && new Date(s.announce_ends_at) <= new Date()) return null;
+  try { if (localStorage.getItem('filter_ann_dismissed') === annKey(s)) return null; } catch (e) {}
+  return s;
+}
+function fmtCountdown(ms){ if (ms <= 0) return 'Ending now'; const d=Math.floor(ms/86400000), h=Math.floor(ms%86400000/3600000), m=Math.floor(ms%3600000/60000), sec=Math.floor(ms%60000/1000); return d ? `${d}d ${h}h ${m}m left` : h ? `${h}h ${m}m left` : `${m}m ${String(sec).padStart(2,'0')}s left`; }
+let _annTimer = null;
+function renderAnnouncement(){
+  const s = activeAnnouncement();
+  clearInterval(_annTimer); _annTimer = null;
+  if (!s) return '';
+  const p = s.announce_product_id ? state.products.find(x => x.id === s.announce_product_id && x.is_available) : null;
+  if (s.announce_ends_at) _annTimer = setInterval(() => {
+    const el = document.getElementById('ann-countdown'); const ms = new Date(s.announce_ends_at) - new Date();
+    if (ms <= 0) { clearInterval(_annTimer); render(); return; }
+    if (el) el.textContent = fmtCountdown(ms); else clearInterval(_annTimer);
+  }, 1000);
+  return `<div class="ann-card">
+    <button class="ann-x" aria-label="Dismiss" onclick="dismissAnnouncement()">✕</button>
+    <div class="lo-kicker">${s.announce_ends_at ? '⚡ Limited time' : '📣 From Filter'}</div>
+    ${s.announce_title ? `<div class="ann-title">${esc(s.announce_title)}</div>` : ''}
+    <div class="ann-text">${esc(s.banner_text)}</div>
+    <div style="display:flex;align-items:center;gap:8px;margin-top:12px;flex-wrap:wrap">
+      ${s.announce_ends_at ? `<span class="ann-timer" id="ann-countdown">${fmtCountdown(new Date(s.announce_ends_at) - new Date())}</span>` : ''}
+      ${p ? `<button class="btn btn-sm ann-btn" onclick="openProduct('${p.id}')">Order ${esc(p.name)} · ${money(p.base_price)}</button>` : ''}
+    </div>
+  </div>`;
+}
+function dismissAnnouncement(){ try { localStorage.setItem('filter_ann_dismissed', annKey(state.settings||{})); } catch (e) {} render(); }
+
 function payoutDetailsBodyHtml(){
   // Same draft-isolation pattern as Settings above — bank details are never
   // auto-overwritten mid-edit by a background refresh.
@@ -3033,9 +3166,8 @@ async function saveSettings(){
   // a field without firing one. The draft then still held the old value,
   // so "Save" wrote the old email back. The visible fields win.
   const d = Object.assign({}, state.settingsDraft || {});
-  const fieldMap = { 's-name':'business_name', 's-tag':'tagline', 's-phone':'support_phone', 's-email':'support_email', 's-open':'open_time', 's-close':'close_time', 's-tax':'tax_rate', 's-lpp':'loyalty_points_per_currency', 's-banner':'banner_text' };
+  const fieldMap = { 's-name':'business_name', 's-tag':'tagline', 's-phone':'support_phone', 's-email':'support_email', 's-open':'open_time', 's-close':'close_time', 's-tax':'tax_rate', 's-lpp':'loyalty_points_per_currency' };
   Object.entries(fieldMap).forEach(([id, key]) => { const el = document.getElementById(id); if (el) d[key] = el.value; });
-  const ba = document.getElementById('s-banner-active'); if (ba) d.banner_active = ba.checked;
   const ac = document.getElementById('s-accepting'); if (ac) d.is_accepting_orders = ac.checked;
   d.support_email = String(d.support_email || '').trim();
   if (d.support_email && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(d.support_email)) { showToast('Please enter a valid email address', 'err'); return; }
@@ -3048,8 +3180,6 @@ async function saveSettings(){
     close_time: d.close_time || '19:00',
     tax_rate: Number(d.tax_rate) || 0,
     loyalty_points_per_currency: Number(d.loyalty_points_per_currency) || 1,
-    banner_text: d.banner_text || '',
-    banner_active: !!d.banner_active,
     is_accepting_orders: !!d.is_accepting_orders,
   };
   const { data: saved, error } = await sb.from('business_settings').update(payload).eq('id', true);
