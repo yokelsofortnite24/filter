@@ -359,6 +359,79 @@ select.input{padding-right:40px;text-overflow:ellipsis;white-space:nowrap;overfl
 .sp-text{margin-top:10px;font-family:'Fraunces',serif;font-weight:600;font-size:18px;color:var(--coffee-900)}
 @keyframes popIn{from{opacity:0;transform:scale(.85)}to{opacity:1;transform:none}}
 @keyframes draw{to{stroke-dashoffset:0}}
+/* ---- v21 action animations ---- */
+.ripple{position:absolute;border-radius:50%;background:currentColor;opacity:.18;transform:scale(0);animation:ripple .6s ease-out forwards;pointer-events:none}
+@keyframes ripple{to{transform:scale(1);opacity:0}}
+.fly-dot{position:fixed;z-index:300;width:44px;height:44px;border-radius:50%;background:var(--caramel) center/cover no-repeat;box-shadow:0 8px 20px rgba(42,24,15,.35);border:2px solid #fff;display:flex;align-items:center;justify-content:center;font-size:20px;pointer-events:none}
+.cart-hit{animation:cartHit .55s cubic-bezier(.3,.7,.4,1.6)}
+@keyframes cartHit{0%{transform:scale(1)}30%{transform:scale(1.25) rotate(-8deg)}60%{transform:scale(.92) rotate(4deg)}100%{transform:none}}
+.burst{position:fixed;left:50%;top:45%;z-index:160;pointer-events:none}
+.burst i{position:absolute;left:0;top:0;animation:burstFly 1.3s cubic-bezier(.15,.7,.3,1) forwards;opacity:0}
+.burst .bean{width:12px;height:16px;border-radius:50%;background:#5A3826;box-shadow:inset -2px 0 0 #3A2216}
+.burst .bean::after{content:'';position:absolute;left:5px;top:2px;width:2px;height:12px;border-radius:2px;background:#C89A6B;opacity:.7}
+.burst .dot{width:9px;height:9px;border-radius:3px}
+.burst .c1{background:#E8B04B}.burst .c2{background:#77875F}.burst .c3{background:#C8794A}
+@keyframes burstFly{0%{opacity:1;transform:translate(0,0) rotate(0) scale(.6)}70%{opacity:1}100%{opacity:0;transform:translate(var(--x),calc(var(--y) + 140px)) rotate(var(--r)) scale(1)}}
+.shake{animation:shake .45s cubic-bezier(.36,.07,.19,.97)}
+@keyframes shake{10%,90%{transform:translateX(-2px)}20%,80%{transform:translateX(4px)}30%,50%,70%{transform:translateX(-7px)}40%,60%{transform:translateX(7px)}}
+.heart-btn.pop{animation:heartPop .55s cubic-bezier(.3,.7,.4,1.8)}
+@keyframes heartPop{0%{transform:scale(1)}30%{transform:scale(1.5)}55%{transform:scale(.85)}100%{transform:scale(1)}}
+.order-card.slide-in{animation:slideIn .6s cubic-bezier(.2,.9,.3,1.2) both;box-shadow:0 0 0 2px var(--caramel),var(--soft)}
+@keyframes slideIn{from{opacity:0;transform:translateX(-40px) scale(.97)}to{opacity:1;transform:none}}
+/* tracker */
+.tracker{position:relative;display:flex;justify-content:space-between;padding-top:2px;margin-top:12px}
+.tr-line{position:absolute;left:12%;right:12%;top:13px;height:4px;border-radius:4px;background:rgba(119,90,60,.15)}
+.tracker.dark .tr-line{background:rgba(251,247,239,.22)}
+.tr-fill{height:100%;border-radius:4px;background:linear-gradient(90deg,var(--caramel),var(--caramel-dark));transition:width .9s cubic-bezier(.3,.8,.3,1)}
+.tracker.dark .tr-fill{background:var(--cream-2)}
+.tr-step{position:relative;z-index:1;flex:1;display:flex;flex-direction:column;align-items:center;gap:6px}
+.tr-dot{width:26px;height:26px;border-radius:50%;background:var(--card);border:2px solid var(--line);display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:700;color:#fff;transition:background .4s,border-color .4s}
+.tracker.dark .tr-dot{background:#4A3020;border-color:rgba(251,247,239,.3)}
+.tr-step.done .tr-dot{background:var(--caramel-dark);border-color:var(--caramel-dark)}
+.tracker.dark .tr-step.done .tr-dot{background:var(--cream-2);border-color:var(--cream-2);color:var(--coffee-900)}
+.tr-step.cur .tr-dot{background:var(--caramel);border-color:var(--caramel);animation:pulse 1.6s ease-out infinite}
+.tracker.dark .tr-step.cur .tr-dot{background:#E8B04B;border-color:#E8B04B}
+@keyframes pulse{0%{box-shadow:0 0 0 0 rgba(200,140,80,.55)}70%{box-shadow:0 0 0 12px rgba(200,140,80,0)}100%{box-shadow:0 0 0 0 rgba(200,140,80,0)}}
+.tr-lbl{font-size:11px;font-weight:600;color:var(--coffee-500)}
+.tracker.dark .tr-lbl{color:rgba(251,247,239,.75)}
+.tr-step.cur .tr-lbl{color:var(--coffee-900)}.tracker.dark .tr-step.cur .tr-lbl{color:#fff}
+.lo-eta{margin-top:10px;font-size:12.5px;font-weight:600;opacity:.9}
+/* loader */
+.boot-loader{height:100vh;display:flex;flex-direction:column;align-items:center;justify-content:center;color:var(--coffee-900)}
+.cup{position:relative;width:64px;height:70px}
+.cup-body{position:absolute;bottom:0;left:4px;width:46px;height:40px;border-radius:4px 4px 18px 18px;background:var(--coffee-900);animation:cupBob 1.6s ease-in-out infinite}
+.cup-handle{position:absolute;bottom:12px;left:46px;width:16px;height:18px;border:5px solid var(--coffee-900);border-left:0;border-radius:0 12px 12px 0;animation:cupBob 1.6s ease-in-out infinite}
+.steam{position:absolute;bottom:42px;width:6px;height:22px;border-radius:6px;background:var(--caramel);opacity:0;animation:steam 1.8s ease-in-out infinite}
+.steam.s1{left:12px}.steam.s2{left:24px;animation-delay:.4s}.steam.s3{left:36px;animation-delay:.8s}
+@keyframes steam{0%{opacity:0;transform:translateY(6px) scaleY(.6)}40%{opacity:.7}100%{opacity:0;transform:translateY(-16px) scaleY(1.1)}}
+@keyframes cupBob{0%,100%{transform:translateY(0)}50%{transform:translateY(-3px)}}
+.skel{background:linear-gradient(90deg,#EFE6D6 25%,#F8F2E8 50%,#EFE6D6 75%);background-size:200% 100%;animation:shimmer 1.2s linear infinite;border-radius:12px}
+@keyframes shimmer{to{background-position:-200% 0}}
+/* fav row + best sellers */
+.fav-row-wrap{margin:0 0 16px}
+.section-kicker{font-size:12px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:var(--caramel-dark);margin:0 0 8px}
+.fav-row{display:flex;gap:10px;padding-bottom:4px}
+.fav-mini{flex:0 0 132px;background:var(--card);border-radius:16px;padding:8px;box-shadow:var(--soft)}
+.fm-img{height:72px;border-radius:12px;background:linear-gradient(135deg,#EFE0C4,var(--caramel-light)) center/cover;display:flex;align-items:center;justify-content:center;font-size:24px}
+.fm-name{font-weight:700;font-size:13px;margin:6px 2px 2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.fm-row{display:flex;align-items:center;justify-content:space-between;padding:0 2px}
+.fm-add{width:32px;height:32px;border-radius:50%;border:0;background:var(--coffee-900);color:var(--cream-2);font-size:18px;font-weight:700;line-height:1}
+.bs-row{display:flex;align-items:center;gap:10px;font-size:13.5px;margin:8px 0}
+.bs-rank{width:22px;height:22px;border-radius:50%;background:#F3E7D3;font-size:11px;font-weight:700;display:flex;align-items:center;justify-content:center}
+.bs-name{flex:0 0 38%;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.bs-bar{flex:1;height:8px;border-radius:8px;background:#F3E9D9;overflow:hidden}.bs-bar i{display:block;height:100%;border-radius:8px;background:linear-gradient(90deg,var(--caramel),var(--caramel-dark));transform-origin:left;animation:barGrow .9s cubic-bezier(.3,.8,.3,1) both}
+@keyframes barGrow{from{transform:scaleX(0)}}
+/* stronger screen + sheet motion */
+#root.enter > :not(.scrim):not(.toast-stack):not(.tabbar){animation:screenIn2 .42s cubic-bezier(.2,.8,.2,1) both}
+@keyframes screenIn2{from{opacity:0;transform:translateY(18px)}to{opacity:1;transform:none}}
+#root.enter .pcard{animation:cardIn2 .55s cubic-bezier(.2,.9,.3,1.15) both}
+@keyframes cardIn2{from{opacity:0;transform:translateY(26px) scale(.94)}to{opacity:1;transform:none}}
+.sheet:not(.no-anim){animation:sheetUp .45s cubic-bezier(.2,1.1,.3,1) both!important}
+@keyframes sheetUp{from{transform:translateY(100%)}to{transform:none}}
+.success-pop .sp-card{animation:popIn2 .55s cubic-bezier(.3,.7,.4,1.5) both}
+@keyframes popIn2{from{opacity:0;transform:scale(.6)}to{opacity:1;transform:none}}
+@media (prefers-reduced-motion: reduce){.burst,.fly-dot,.ripple{display:none}.tr-step.cur .tr-dot{animation:none}}
+
 @media (prefers-reduced-motion: reduce){*,*::before,*::after{animation-duration:.01ms!important;animation-delay:0s!important;transition-duration:.01ms!important}}
 </style>
 </head>
@@ -369,7 +442,7 @@ select.input{padding-right:40px;text-overflow:ellipsis;white-space:nowrap;overfl
 // Bumped on every real deploy. Lets a running tab/installed PWA detect a
 // newer version is live on the server and prompt to refresh, instead of
 // silently running stale code forever (a common PWA gotcha).
-const APP_BUILD = '2026-10-12-05';
+const APP_BUILD = '2026-10-12-06';
 async function checkForUpdate(){
   try {
     const resp = await fetch('./index.html?_=' + Date.now(), { cache: 'no-store' });
@@ -557,10 +630,11 @@ let state = {
 const root = document.getElementById('root');
 let _toastId = 0;
 function setState(patch){ state = { ...state, ...patch }; render(); }
+function showToastShake(type){ if (type==='err') shakeEl(document.activeElement && document.activeElement.closest && (document.activeElement.closest('.input') || document.activeElement.closest('.sheet')) || document.querySelector('.sheet')); }
 function showToast(msg, type){
   const id = ++_toastId;
   state.toasts.push({ id, msg, type: type||'info' });
-  render();
+  render(); if (type === "err") setTimeout(() => showToastShake("err"), 0);
   setTimeout(()=>{ state.toasts = state.toasts.filter(t=>t.id!==id); render(); }, 3200);
 }
 function money(n){ return 'Rs ' + Math.round(Number(n||0)).toLocaleString('en-US'); }
@@ -921,7 +995,7 @@ async function pollTick(opts){
         const giftUnlocked = (state.myGifts||[]).length > prevGiftCount;
 
         if (isEditingSomething()) return; // data is fresh in state; screen updates next safe render
-        statusChanges.forEach(o => showToast(`Order #${o.order_number} is now ${o.status}`));
+        statusChanges.forEach(o => { if (o.status === 'ready') readyCelebration(o); else showToast(`Order #${o.order_number} is now ${o.status}`); });
         if (pointsGained > 0) showToast(`+${pointsGained} loyalty points earned!`, 'ok');
         if (giftUnlocked) showToast('🎁 You unlocked a free gift! Check Rewards.', 'ok');
         if (pollSignature() !== _sigBefore && !modalInUse()) render();
@@ -929,7 +1003,7 @@ async function pollTick(opts){
         const prevIds = new Set(state.workerOrders.map(o => o.id)), hadAny = state.workerOrders.length > 0 || _pollN > 1;
         await Promise.all([loadWorkerOrders(), loadNotifications()]);
         const fresh = hadAny ? state.workerOrders.filter(o => !prevIds.has(o.id) && o.status === 'pending') : [];
-        if (fresh.length) { chime(); showNewOrderBanner(fresh[0]); }
+        if (fresh.length) { chime(); showNewOrderBanner(fresh[0]); fresh.forEach(o => _freshOrderIds.add(o.id)); setTimeout(() => fresh.forEach(o => _freshOrderIds.delete(o.id)), 1500); }
 
         if (isEditingSomething()) return; // never wipe an in-progress edit (settings, product form, etc.)
         if (pollSignature() !== _sigBefore && !modalInUse()) render();
@@ -959,6 +1033,7 @@ async function loadWorkerOrders(){
 // ---------------- CART ----------------
 function cartKey(item){ return item.product_id + '|' + item.size_name + '|' + item.choices.map(c=>c.name).sort().join(',') + '|' + item.notes; }
 function addToCart(item){
+  if (state.productModal) { const p = state.products.find(x => x.id === item.product_id); flyToCart(p && p.image_url); }
   const existing = state.cart.find(c => cartKey(c) === cartKey(item));
   if (existing) existing.qty += item.qty; else state.cart.push(item);
   setState({ productModal: null }); showToast('Added to cart');
@@ -1007,7 +1082,7 @@ async function placeOrder({ pickupDate, pickupTime, notes }){
 
   await loadProfile();
   setState({ cart: [], checkoutOpen: false, promoCode: '', promoResult: null, redeemPoints: 0, tip: 0, tipCustom: false, view: 'customer', tab: 'orders' });
-  successPop(`Order #${order.order_number} placed!`);
+  burst(); successPop(`Order #${order.order_number} placed!`);
   return order;
 }
 
@@ -1024,13 +1099,112 @@ function tabJustChanged(tab){
   _lastTab = tab;
   return changed;
 }
-let _screenKey = '', _enterT = null, _lastCartCount = 0;
+// ================= MOTION FX (v21) =================
+const RM = () => window.matchMedia && matchMedia('(prefers-reduced-motion: reduce)').matches;
+let _lastTap = null;
+document.addEventListener('pointerdown', (e) => {
+  _lastTap = { x: e.clientX, y: e.clientY, el: e.target };
+  const b = e.target.closest && e.target.closest('.btn, .chip, .tip-chip, .pay-opt, .admin-nav button');
+  if (!b || RM()) return;
+  const r = b.getBoundingClientRect(), d = Math.max(r.width, r.height) * 1.2;
+  const s = document.createElement('span'); s.className = 'ripple';
+  s.style.cssText = `width:${d}px;height:${d}px;left:${e.clientX - r.left - d/2}px;top:${e.clientY - r.top - d/2}px`;
+  if (getComputedStyle(b).position === 'static') b.style.position = 'relative';
+  b.style.overflow = 'hidden'; b.appendChild(s); setTimeout(() => s.remove(), 600);
+}, { passive: true });
+function cartIconEl(){ return [...document.querySelectorAll('button')].find(b => (b.getAttribute('onclick') || '').includes('cartOpen:true')); }
+function flyToCart(img){
+  if (RM()) return; const target = cartIconEl(); if (!target || !_lastTap) return;
+  const r0 = target.getBoundingClientRect(), t = { left: Math.min(Math.max(r0.left, 8), innerWidth - 50), top: Math.max(r0.top, 12), width: r0.width || 40, height: r0.height || 40 }, sx = _lastTap.x, sy = _lastTap.y;
+  const el = document.createElement('div'); el.className = 'fly-dot';
+  if (img) el.style.backgroundImage = `url("${img}")`; else el.textContent = '☕';
+  el.style.left = (sx - 22) + 'px'; el.style.top = (sy - 22) + 'px'; document.body.appendChild(el);
+  const dx = t.left + t.width/2 - sx, dy = t.top + t.height/2 - sy;
+  el.animate([
+    { transform: 'translate(0,0) scale(1)', opacity: 1 },
+    { transform: `translate(${dx*0.5}px, ${dy*0.5 - 90}px) scale(.85)`, opacity: 1, offset: .5 },
+    { transform: `translate(${dx}px, ${dy}px) scale(.25)`, opacity: .6 }
+  ], { duration: 650, easing: 'cubic-bezier(.5,0,.3,1)' }).onfinish = () => { el.remove(); const tt = cartIconEl(); if (tt) { tt.classList.remove('cart-hit'); void tt.offsetWidth; tt.classList.add('cart-hit'); } };
+}
+function burst(n = 26){
+  if (RM()) return;
+  const wrap = document.createElement('div'); wrap.className = 'burst';
+  const kinds = ['bean', 'bean', 'dot c1', 'dot c2', 'dot c3'];
+  for (let i = 0; i < n; i++) {
+    const p = document.createElement('i'); p.className = kinds[i % kinds.length];
+    const a = Math.random() * Math.PI * 2, dist = 120 + Math.random() * 160;
+    p.style.setProperty('--x', Math.cos(a) * dist + 'px'); p.style.setProperty('--y', (Math.sin(a) * dist - 60) + 'px');
+    p.style.setProperty('--r', (Math.random() * 720 - 360) + 'deg'); p.style.animationDelay = (Math.random() * 0.12) + 's';
+    wrap.appendChild(p);
+  }
+  document.body.appendChild(wrap); setTimeout(() => wrap.remove(), 1700);
+}
+function shakeEl(el){ if (!el || RM()) return; el.classList.remove('shake'); void el.offsetWidth; el.classList.add('shake'); setTimeout(() => el.classList.remove('shake'), 500); }
+function countUps(){
+  if (RM()) return;
+  document.querySelectorAll('[data-count]').forEach(el => {
+    const to = Number(el.dataset.count) || 0, money_ = el.dataset.money === '1', t0 = performance.now(), dur = 900;
+    const fmt = v => money_ ? money(v) : Math.round(v).toLocaleString('en-US');
+    const step = (now) => { const k = Math.min(1, (now - t0) / dur), e = 1 - Math.pow(1 - k, 3); el.textContent = fmt(to * e); if (k < 1) requestAnimationFrame(step); };
+    requestAnimationFrame(step);
+  });
+}
+// Animated width targets (order tracker) — rendered at previous width, then eased to new.
+function runWidthAnims(){ const els = document.querySelectorAll('[data-anim-w]'); if (!els.length) return; requestAnimationFrame(() => requestAnimationFrame(() => els.forEach(el => { el.style.width = el.dataset.animW + '%'; el.removeAttribute('data-anim-w'); }))); }
+const _trackPrev = {};
+function renderTracker(o, dark){
+  const steps = ['pending','accepted','preparing','ready'], labels = ['Received','Confirmed','Making','Ready'];
+  const n = o.status === 'completed' ? 4 : steps.indexOf(o.status) + 1; if (n < 1) return '';
+  const pct = (n - 1) / 3 * 100, prev = _trackPrev[o.id] ?? pct; _trackPrev[o.id] = pct;
+  return `<div class="tracker ${dark?'dark':''}"><div class="tr-line"><div class="tr-fill" style="width:${prev}%" ${prev!==pct?`data-anim-w="${pct}"`:''}></div></div>
+    ${steps.map((s,i)=>`<div class="tr-step ${i+1<n?'done':''} ${i+1===n?'cur':''}"><span class="tr-dot">${i+1<n||(i+1===n&&n===4)?'✓':''}</span><span class="tr-lbl">${labels[i]}</span></div>`).join('')}</div>`;
+}
+// Swipe-down to close sheets (spring back if not far enough).
+(function(){
+  let sh = null, y0 = 0, dy = 0;
+  document.addEventListener('touchstart', e => { const s = e.target.closest && e.target.closest('.sheet'); if (!s || s.scrollTop > 0) return; sh = s; y0 = e.touches[0].clientY; dy = 0; sh.style.transition = 'none'; }, { passive: true });
+  document.addEventListener('touchmove', e => { if (!sh) return; dy = Math.max(0, e.touches[0].clientY - y0); if (dy > 0) sh.style.transform = `translateY(${dy}px)`; }, { passive: true });
+  document.addEventListener('touchend', () => { if (!sh) return; const s = sh; sh = null; s.style.transition = 'transform .35s cubic-bezier(.2,1.3,.4,1)';
+    if (dy > 110) { s.style.transform = 'translateY(100%)'; setTimeout(() => { const sc = s.closest('.scrim'); if (sc) sc.dispatchEvent(new MouseEvent('click', { bubbles: true })); }, 180); }
+    else s.style.transform = ''; });
+})();
+function readyCelebration(o){ burst(30); successPop(`Order #${o.order_number} is ready! ☕`); try { navigator.vibrate && navigator.vibrate([120, 60, 120]); } catch (e) {} }
+// Estimated ready time: orders ahead in the queue × ~4 min + 6 min base.
+function etaMinutes(o){
+  if (!['pending','accepted','preparing'].includes(o.status)) return 0;
+  const items = (o.order_items || []).reduce((a, i) => a + Number(i.quantity || 0), 0) || 1;
+  const base = o.status === 'preparing' ? 3 : o.status === 'accepted' ? 6 : 8;
+  return Math.max(2, Math.round(base + items * 1.5 - (Date.now() - new Date(o.created_at)) / 60000 * 0.3));
+}
+function skeletonGrid(){ return `<div style="display:grid;grid-template-columns:1fr 1fr;gap:12px">${Array(4).fill('<div class="card" style="padding:12px"><div class="skel" style="height:96px"></div><div class="skel" style="height:14px;margin-top:10px;width:70%"></div><div class="skel" style="height:12px;margin-top:8px;width:40%"></div></div>').join('')}</div>`; }
+function renderFavRow(){
+  const favs = state.products.filter(p => state.favorites?.has(p.id) && p.is_available);
+  if (!favs.length) return '';
+  return `<div class="fav-row-wrap"><div class="section-kicker">Your favourites</div><div class="scrollx fav-row">${favs.map(p => `<div class="fav-mini"><div class="fm-img" style="${p.image_url?`background-image:url('${esc(p.image_url)}')`:''}">${p.image_url?'':'☕'}</div><div class="fm-name">${esc(p.name)}</div><div class="fm-row"><span class="meta">${money(p.base_price)}</span><button class="fm-add" aria-label="Add ${esc(p.name)}" onclick="quickAddFav('${p.id}')">+</button></div></div>`).join('')}</div></div>`;
+}
+function quickAddFav(id){
+  const p = state.products.find(x => x.id === id); if (!p) return;
+  const needsChoice = (p.product_sizes || []).length > 1 || (p.product_option_groups || []).some(g => g.is_required && (g.product_option_choices || []).length);
+  if (needsChoice) return openProduct(id);
+  const sz = (p.product_sizes || [])[0];
+  flyToCart(p.image_url);
+  addToCart({ product_id: p.id, name: p.name, size_name: sz ? sz.name : null, size_mod: sz ? Number(sz.price_modifier || 0) : 0, unit_price: Number(p.base_price) + (sz ? Number(sz.price_modifier || 0) : 0), choices: [], qty: 1, notes: '' });
+}
+function bestSellersToday(){
+  const today = localDateStr(new Date()), cnt = {};
+  state.workerOrders.filter(o => o.status !== 'cancelled' && !o.excluded_from_sales && localDateStr(new Date(o.created_at)) === today).forEach(o => (o.order_items || []).forEach(i => cnt[i.product_name] = (cnt[i.product_name] || 0) + Number(i.quantity || 0)));
+  const top = Object.entries(cnt).sort((a, b) => b[1] - a[1]).slice(0, 5); if (!top.length) return '';
+  const max = top[0][1];
+  return `<div class="card" style="padding:16px;margin-bottom:16px"><div class="display" style="font-size:17px;margin-bottom:10px">Best sellers today</div>${top.map(([n, c], i) => `<div class="bs-row"><span class="bs-rank">${i+1}</span><span class="bs-name">${esc(n)}</span><span class="bs-bar"><i style="width:${Math.round(c/max*100)}%"></i></span><b>${c}</b></div>`).join('')}</div>`;
+}
+
+let _screenKey = '', _enterT = null, _lastCartCount = 0, _freshOrderIds = new Set();
 function successPop(text){
   const el = document.createElement('div'); el.className = 'success-pop'; el.innerHTML = `<div class="sp-card"><div class="sp-check"><svg viewBox="0 0 52 52"><circle cx="26" cy="26" r="24"/><path d="M15 27l7 7 15-16"/></svg></div><div class="sp-text">${esc(text)}</div></div>`;
   document.body.appendChild(el); setTimeout(() => el.classList.add('out'), 1500); setTimeout(() => el.remove(), 1900);
 }
 function render(){
-  if (state.view === 'loading') { root.innerHTML = `<div style="height:100vh;display:flex;align-items:center;justify-content:center;flex-direction:column;gap:12px"><div class="spinner" style="width:32px;height:32px;border-width:3px"></div><div class="display" style="font-size:22px;color:var(--coffee-700)">Filter</div></div>`; return; }
+  if (state.view === 'loading') { root.innerHTML = `<div class="boot-loader"><div class="cup"><span class="steam s1"></span><span class="steam s2"></span><span class="steam s3"></span><div class="cup-body"></div><div class="cup-handle"></div></div><div class="display" style="font-size:20px;margin-top:18px">Brewing…</div></div>`; return; }
   let html = '';
   if (state.view === 'auth') html = renderAuth();
   else if (state.view === 'customer') html = renderCustomer() + renderChatBubble();
@@ -1060,7 +1234,8 @@ function render(){
   root.innerHTML = html;
   _lastCartCount = (state.cart||[]).reduce((a,i)=>a+i.qty,0);
   const _sk = [state.view, state.tab, state.adminTab, state.workerTab].join('|');
-  if (_sk !== _screenKey) { _screenKey = _sk; root.classList.remove('enter'); void root.offsetWidth; root.classList.add('enter'); clearTimeout(_enterT); _enterT = setTimeout(() => root.classList.remove('enter'), 800); }
+  if (_sk !== _screenKey) { _screenKey = _sk; root.classList.remove('enter'); void root.offsetWidth; root.classList.add('enter'); clearTimeout(_enterT); _enterT = setTimeout(() => root.classList.remove('enter'), 800); countUps(); }
+  runWidthAnims();
   restoreTypedValues(activeId, selStart, selEnd);
   restoreScrolls(scrolls);
 }
@@ -1320,7 +1495,8 @@ function renderLiveOrderBanner(){
   const [t,sub,n]=steps[o.status];
   return `<div class="live-order ${o.status==='ready'?'ready':''}" onclick="setState({orderDetailId:'${o.id}'})">
     <div style="display:flex;justify-content:space-between;align-items:center;gap:8px"><div><div class="lo-kicker">Order #${o.order_number}${o.pickup_time?' · pickup '+fmtTime12(o.pickup_time.slice(0,5)):''}</div><div class="lo-title">${t}</div><div class="lo-sub">${sub}</div></div><div style="font-size:28px">${o.status==='ready'?'🛎️':'☕'}</div></div>
-    <div class="lo-steps">${[1,2,3,4].map(i=>`<span class="${i<=n?'on':''}"></span>`).join('')}</div>
+    ${renderTracker(o, true)}
+    ${etaMinutes(o)?`<div class="lo-eta">⏱ Ready in about ${etaMinutes(o)} min</div>`:''}
   </div>`;
 }
 function renderRatePrompt(){
@@ -1630,12 +1806,13 @@ function renderMenuTab(){
   const drop = (state.promotions||[]).find(p=>p.is_drop && p.is_active && p.ends_at && new Date(p.ends_at) > new Date());
   const taste = computeTasteProfile();
   const recommendation = taste ? state.products.find(p=>p.name===taste.favorite && p.is_available) : null;
+  if (!state.products.length) return skeletonGrid();
   return waFab() + `
   <div style="padding:16px 18px">
     ${renderAnnouncement()}
     ${renderShopStatus()}
     ${renderLiveOrderBanner()}
-    ${!state.search && state.activeCategory==='all' ? renderRatePrompt() + renderOrderAgain() : ''}
+    ${!state.search && state.activeCategory==='all' ? renderRatePrompt() + renderOrderAgain() + renderFavRow() : ''}
     ${drop ? renderDropBanner(drop) : ''}
     ${recommendation && !state.search && state.activeCategory==='all' && !(renderOrderAgain() && (state.orders||[]).find(x=>x.status==='completed')?.order_items?.some(i=>i.product_name===recommendation.name)) ? `<div class="card" style="padding:14px;margin-bottom:16px;display:flex;align-items:center;gap:12px;cursor:pointer" onclick="openProduct('${recommendation.id}')">
       <div style="width:44px;height:44px;border-radius:12px;background:linear-gradient(135deg,#EFE0C4,var(--caramel-light));display:flex;align-items:center;justify-content:center;font-size:20px;flex-shrink:0;overflow:hidden">${recommendation.image_url?`<img src="${esc(recommendation.image_url)}" style="width:100%;height:100%;object-fit:cover">`:productEmoji(recommendation)}</div>
@@ -1687,7 +1864,7 @@ function renderProductCard(p){
   return `<div class="card hoverable pcard" style="padding:12px;${!p.is_available?'opacity:.5':''}">
     <div style="position:relative;height:96px;border-radius:12px;background:linear-gradient(135deg,#EFE0C4,var(--caramel-light));margin-bottom:8px;display:flex;align-items:center;justify-content:center;font-size:28px;overflow:hidden" onclick="${p.is_available?`openProduct('${p.id}')`:''}">
       ${p.image_url?`<img src="${esc(p.image_url)}" style="width:100%;height:100%;object-fit:cover">`:productEmoji(p)}
-      <button onclick="event.stopPropagation(); toggleFavorite('${p.id}')" style="position:absolute;top:6px;right:6px;background:rgba(255,255,255,.85);border:none;border-radius:99px;width:26px;height:26px;font-size:13px;color:${fav?'var(--danger)':'var(--coffee-500)'}">${fav?'♥':'♡'}</button>
+      <button class="heart-btn ${state._favPop===p.id?'pop':''}" onclick="event.stopPropagation(); toggleFavorite('${p.id}')" style="position:absolute;top:6px;right:6px;background:rgba(255,255,255,.85);border:none;border-radius:99px;width:26px;height:26px;font-size:13px;color:${fav?'var(--danger)':'var(--coffee-500)'}">${fav?'♥':'♡'}</button>
       ${!p.is_available?`<div style="position:absolute;bottom:0;left:0;right:0;background:rgba(42,24,15,.75);color:#fff;font-size:10px;text-align:center;padding:3px;font-weight:700">SOLD OUT</div>`:''}
     </div>
     <div style="cursor:pointer" onclick="${p.is_available?`openProduct('${p.id}')`:''}">
@@ -1705,7 +1882,7 @@ async function toggleFavorite(productId){
     state.favorites.delete(productId);
     await sb.from('favorites').delete().eq('customer_id', state.session.user.id).eq('product_id', productId);
   } else {
-    state.favorites.add(productId);
+    state.favorites.add(productId); state._favPop = productId; render(); setTimeout(() => { if (state._favPop === productId) state._favPop = null; }, 600);
     await sb.from('favorites').insert({ customer_id: state.session.user.id, product_id: productId });
   }
   render();
@@ -2025,6 +2202,7 @@ function renderOrderDetailSheet(fresh){
     </div>
     <span class="badge ${o.status}">${o.status.toUpperCase()}</span>
     <span class="badge ${o.payment_confirmed?'ready':'pending'}" style="margin-left:6px">${o.payment_confirmed?'✓ PAID':'PAYMENT PENDING'}</span>${payBadge(o,'margin-left:6px')}${o.excluded_from_sales?'<span class="badge excluded" style="margin-left:6px">Removed from sales</span>':''}
+    ${['pending','accepted','preparing','ready'].includes(o.status)?`<div style="margin:18px 0 6px">${renderTracker(o)}</div>${etaMinutes(o)?`<div class="meta" style="text-align:center">Estimated ready in about ${etaMinutes(o)} min</div>`:''}`:''}
     <div style="margin:16px 0">${renderOrderTimeline(o)}</div>
     ${o.status==='cancelled' && o.cancel_reason ? `<div style="font-size:12.5px;color:var(--danger);margin-bottom:12px"><b>Cancelled:</b> ${esc(o.cancel_reason)}</div>` : ''}
     ${['admin','worker'].includes(state.profile?.role) ? `<div style="display:flex;gap:8px;margin:0 0 12px"><button class="btn btn-ghost btn-sm" style="flex:1" onclick="shareOrderWhatsApp('${o.id}')">WhatsApp${o.profiles?.phone?' customer':''}</button><button class="btn btn-ghost btn-sm" style="flex:1" onclick="copyOrderSummary('${o.id}')">Share receipt</button>${o.profiles?.phone?`<a class="btn btn-ghost btn-sm" style="flex:1;text-decoration:none;display:inline-flex;align-items:center;justify-content:center" href="tel:${esc(o.profiles.phone)}">Call</a>`:''}</div>` : ''}
@@ -2507,6 +2685,7 @@ function renderAdminDashboard(){
     ${renderAdminQuickSearch()}
     <div style="margin:4px 0 16px"><div class="meta">${new Date().toLocaleDateString([],{weekday:'long',day:'numeric',month:'long'})}</div><div class="display" style="font-size:24px;margin-top:2px">${greet}, ${esc((state.profile?.full_name||'').split(' ')[0]||'there')}</div></div>
     ${renderDailyClose(orders, today)}
+    ${bestSellersToday()}
     <div class="stat-grid" style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:16px">
       ${statCard('Total sales', money(totalSales))}
       ${statCard('All orders', orders.length)}
@@ -2564,7 +2743,8 @@ function renderAdminQuickSearch(){
   if (!_adminUsers.length && !state._quLoading){ state._quLoading=true; loadAdminUsers().catch(()=>{}); }
   return `<div style="margin-bottom:16px"><input class="input" id="admin-quick" type="search" placeholder="Search orders, customers, phone…" value="${esc(state.adminQuick||'')}" oninput="state.adminQuick=this.value; document.getElementById('qs-wrap').innerHTML=quickResultsHtml()"><div id="qs-wrap">${quickResultsHtml()}</div></div>`;
 }
-function statCard(label,val){ return `<div class="card" style="padding:16px"><div style="font-size:12px;color:var(--coffee-500);font-weight:600">${label}</div><div class="display" style="font-size:26px;margin-top:6px">${val}</div></div>`; }
+function statVal(v){ if (typeof v==='number') return `<span data-count="${v}">${v}</span>`; const m=/^Rs ([\d,]+)$/.exec(String(v)); return m?`<span data-count="${m[1].replace(/,/g,'')}" data-money="1">${v}</span>`:v; }
+function statCard(label,val){ return `<div class="card" style="padding:16px"><div style="font-size:12px;color:var(--coffee-500);font-weight:600">${label}</div><div class="display" style="font-size:26px;margin-top:6px">${statVal(val)}</div></div>`; }
 
 // ================= FILTER INSIGHTS =================
 function renderAdminInsights(){
@@ -2932,7 +3112,7 @@ function adminOrdersListHtml(){
     const ns={pending:'accepted',accepted:'preparing',preparing:'ready',ready:'completed'}[o.status];
     const nl={pending:'Accept order',accepted:'Start preparing',preparing:'Mark ready',ready:'Complete order'}[o.status];
     const who = esc(o.profiles?.full_name||(o.customer_id?'Customer':'Deleted customer'));
-    return `<div class="card order-card" data-order-id="${o.id}">
+    return `<div class="card order-card ${_freshOrderIds.has(o.id)?'slide-in':''}" data-order-id="${o.id}">
       <div class="oc-head">
         <div style="min-width:0">
           <div class="oc-title"><span style="cursor:pointer" onclick="setState({orderDetailId:'${o.id}'})">#${o.order_number}</span> ${o.customer_id?`<button class="oc-who linkish" onclick="openCustomerProfile('${o.customer_id}')">${who}</button>`:`<span class="oc-who">${who}</span>`}</div>
