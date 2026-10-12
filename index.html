@@ -294,6 +294,24 @@ select.input{padding-right:40px;text-overflow:ellipsis;white-space:nowrap;overfl
 .ann-x{position:absolute;top:6px;right:6px;width:40px;height:40px;border:none;background:none;color:var(--cream-2);opacity:.7;font-size:15px}
 .ann-timer{display:inline-flex;align-items:center;min-height:32px;padding:0 12px;border-radius:999px;background:rgba(251,247,239,.14);font-size:13px;font-weight:700;font-variant-numeric:tabular-nums}
 .ann-btn{background:var(--cream-2);color:var(--coffee-900);min-height:36px}
+/* ---- v16 payment ---- */
+.pay-opts{display:flex;gap:8px;margin:8px 0 12px}
+.pay-opt{flex:1;min-height:64px;border:1.5px solid var(--line);background:var(--card);border-radius:14px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px;font-size:12.5px;font-weight:600;color:var(--coffee-700);padding:6px}
+.pay-opt .pi{font-size:18px;line-height:1}
+.pay-opt.on{border-color:var(--coffee-900);background:var(--coffee-900);color:var(--cream-2)}
+.pay-panel{padding:14px 16px;margin-bottom:16px;background:#FBF4E6}
+.pay-note{font-size:12.5px;color:var(--coffee-700);margin-top:10px;line-height:1.5}
+.copy-btn{background:none;border:1px solid var(--line);border-radius:8px;font-size:11px;font-weight:600;padding:2px 8px;margin-left:4px;color:var(--coffee-700)}
+.qr-img-btn{background:#fff;border:1px solid var(--line);border-radius:16px;padding:10px;display:inline-block}
+.qr-img{width:220px;height:220px;object-fit:contain;display:block}
+.qr-amount{font-family:'Fraunces',serif;font-size:22px;font-weight:600;margin-top:6px}
+.qr-zoom{position:fixed;inset:0;z-index:120;background:rgba(42,24,15,.92);color:var(--cream-2);display:flex;flex-direction:column;align-items:center;justify-content:center;padding:24px}
+.qr-zoom img{width:min(86vw,420px);height:auto;background:#fff;border-radius:18px;padding:14px}
+.qr-admin{display:flex;gap:12px;align-items:center}
+.qr-prev{width:96px;height:96px;border-radius:14px;border:1px dashed var(--line);background:#fff;display:flex;align-items:center;justify-content:center;overflow:hidden;flex-shrink:0;text-align:center}
+.qr-prev img{width:100%;height:100%;object-fit:contain}
+.badge.pay-qr,.badge.pay-bank{background:#EDE3F3;color:#5B3F73}
+.badge.pay-bank{background:#E2ECF3;color:#2F5470}
 </style>
 </head>
 <body>
@@ -303,7 +321,7 @@ select.input{padding-right:40px;text-overflow:ellipsis;white-space:nowrap;overfl
 // Bumped on every real deploy. Lets a running tab/installed PWA detect a
 // newer version is live on the server and prompt to refresh, instead of
 // silently running stale code forever (a common PWA gotcha).
-const APP_BUILD = '2026-10-11-01';
+const APP_BUILD = '2026-10-12-01';
 async function checkForUpdate(){
   try {
     const resp = await fetch('./index.html?_=' + Date.now(), { cache: 'no-store' });
@@ -842,7 +860,7 @@ async function placeOrder({ pickupDate, pickupTime, notes }){
     customer_id: state.session.user.id, status: 'pending', fulfillment_type: 'pickup',
     pickup_date: pickupDate, pickup_time: pickupTime, subtotal, discount_amount: +discount.toFixed(2),
     tax_amount: tax, total, loyalty_points_redeemed: state.redeemPoints, loyalty_discount_amount: +loyaltyDiscount.toFixed(2),
-    loyalty_points_earned: pointsEarned, promo_id: promoId, special_instructions: notes,
+    loyalty_points_earned: pointsEarned, promo_id: promoId, special_instructions: notes, payment_method: availablePayMethods().includes(state.payMethod) ? state.payMethod : 'cash',
   }).select().single();
   if (error) { showToast('Order failed: ' + error.message, 'err'); return null; }
 
@@ -1191,7 +1209,7 @@ function renderOrderAgain(){
 }
 function orderSummaryText(o){
   const lines=(o.order_items||[]).map(i=>`• ${i.quantity}× ${i.product_name}${i.size_name?' ('+i.size_name+')':''} — ${money(i.line_total ?? i.unit_price*i.quantity)}`);
-  return `${state.settings?.business_name||'Filter'} — Order #${o.order_number}\n${o.profiles?.full_name?'For: '+o.profiles.full_name+'\n':''}Pickup: ${o.pickup_date||''} ${o.pickup_time?fmtTime12(o.pickup_time.slice(0,5)):''}\n\n${lines.join('\n')}\n\nTotal: ${money(o.total)} (${o.payment_confirmed?'paid':'payment pending'})\nStatus: ${o.status}${o.special_instructions?'\nNotes: '+o.special_instructions:''}`;
+  return `${state.settings?.business_name||'Filter'} — Order #${o.order_number}\n${o.profiles?.full_name?'For: '+o.profiles.full_name+'\n':''}Pickup: ${o.pickup_date||''} ${o.pickup_time?fmtTime12(o.pickup_time.slice(0,5)):''}\n\n${lines.join('\n')}\n\nTotal: ${money(o.total)} (${o.payment_confirmed?'paid':'payment pending'} · ${PAY_LABELS[o.payment_method||'cash']||'Cash at pickup'})\nStatus: ${o.status}${o.special_instructions?'\nNotes: '+o.special_instructions:''}`;
 }
 function waNumber(ph){ let d=String(ph||'').replace(/\D/g,''); if(!d) return ''; if(d.startsWith('0')) d='92'+d.slice(1); return d; }
 function findAnyOrder(id){ return state.workerOrders.find(x=>x.id===id)||state.orders.find(x=>x.id===id)||(state.customerProfile?.orders||[]).find(x=>x.id===id); }
@@ -1212,7 +1230,7 @@ function receiptData(o){
     num: o.order_number, placed: new Date(o.created_at),
     pickup: `${o.pickup_date ? new Date(o.pickup_date+'T12:00').toLocaleDateString([],{weekday:'short',day:'numeric',month:'short'}) : ''}${o.pickup_time ? ' · ' + fmtTime12(o.pickup_time.slice(0,5)) : ''}`,
     items, sub, promo: promo > 0 ? promo : 0, ptsRedeemed: Number(o.loyalty_points_redeemed||0), ptsDiscount: pts,
-    tax: Number(o.tax_amount||0), total: Number(o.total||0), paid: !!o.payment_confirmed,
+    tax: Number(o.tax_amount||0), total: Number(o.total||0), paid: !!o.payment_confirmed, method: PAY_LABELS[o.payment_method||'cash'] || 'Cash at pickup',
     earned: Number(o.loyalty_points_earned||0), customer: o.profiles?.full_name || (o.customer_id===state.session?.user?.id ? state.profile?.full_name : '') || '',
     notes: o.special_instructions || '', status: o.status
   };
@@ -1247,7 +1265,7 @@ function receiptHtml(d){
     ${d.ptsDiscount?row(`Points redeemed (${d.ptsRedeemed})`, '−'+money(d.ptsDiscount)):''}
     ${d.tax?row('Tax', money(d.tax)):''}
     ${row('Total', money(d.total), 'rc-total')}
-    <div class="rc-pay ${d.paid?'paid':''}">${d.paid?'✓ Paid':'Payment pending'}</div>
+    <div class="rc-pay ${d.paid?'paid':''}">${d.paid?'✓ Paid':'Payment pending'} · ${esc(d.method)}</div>
     ${d.earned?`<div class="rc-small" style="text-align:center;margin-top:8px">⭐ ${d.earned} loyalty points ${d.paid?'earned':'on payment'}</div>`:''}
     ${d.notes?`<div class="rc-small" style="margin-top:8px">Notes: ${esc(d.notes)}</div>`:''}
     <div class="rc-sep"></div>
@@ -1301,7 +1319,7 @@ async function drawReceiptCanvas(d){
   if (d.ptsDiscount) row(`Points redeemed (${d.ptsRedeemed})`, '−' + money(d.ptsDiscount), {c:'#4A3020'});
   if (d.tax) row('Tax', money(d.tax), {c:'#4A3020'});
   y += 4; row('Total', money(d.total), { w: '700 17px', h: 30 });
-  push(44, yy => { const bw = 150, bx = (W - bw)/2; x.fillStyle = d.paid ? '#E3EEDF' : '#F6E7CC'; x.beginPath(); x.roundRect ? x.roundRect(bx, yy + 6, bw, 30, 15) : x.rect(bx, yy + 6, bw, 30); x.fill(); x.font = sans('700 13px'); x.fillStyle = d.paid ? '#3F6B3A' : '#8A5A1E'; x.textAlign = 'center'; x.fillText(d.paid ? '✓ Paid' : 'Payment pending', W/2, yy + 26); });
+  push(44, yy => { const bw = 250, bx = (W - bw)/2; x.fillStyle = d.paid ? '#E3EEDF' : '#F6E7CC'; x.beginPath(); x.roundRect ? x.roundRect(bx, yy + 6, bw, 30, 15) : x.rect(bx, yy + 6, bw, 30); x.fill(); x.font = sans('700 13px'); x.fillStyle = d.paid ? '#3F6B3A' : '#8A5A1E'; x.textAlign = 'center'; x.fillText((d.paid ? '✓ Paid' : 'Payment pending') + ' · ' + d.method, W/2, yy + 26); });
   if (d.earned) push(20, yy => { x.font = sans('500 12px'); x.fillStyle = '#6B4A34'; x.textAlign = 'center'; x.fillText(`★ ${d.earned} loyalty points ${d.paid ? 'earned' : 'on payment'}`, W/2, yy + 14); });
   if (d.notes) wrap('Notes: ' + d.notes, sans('400 12px'), W - 2*P).forEach(l => push(17, yy => { x.font = sans('400 12px'); x.fillStyle = '#6B4A34'; x.textAlign = 'left'; x.fillText(l, P, yy + 12); }));
   sep();
@@ -1346,6 +1364,92 @@ async function shareReceipt(){
   } catch (e) { if (!e || e.name !== 'AbortError') showToast('Could not share', 'err'); }
 }
 function printReceipt(){ document.body.classList.add('printing-receipt'); setTimeout(() => { window.print(); setTimeout(() => document.body.classList.remove('printing-receipt'), 500); }, 50); }
+
+// ---- Payment method + QR (v16) ----
+const PAY_LABELS = { cash: 'Cash at pickup', bank: 'Bank transfer', qr: 'QR payment' };
+function payBadge(o, style=''){ const m = o.payment_method || 'cash'; if (m === 'cash') return ''; return `<span class="badge pay-${m}" style="${style}">${m === 'qr' ? 'QR' : 'Bank'}</span>`; }
+function availablePayMethods(){
+  const m = ['cash'];
+  if (state.payoutDetails?.show_to_customers && (state.payoutDetails.account_number || state.payoutDetails.iban)) m.push('bank');
+  if (state.settings?.pay_qr_enabled && state.settings?.pay_qr_url) m.push('qr');
+  return m;
+}
+function renderPayMethodPicker(total){
+  const methods = availablePayMethods();
+  if (methods.length === 1) return '';
+  const cur = methods.includes(state.payMethod) ? state.payMethod : 'cash';
+  const pd = state.payoutDetails || {}, st = state.settings || {};
+  const icon = { cash:'💵', bank:'🏦', qr:'▦' };
+  return `<label class="small">How will you pay?</label>
+  <div class="pay-opts">${methods.map(m=>`<button class="pay-opt ${cur===m?'on':''}" onclick="setState({payMethod:'${m}'})"><span class="pi">${icon[m]}</span>${m==='cash'?'Cash at pickup':m==='bank'?'Bank transfer':'Pay by QR'}</button>`).join('')}</div>
+  ${cur==='bank' ? `<div class="card pay-panel">
+      ${pd.bank_name?`<div class="kv"><span class="meta">Bank</span><span>${esc(pd.bank_name)}</span></div>`:''}
+      ${pd.account_title?`<div class="kv"><span class="meta">Title</span><span>${esc(pd.account_title)}</span></div>`:''}
+      ${pd.account_number?`<div class="kv"><span class="meta">Account</span><span>${esc(pd.account_number)} <button class="copy-btn" onclick="copyText('${esc(pd.account_number)}')">Copy</button></span></div>`:''}
+      ${pd.iban?`<div class="kv"><span class="meta">IBAN</span><span style="overflow-wrap:anywhere">${esc(pd.iban)} <button class="copy-btn" onclick="copyText('${esc(pd.iban)}')">Copy</button></span></div>`:''}
+      ${pd.notes?`<div class="meta" style="margin-top:8px">${esc(pd.notes)}</div>`:''}
+      <div class="pay-note">Send <b>${money(total)}</b>, then place your order — we'll confirm your payment.</div></div>` : ''}
+  ${cur==='qr' ? `<div class="card pay-panel" style="text-align:center">
+      <button class="qr-img-btn" onclick="setState({qrZoom:true})" aria-label="Enlarge QR"><img src="${esc(st.pay_qr_url)}" alt="Payment QR" class="qr-img"></button>
+      ${st.pay_qr_label?`<div style="font-weight:700;margin-top:8px">${esc(st.pay_qr_label)}</div>`:''}
+      <div class="qr-amount">Amount: ${money(total)}</div>
+      <div style="display:flex;gap:8px;margin-top:12px"><button class="btn btn-ghost btn-sm" style="flex:1" onclick="saveQrImage()">Save QR</button><button class="btn btn-ghost btn-sm" style="flex:1" onclick="setState({qrZoom:true})">Enlarge</button></div>
+      <div class="pay-note">Scan with your banking app, pay <b>${money(total)}</b>, then tap Place Order — we'll confirm your payment.</div></div>` : ''}
+  ${cur==='cash' ? `<div class="meta" style="margin:-4px 0 16px">Pay at the counter when you pick up.</div>` : ''}
+  ${state.qrZoom && cur==='qr' ? `<div class="qr-zoom" onclick="setState({qrZoom:false})"><img src="${esc(st.pay_qr_url)}" alt="Payment QR"><div style="margin-top:16px;font-weight:700">${money(total)} · tap anywhere to close</div></div>` : ''}`;
+}
+async function copyText(t){ try { await navigator.clipboard.writeText(t); showToast('Copied', 'ok'); } catch (e) { showToast(t, 'info'); } }
+async function saveQrImage(){
+  const url = state.settings?.pay_qr_url; if (!url) return;
+  try {
+    const blob = await (await fetch(url, { cache: 'no-store' })).blob();
+    const file = new File([blob], 'filter-payment-qr.' + ((blob.type.split('/')[1]||'png').replace('jpeg','jpg')), { type: blob.type || 'image/png' });
+    if (navigator.canShare && navigator.canShare({ files: [file] }) && /iPhone|iPad|iPod/.test(navigator.userAgent)) { await navigator.share({ files: [file], title: 'Payment QR' }); return; }
+    const u = URL.createObjectURL(blob); const a = document.createElement('a'); a.href = u; a.download = file.name; document.body.appendChild(a); a.click(); a.remove(); setTimeout(()=>URL.revokeObjectURL(u), 4000);
+    showToast('QR saved', 'ok');
+  } catch (e) { if (!e || e.name !== 'AbortError') showToast('Could not save the QR', 'err'); }
+}
+function qrSettingsHtml(){
+  const s = state.settings || {}; const prev = state.qrDraftUrl !== undefined ? state.qrDraftUrl : (s.pay_qr_url || '');
+  return `<div class="card" style="padding:16px;margin-top:16px" id="qr-settings">
+    <h3 style="margin:0 0 4px;font-size:15px">▦ Payment QR</h3>
+    <p class="meta" style="margin:0 0 12px">Upload your Raast, JazzCash or Easypaisa QR. When it's on, customers can choose "Pay by QR" at checkout. You still tap Confirm Paid once the money arrives.</p>
+    <div class="qr-admin">
+      <div class="qr-prev">${prev ? `<img src="${esc(prev)}" alt="QR preview">` : '<span class="meta">No QR yet</span>'}</div>
+      <div style="flex:1;min-width:0;display:flex;flex-direction:column;gap:8px">
+        <label class="btn btn-outline btn-sm" style="cursor:pointer;justify-content:center;display:inline-flex;align-items:center">${prev?'Replace image':'Upload QR image'}<input type="file" accept="image/*" style="display:none" onchange="uploadQrImage(this.files[0])"></label>
+        ${prev ? `<button class="link-danger" style="min-height:32px;font-size:13px" onclick="state.qrDraftUrl=''; refreshQrSettings()">Remove image</button>` : ''}
+      </div>
+    </div>
+    <label class="small" style="display:block;margin-top:12px">Label / account name (optional)</label><input class="input" id="qr-label" maxlength="60" value="${esc(s.pay_qr_label||'')}" placeholder="e.g. Raast · Yahya Tariq" style="margin:6px 0 12px">
+    <label style="font-size:14px;display:flex;gap:8px;align-items:center;margin-bottom:12px"><input type="checkbox" id="qr-on" ${s.pay_qr_enabled?'checked':''}> Offer "Pay by QR" at checkout</label>
+    <button class="btn btn-primary btn-sm" style="width:100%" id="qr-save" onclick="saveQrSettings()">Save QR settings</button>
+  </div>`;
+}
+function refreshQrSettings(){ const el = document.getElementById('qr-settings'); if (el) { const lbl = document.getElementById('qr-label')?.value, on = document.getElementById('qr-on')?.checked; el.outerHTML = qrSettingsHtml(); const l = document.getElementById('qr-label'); if (l && lbl !== undefined) l.value = lbl; const o = document.getElementById('qr-on'); if (o && on !== undefined) o.checked = on; } }
+async function uploadQrImage(file){
+  if (!file) return; if (!/^image\//.test(file.type)) return showToast('Please choose an image', 'err');
+  if (file.size > 5 * 1024 * 1024) return showToast('Image is too large (max 5 MB)', 'err');
+  showToast('Uploading…', 'info');
+  try {
+    const ext = ((file.name.split('.').pop() || 'png').toLowerCase().replace(/[^a-z0-9]/g, '')) || 'png';
+    const path = `payment-qr/${Date.now()}.${ext}`;
+    const resp = await doFetch(`${SUPABASE_URL}/storage/v1/object/product-images/${path}`, { method: 'POST', headers: { 'apikey': SUPABASE_KEY, 'Authorization': `Bearer ${state.session.access_token}`, 'Content-Type': file.type, 'x-upsert': 'true' }, body: file });
+    if (!resp.ok) { const j = await parseJsonSafe(resp); throw new Error((j && (j.message || j.error)) || 'Upload failed'); }
+    state.qrDraftUrl = `${SUPABASE_URL}/storage/v1/object/public/product-images/${path}`;
+    refreshQrSettings(); showToast('Uploaded — tap Save QR settings', 'ok');
+  } catch (e) { showToast('Upload failed: ' + e.message, 'err'); }
+}
+async function saveQrSettings(){
+  const url = state.qrDraftUrl !== undefined ? state.qrDraftUrl : (state.settings?.pay_qr_url || '');
+  const on = !!document.getElementById('qr-on')?.checked;
+  if (on && !url) return showToast('Upload a QR image first', 'err');
+  const payload = { pay_qr_url: url || null, pay_qr_label: (document.getElementById('qr-label')?.value || '').trim() || null, pay_qr_enabled: on };
+  const { data, error } = await sb.from('business_settings').update(payload).eq('id', true).select();
+  if (error || !data?.length) return showToast('Not saved: ' + (error?.message || 'no permission'), 'err');
+  Object.assign(state.settings, data[0]); state.qrDraftUrl = undefined; forgetTyped('qr-');
+  refreshQrSettings(); showToast('QR settings saved', 'ok');
+}
 
 function renderMenuTab(){
   const prods = filteredProducts();
@@ -1617,16 +1721,7 @@ function renderCheckoutSheet(fresh){
     <label class="small">Order Notes</label>
     <textarea class="input" id="order-notes" style="margin:8px 0 16px;min-height:50px" placeholder="Anything else we should know?"></textarea>
 
-    ${state.payoutDetails?.show_to_customers ? `<div class="card" style="padding:14px;margin-bottom:16px;background:#FBF2E1">
-      <div style="font-weight:700;font-size:13px;margin-bottom:6px">🏦 Prefer to pay by bank transfer?</div>
-      <div style="font-size:12.5px;color:var(--coffee-700);line-height:1.6">
-        ${state.payoutDetails.bank_name?`${esc(state.payoutDetails.bank_name)}<br>`:''}
-        ${state.payoutDetails.account_title?`${esc(state.payoutDetails.account_title)}<br>`:''}
-        ${state.payoutDetails.account_number?`Acct: ${esc(state.payoutDetails.account_number)}<br>`:''}
-        ${state.payoutDetails.iban?`IBAN: ${esc(state.payoutDetails.iban)}<br>`:''}
-        ${state.payoutDetails.notes?`<span style="color:var(--coffee-500)">${esc(state.payoutDetails.notes)}</span>`:''}
-      </div>
-    </div>` : ''}
+    ${renderPayMethodPicker(total)}
 
     <div id="checkout-summary">${checkoutSummaryHtml()}</div>
 
@@ -1745,7 +1840,7 @@ function renderOrderDetailSheet(fresh){
       <button class="btn btn-ghost" style="padding:6px 10px" onclick="setState({orderDetailId:null})">✕</button>
     </div>
     <span class="badge ${o.status}">${o.status.toUpperCase()}</span>
-    <span class="badge ${o.payment_confirmed?'ready':'pending'}" style="margin-left:6px">${o.payment_confirmed?'✓ PAID':'PAYMENT PENDING'}</span>
+    <span class="badge ${o.payment_confirmed?'ready':'pending'}" style="margin-left:6px">${o.payment_confirmed?'✓ PAID':'PAYMENT PENDING'}</span>${payBadge(o,'margin-left:6px')}
     <div style="margin:16px 0">${renderOrderTimeline(o)}</div>
     ${o.status==='cancelled' && o.cancel_reason ? `<div style="font-size:12.5px;color:var(--danger);margin-bottom:12px"><b>Cancelled:</b> ${esc(o.cancel_reason)}</div>` : ''}
     ${['admin','worker'].includes(state.profile?.role) ? `<div style="display:flex;gap:8px;margin:0 0 12px"><button class="btn btn-ghost btn-sm" style="flex:1" onclick="shareOrderWhatsApp('${o.id}')">WhatsApp${o.profiles?.phone?' customer':''}</button><button class="btn btn-ghost btn-sm" style="flex:1" onclick="copyOrderSummary('${o.id}')">Share receipt</button></div>` : ''}
@@ -2125,7 +2220,7 @@ function renderWorkerOrderCard(o){
   const urgent = urgency <= 10 && o.status !== 'ready';
   return `<div class="card" data-order-id="${o.id}" style="padding:12px;${urgent?'border-color:var(--danger)':''}">
     <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px">
-      <div style="font-weight:700;font-size:14px">#${o.order_number}</div>
+      <div style="font-weight:700;font-size:14px">#${o.order_number} ${payBadge(o,'font-size:10px;padding:2px 8px')}</div>
       ${urgent ? `<span class="badge cancelled">⏱ ${urgency<=0?'DUE NOW':urgency+'m'}</span>` : `<span style="font-size:11px;color:var(--coffee-500)">${o.pickup_time||''}</span>`}
     </div>
     <div style="font-size:12px;color:var(--coffee-500);margin-bottom:8px">${esc(o.profiles?.full_name||'Customer')}</div>
@@ -2264,7 +2359,7 @@ function renderDailyClose(orders, today){
       <button class="pill-toggle ${accepting?'on':''}" onclick="toggleAccepting()" aria-pressed="${accepting}"><span class="dot"></span>${accepting?'Taking orders':'Orders paused'}</button></div>
     <div class="close-grid">
       <div><span class="meta">Collected</span><b>${money(paid)}</b></div>
-      <div><span class="meta">To collect</span><b style="color:${unpaid?'#8A5A1E':'inherit'}">${money(unpaid)}</b><span class="meta">${unpaidOrders.length} unpaid</span></div>
+      <div><span class="meta">To collect</span><b style="color:${unpaid?'#8A5A1E':'inherit'}">${money(unpaid)}</b><span class="meta">${unpaidOrders.length} unpaid${unpaidOrders.some(o=>o.payment_method&&o.payment_method!=='cash')?` · ${unpaidOrders.filter(o=>o.payment_method&&o.payment_method!=='cash').length} to verify`:''}</span></div>
       <div><span class="meta">Top today</span><b style="font-size:14px">${top ? esc(top[0]) + ' ×' + top[1] : '—'}</b></div>
     </div></div>`;
 }
@@ -2654,7 +2749,7 @@ function adminOrdersListHtml(){
         </div>
         <div class="oc-total">${money(o.total)}</div>
       </div>
-      <div class="oc-badges"><span class="badge ${o.status}">${o.status.charAt(0).toUpperCase()+o.status.slice(1)}</span><span class="badge ${o.payment_confirmed?'ready':'pending'}">${o.payment_confirmed?'Paid':'Unpaid'}</span></div>
+      <div class="oc-badges"><span class="badge ${o.status}">${o.status.charAt(0).toUpperCase()+o.status.slice(1)}</span><span class="badge ${o.payment_confirmed?'ready':'pending'}">${o.payment_confirmed?'Paid':'Unpaid'}</span>${payBadge(o)}</div>
       ${(ns || (!o.payment_confirmed && o.status!=='cancelled')) ? `<div class="oc-actions">
         ${ns ? `<button class="btn btn-primary btn-sm" style="flex:1" onclick="updateOrderStatus('${o.id}','${ns}')">${nl}</button>` : ''}
         ${!o.payment_confirmed && o.status!=='cancelled' ? `<button class="btn btn-outline btn-sm" style="flex:1" onclick="confirmPayment('${o.id}')">Confirm paid</button>` : ''}
@@ -2984,6 +3079,7 @@ function renderAdminSettings(){
     <button class="btn btn-primary" style="width:100%;margin-top:16px" onclick="saveSettings()">Save Settings</button>
   </div>
   <div id="payout-body">${payoutDetailsBodyHtml()}</div>
+  ${qrSettingsHtml()}
   ${announcementEditorHtml()}
   <div id="staff-codes-body" style="margin-top:16px">${staffCodesBodyHtml()}</div>`;
 }
