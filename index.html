@@ -295,6 +295,10 @@ select.input{padding-right:40px;text-overflow:ellipsis;white-space:nowrap;overfl
 .ann-timer{display:inline-flex;align-items:center;min-height:32px;padding:0 12px;border-radius:999px;background:rgba(251,247,239,.14);font-size:13px;font-weight:700;font-variant-numeric:tabular-nums}
 .ann-btn{background:var(--cream-2);color:var(--coffee-900);min-height:36px}
 /* ---- v16 payment ---- */
+.badge.excluded{background:#EFE6E3;color:#8A3B2E}
+.excl-box{display:flex;gap:12px;align-items:center;justify-content:space-between;background:#F6EFE4;border-radius:14px;padding:12px 14px;margin:0 0 16px;font-size:13.5px}
+.excl-box.warn{background:#F8E9E4;flex-wrap:wrap}
+.btn-danger-soft{background:var(--danger);color:#fff}
 .asap-note{font-size:13px;color:var(--coffee-700);background:#FBF4E6;border-radius:12px;padding:10px 12px;margin:0 0 16px;line-height:1.45}
 .pay-opts{display:flex;gap:8px;margin:8px 0 12px}
 .pay-opt{flex:1;min-height:64px;border:1.5px solid var(--line);background:var(--card);border-radius:14px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px;font-size:12.5px;font-weight:600;color:var(--coffee-700);padding:6px}
@@ -322,7 +326,7 @@ select.input{padding-right:40px;text-overflow:ellipsis;white-space:nowrap;overfl
 // Bumped on every real deploy. Lets a running tab/installed PWA detect a
 // newer version is live on the server and prompt to refresh, instead of
 // silently running stale code forever (a common PWA gotcha).
-const APP_BUILD = '2026-10-12-02';
+const APP_BUILD = '2026-10-12-03';
 async function checkForUpdate(){
   try {
     const resp = await fetch('./index.html?_=' + Date.now(), { cache: 'no-store' });
@@ -1452,6 +1456,21 @@ async function saveQrSettings(){
   refreshQrSettings(); showToast('QR settings saved', 'ok');
 }
 
+function excludeSalesHtml(o){
+  if (state.profile?.role !== 'admin' || o.status === 'cancelled') return '';
+  if (o.excluded_from_sales) return `<div class="excl-box"><div><b>Removed from sales</b><div class="meta">This order doesn't count in totals or summaries.</div></div><button class="btn btn-outline btn-sm" onclick="setOrderExcluded('${o.id}', false)">Undo</button></div>`;
+  if (!(o.payment_confirmed || o.status === 'completed')) return '';
+  if (state.excludeArm === o.id) return `<div class="excl-box warn"><div style="flex:1"><b>Remove ${money(o.total)} from sales?</b><div class="meta">The order stays on record; points aren't changed. You can undo this.</div></div><div style="display:flex;gap:8px"><button class="btn btn-ghost btn-sm" onclick="setState({excludeArm:null})">Keep</button><button class="btn btn-sm btn-danger-soft" onclick="setOrderExcluded('${o.id}', true)">Remove</button></div></div>`;
+  return `<button class="link-danger" style="margin:0 0 16px;display:block" onclick="setState({excludeArm:'${o.id}'})">Remove from sales</button>`;
+}
+async function setOrderExcluded(id, on){
+  const { data, error } = await sb.rpc('admin_set_order_excluded', { p_order_id: id, p_excluded: on });
+  if (error) return showToast('Not changed: ' + error.message, 'err');
+  const row = Array.isArray(data) ? data[0] : data;
+  [state.workerOrders, state.orders].forEach(list => (list || []).forEach(o => { if (o.id === id) { o.excluded_from_sales = row?.excluded_from_sales ?? on; o.excluded_at = row?.excluded_at ?? null; } }));
+  showToast(on ? 'Removed from sales' : 'Back in sales', 'ok');
+  setState({ excludeArm: null });
+}
 function renderMenuTab(){
   const prods = filteredProducts();
   const featured = state.products.filter(p=>p.is_featured && p.is_available);
@@ -1846,12 +1865,13 @@ function renderOrderDetailSheet(fresh){
       <button class="btn btn-ghost" style="padding:6px 10px" onclick="setState({orderDetailId:null})">✕</button>
     </div>
     <span class="badge ${o.status}">${o.status.toUpperCase()}</span>
-    <span class="badge ${o.payment_confirmed?'ready':'pending'}" style="margin-left:6px">${o.payment_confirmed?'✓ PAID':'PAYMENT PENDING'}</span>${payBadge(o,'margin-left:6px')}
+    <span class="badge ${o.payment_confirmed?'ready':'pending'}" style="margin-left:6px">${o.payment_confirmed?'✓ PAID':'PAYMENT PENDING'}</span>${payBadge(o,'margin-left:6px')}${o.excluded_from_sales?'<span class="badge excluded" style="margin-left:6px">Removed from sales</span>':''}
     <div style="margin:16px 0">${renderOrderTimeline(o)}</div>
     ${o.status==='cancelled' && o.cancel_reason ? `<div style="font-size:12.5px;color:var(--danger);margin-bottom:12px"><b>Cancelled:</b> ${esc(o.cancel_reason)}</div>` : ''}
     ${['admin','worker'].includes(state.profile?.role) ? `<div style="display:flex;gap:8px;margin:0 0 12px"><button class="btn btn-ghost btn-sm" style="flex:1" onclick="shareOrderWhatsApp('${o.id}')">WhatsApp${o.profiles?.phone?' customer':''}</button><button class="btn btn-ghost btn-sm" style="flex:1" onclick="copyOrderSummary('${o.id}')">Share receipt</button></div>` : ''}
     ${o.status!=='cancelled' ? `<button class="btn btn-outline btn-sm" style="width:100%;margin:0 0 12px" onclick="openReceipt('${o.id}')">🧾 View receipt</button>` : ''}
     ${canCancel(o) ? `<button class="link-danger" style="margin:0 0 16px" onclick="cancelOrder('${o.id}')">Cancel this order</button>` : ''}
+    ${excludeSalesHtml(o)}
     <div style="font-size:12.5px;color:var(--coffee-500);margin-bottom:16px">Ordered ${new Date(o.created_at).toLocaleString([],{month:'short',day:'numeric',hour:'numeric',minute:'2-digit'})} · ${o.pickup_time?'pickup '+fmtTime12(o.pickup_time.slice(0,5)):'ASAP pickup'}</div>
     ${state.profile?.role==='admin' && o.status!=='cancelled' ? `<div class="card" style="padding:14px;margin-bottom:16px;background:${o.payment_confirmed?'#EAF2E9':'#FBF2E1'}">
       <div style="display:flex;justify-content:space-between;align-items:center;gap:10px">
@@ -2310,7 +2330,7 @@ function renderAdmin(){
 }
 function renderAdminDashboard(){
   const orders = state.workerOrders;
-  const completed = orders.filter(o=>o.status==='completed');
+  const completed = orders.filter(o=>o.status==='completed' && !o.excluded_from_sales);
   const totalSales = completed.reduce((s,o)=>s+Number(o.total),0);
   const today = localDateStr(new Date());
   const todayOrders = orders.filter(o=>localDateStr(new Date(o.created_at))===today);
@@ -2353,7 +2373,7 @@ function quickResultsHtml(){
   return `<div class="card qs-results">${os.map(o=>`<button class="qs-row" onclick="setState({orderDetailId:'${o.id}'})"><span class="qs-ic">🧾</span><span style="flex:1;min-width:0"><b>#${o.order_number}</b> ${esc(o.profiles?.full_name||'Deleted customer')}<span class="meta" style="display:block">${o.status} · ${money(o.total)}</span></span></button>`).join('')}${us.map(u=>`<button class="qs-row" onclick="openCustomerProfile('${u.id}')"><span class="qs-ic">👤</span><span style="flex:1;min-width:0"><b>${esc(u.full_name||'No name')}</b><span class="meta" style="display:block">${esc(u.phone||'no phone')} · ${u.role}</span></span></button>`).join('')}${!os.length&&!us.length?`<div class="meta" style="padding:12px 14px">No orders or customers match “${esc(q)}”.</div>`:''}</div>`;
 }
 function renderDailyClose(orders, today){
-  const t = orders.filter(o => o.status !== 'cancelled' && localDateStr(new Date(o.created_at)) === today);
+  const t = orders.filter(o => o.status !== 'cancelled' && !o.excluded_from_sales && localDateStr(new Date(o.created_at)) === today);
   const paid = t.filter(o => o.payment_confirmed).reduce((a, o) => a + Number(o.total || 0), 0);
   const unpaidOrders = t.filter(o => !o.payment_confirmed);
   const unpaid = unpaidOrders.reduce((a, o) => a + Number(o.total || 0), 0);
@@ -2384,7 +2404,7 @@ function statCard(label,val){ return `<div class="card" style="padding:16px"><di
 
 // ================= FILTER INSIGHTS =================
 function renderAdminInsights(){
-  const orders = state.workerOrders.filter(o=>o.payment_confirmed);
+  const orders = state.workerOrders.filter(o=>o.payment_confirmed && !o.excluded_from_sales);
   if (!orders.length) return `<div class="card" style="padding:24px;text-align:center;color:var(--coffee-500)">Insights will appear here once you have a few paid orders.</div>`;
 
   const avgOrder = orders.reduce((s,o)=>s+Number(o.total),0) / orders.length;
@@ -2755,7 +2775,7 @@ function adminOrdersListHtml(){
         </div>
         <div class="oc-total">${money(o.total)}</div>
       </div>
-      <div class="oc-badges"><span class="badge ${o.status}">${o.status.charAt(0).toUpperCase()+o.status.slice(1)}</span><span class="badge ${o.payment_confirmed?'ready':'pending'}">${o.payment_confirmed?'Paid':'Unpaid'}</span>${payBadge(o)}</div>
+      <div class="oc-badges"><span class="badge ${o.status}">${o.status.charAt(0).toUpperCase()+o.status.slice(1)}</span><span class="badge ${o.payment_confirmed?'ready':'pending'}">${o.payment_confirmed?'Paid':'Unpaid'}</span>${payBadge(o)}${o.excluded_from_sales?'<span class="badge excluded">Removed from sales</span>':''}</div>
       ${(ns || (!o.payment_confirmed && o.status!=='cancelled')) ? `<div class="oc-actions">
         ${ns ? `<button class="btn btn-primary btn-sm" style="flex:1" onclick="updateOrderStatus('${o.id}','${ns}')">${nl}</button>` : ''}
         ${!o.payment_confirmed && o.status!=='cancelled' ? `<button class="btn btn-outline btn-sm" style="flex:1" onclick="confirmPayment('${o.id}')">Confirm paid</button>` : ''}
@@ -2959,7 +2979,7 @@ function renderCustomerProfileSheet(fresh){
   const c = state.customerProfile;
   const close = `<button class="btn btn-ghost btn-sm" aria-label="Close" onclick="setState({customerProfile:null})">✕</button>`;
   if (c.loading) return `<div class="scrim" onclick="if(event.target===this) setState({customerProfile:null})"><div class="sheet ${fresh?'':'no-anim'}"><div style="display:flex;justify-content:space-between;align-items:center"><h2 class="display" style="margin:0;font-size:22px">Customer</h2>${close}</div><div style="display:flex;justify-content:center;padding:32px"><div class="spinner"></div></div></div></div>`;
-  const u = c.profile, paid = c.orders.filter(o => o.payment_confirmed && o.status !== 'cancelled');
+  const u = c.profile, paid = c.orders.filter(o => o.payment_confirmed && o.status !== 'cancelled' && !o.excluded_from_sales);
   const spent = paid.reduce((t, o) => t + Number(o.total || 0), 0);
   const counts = {}; c.orders.forEach(o => (o.order_items || []).forEach(oi => { counts[oi.product_name] = (counts[oi.product_name] || 0) + oi.quantity; }));
   const top = Object.entries(counts).sort((a, b) => b[1] - a[1]).slice(0, 3);
