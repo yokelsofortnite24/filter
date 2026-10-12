@@ -304,6 +304,10 @@ select.input{padding-right:40px;text-overflow:ellipsis;white-space:nowrap;overfl
 .nob-dot{width:10px;height:10px;border-radius:50%;background:#E8B04B;box-shadow:0 0 0 4px rgba(232,176,75,.25);flex-shrink:0}
 .nob-open{font-weight:700;font-size:12.5px;padding:6px 12px;border-radius:999px;background:rgba(255,255,255,.12)}
 @keyframes nobIn{from{opacity:0;transform:translateY(-16px)}to{opacity:1;transform:none}}
+.wa-fab{position:fixed;right:max(16px,calc(50vw - 224px));bottom:calc(env(safe-area-inset-bottom) + 144px);z-index:60;display:flex;align-items:center;gap:6px;min-height:48px;padding:0 16px 0 14px;border:0;border-radius:999px;background:#2E7D4F;color:#fff;font:inherit;font-weight:700;font-size:14px;box-shadow:0 8px 22px rgba(46,125,79,.35)}
+.wa-fab.lift{bottom:calc(env(safe-area-inset-bottom) + 144px)}
+.btn-wa{background:#2E7D4F;color:#fff;display:inline-flex;align-items:center;justify-content:center;gap:6px}
+.btn-wa svg{width:18px;height:18px}
 .tip-chips,.note-chips{display:flex;gap:8px;flex-wrap:wrap;margin:8px 0 10px}
 .tip-chip{flex:1;min-width:64px;min-height:44px;border-radius:12px;border:1.5px solid var(--line);background:var(--card);font-weight:600;font-size:13px;color:var(--coffee-700)}
 .tip-chip.on{background:var(--coffee-900);border-color:var(--coffee-900);color:var(--cream-2)}
@@ -328,6 +332,34 @@ select.input{padding-right:40px;text-overflow:ellipsis;white-space:nowrap;overfl
 .qr-prev img{width:100%;height:100%;object-fit:contain}
 .badge.pay-qr,.badge.pay-bank{background:#EDE3F3;color:#5B3F73}
 .badge.pay-bank{background:#E2ECF3;color:#2F5470}
+
+/* ---- v20 refresh + motion ---- */
+:root{--soft:0 1px 2px rgba(42,24,15,.04),0 8px 24px -18px rgba(74,48,32,.30)}
+.card{border-color:rgba(230,217,194,.65);box-shadow:var(--soft);border-radius:18px}
+.btn{transition:transform .16s cubic-bezier(.3,.7,.4,1.4),background-color .2s,box-shadow .2s}
+.btn:active{transform:scale(.96)}
+.pcard{transition:transform .2s ease,box-shadow .2s ease}
+.pcard:active{transform:scale(.98)}
+.cart-badge.bump{animation:bump .5s cubic-bezier(.3,.7,.4,1.6)}
+@keyframes bump{0%{transform:scale(1)}35%{transform:scale(1.45)}70%{transform:scale(.9)}100%{transform:scale(1)}}
+#root.enter > :not(.scrim):not(.toast-stack):not(.tabbar){animation:screenIn .32s ease-out both}
+#root.enter .pcard{animation:cardIn .42s ease-out both}
+#root.enter .pcard:nth-child(2){animation-delay:.04s}#root.enter .pcard:nth-child(3){animation-delay:.08s}#root.enter .pcard:nth-child(4){animation-delay:.12s}#root.enter .pcard:nth-child(5){animation-delay:.16s}#root.enter .pcard:nth-child(6){animation-delay:.2s}#root.enter .pcard:nth-child(n+7){animation-delay:.24s}
+@keyframes screenIn{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:none}}
+@keyframes cardIn{from{opacity:0;transform:translateY(12px) scale(.98)}to{opacity:1;transform:none}}
+.sheet:not(.no-anim){animation-timing-function:cubic-bezier(.2,.8,.2,1)!important}
+.scrim{animation:fadeIn .2s ease-out}
+@keyframes fadeIn{from{opacity:0}to{opacity:1}}
+.success-pop{position:fixed;inset:0;z-index:150;display:flex;align-items:center;justify-content:center;background:rgba(42,24,15,.18);animation:fadeIn .2s ease-out;transition:opacity .35s;pointer-events:none}
+.success-pop.out{opacity:0}
+.sp-card{background:var(--card);border-radius:24px;padding:24px 28px;text-align:center;box-shadow:0 20px 50px -20px rgba(42,24,15,.45);animation:popIn .45s cubic-bezier(.3,.7,.4,1.4) both}
+.sp-check svg{width:64px;height:64px;fill:none;stroke:var(--sage);stroke-width:3.5;stroke-linecap:round;stroke-linejoin:round}
+.sp-check circle{stroke-dasharray:151;stroke-dashoffset:151;animation:draw .5s .1s ease-out forwards;stroke:rgba(119,135,95,.35)}
+.sp-check path{stroke-dasharray:40;stroke-dashoffset:40;animation:draw .35s .45s ease-out forwards}
+.sp-text{margin-top:10px;font-family:'Fraunces',serif;font-weight:600;font-size:18px;color:var(--coffee-900)}
+@keyframes popIn{from{opacity:0;transform:scale(.85)}to{opacity:1;transform:none}}
+@keyframes draw{to{stroke-dashoffset:0}}
+@media (prefers-reduced-motion: reduce){*,*::before,*::after{animation-duration:.01ms!important;animation-delay:0s!important;transition-duration:.01ms!important}}
 </style>
 </head>
 <body>
@@ -337,7 +369,7 @@ select.input{padding-right:40px;text-overflow:ellipsis;white-space:nowrap;overfl
 // Bumped on every real deploy. Lets a running tab/installed PWA detect a
 // newer version is live on the server and prompt to refresh, instead of
 // silently running stale code forever (a common PWA gotcha).
-const APP_BUILD = '2026-10-12-04';
+const APP_BUILD = '2026-10-12-05';
 async function checkForUpdate(){
   try {
     const resp = await fetch('./index.html?_=' + Date.now(), { cache: 'no-store' });
@@ -975,7 +1007,7 @@ async function placeOrder({ pickupDate, pickupTime, notes }){
 
   await loadProfile();
   setState({ cart: [], checkoutOpen: false, promoCode: '', promoResult: null, redeemPoints: 0, tip: 0, tipCustom: false, view: 'customer', tab: 'orders' });
-  showToast(`Order #${order.order_number} placed! 🎉`, 'ok');
+  successPop(`Order #${order.order_number} placed!`);
   return order;
 }
 
@@ -991,6 +1023,11 @@ function tabJustChanged(tab){
   const changed = tab !== _lastTab;
   _lastTab = tab;
   return changed;
+}
+let _screenKey = '', _enterT = null, _lastCartCount = 0;
+function successPop(text){
+  const el = document.createElement('div'); el.className = 'success-pop'; el.innerHTML = `<div class="sp-card"><div class="sp-check"><svg viewBox="0 0 52 52"><circle cx="26" cy="26" r="24"/><path d="M15 27l7 7 15-16"/></svg></div><div class="sp-text">${esc(text)}</div></div>`;
+  document.body.appendChild(el); setTimeout(() => el.classList.add('out'), 1500); setTimeout(() => el.remove(), 1900);
 }
 function render(){
   if (state.view === 'loading') { root.innerHTML = `<div style="height:100vh;display:flex;align-items:center;justify-content:center;flex-direction:column;gap:12px"><div class="spinner" style="width:32px;height:32px;border-width:3px"></div><div class="display" style="font-size:22px;color:var(--coffee-700)">Filter</div></div>`; return; }
@@ -1021,6 +1058,9 @@ function render(){
   try { if (activeId) { selStart = active.selectionStart; selEnd = active.selectionEnd; } } catch (e) {}
   const scrolls = captureScrolls();
   root.innerHTML = html;
+  _lastCartCount = (state.cart||[]).reduce((a,i)=>a+i.qty,0);
+  const _sk = [state.view, state.tab, state.adminTab, state.workerTab].join('|');
+  if (_sk !== _screenKey) { _screenKey = _sk; root.classList.remove('enter'); void root.offsetWidth; root.classList.add('enter'); clearTimeout(_enterT); _enterT = setTimeout(() => root.classList.remove('enter'), 800); }
   restoreTypedValues(activeId, selStart, selEnd);
   restoreScrolls(scrolls);
 }
@@ -1191,7 +1231,7 @@ function renderCustomer(){
         ${renderInstallIconBtn()}
         ${renderBell()}
         <button class="btn btn-ghost" style="padding:9px 12px;position:relative" onclick="setState({cartOpen:true, notifPanelOpen:false})">🛍
-          ${cartCount>0?`<span style="position:absolute;top:-6px;right:-6px;background:var(--caramel-dark);color:#fff;border-radius:99px;font-size:10px;width:18px;height:18px;display:flex;align-items:center;justify-content:center">${cartCount}</span>`:''}
+          ${cartCount>0?`<span class="cart-badge ${cartCount>_lastCartCount?'bump':''}" style="position:absolute;top:-6px;right:-6px;background:var(--caramel-dark);color:#fff;border-radius:99px;font-size:10px;width:18px;height:18px;display:flex;align-items:center;justify-content:center">${cartCount}</span>`:''}
         </button>
       </div>
     </div>
@@ -1303,7 +1343,14 @@ function orderSummaryText(o){
   const lines=(o.order_items||[]).map(i=>`• ${i.quantity}× ${i.product_name}${i.size_name?' ('+i.size_name+')':''} — ${money(i.line_total ?? i.unit_price*i.quantity)}`);
   return `${state.settings?.business_name||'Filter'} — Order #${o.order_number}\n${o.profiles?.full_name?'For: '+o.profiles.full_name+'\n':''}Pickup: ${o.pickup_time?(o.pickup_date||'')+' '+fmtTime12(o.pickup_time.slice(0,5)):'ASAP'}\n\n${lines.join('\n')}\n\nTotal: ${money(o.total)} (${o.payment_confirmed?'paid':'payment pending'} · ${PAY_LABELS[o.payment_method||'cash']||'Cash at pickup'})\nStatus: ${o.status}${o.special_instructions?'\nNotes: '+o.special_instructions:''}`;
 }
-function waNumber(ph){ let d=String(ph||'').replace(/\D/g,''); if(!d) return ''; if(d.startsWith('0')) d='92'+d.slice(1); return d; }
+function waNumber(ph){ let d=String(ph||'').replace(/\D/g,''); if(!d) return ''; if(d.startsWith('0092')) d=d.slice(2); if(d.startsWith('0')) d='92'+d.slice(1); else if(d.length===10 && d.startsWith('3')) d='92'+d; return d; }
+function shopWa(){ const n = waNumber(state.settings?.support_phone); return /^92\d{10}$/.test(n) ? n : ''; }
+function openShopWhatsApp(order){
+  const n = shopWa(); if (!n) return;
+  const msg = order ? `Hi ${state.settings?.business_name||'Filter'}, about my order #${order.order_number}: ` : `Hi ${state.settings?.business_name||'Filter'}! `;
+  window.open(`https://wa.me/${n}?text=${encodeURIComponent(msg)}`, '_blank');
+}
+const WA_SVG = '<svg viewBox="0 0 24 24" width="22" height="22" fill="currentColor" aria-hidden="true"><path d="M12 2a10 10 0 0 0-8.6 15.1L2 22l5-1.3A10 10 0 1 0 12 2zm0 18.2a8.2 8.2 0 0 1-4.2-1.1l-.3-.2-3 .8.8-2.9-.2-.3A8.2 8.2 0 1 1 12 20.2zm4.5-6.1c-.2-.1-1.5-.7-1.7-.8-.2-.1-.4-.1-.6.1l-.8 1c-.1.2-.3.2-.5.1a6.7 6.7 0 0 1-3.3-2.9c-.3-.4.3-.4.7-1.4.1-.2 0-.3 0-.4l-.8-1.8c-.2-.5-.4-.4-.6-.4h-.5a1 1 0 0 0-.7.3 3 3 0 0 0-.9 2.2 5.2 5.2 0 0 0 1.1 2.7 11.8 11.8 0 0 0 4.5 4c1.7.7 2.3.8 3.2.6.5-.1 1.5-.6 1.7-1.2.2-.6.2-1.1.2-1.2-.1-.1-.2-.2-.5-.3z"/></svg>';
 function findAnyOrder(id){ return state.workerOrders.find(x=>x.id===id)||state.orders.find(x=>x.id===id)||(state.customerProfile?.orders||[]).find(x=>x.id===id); }
 function shareOrderWhatsApp(id){ const o=findAnyOrder(id); if(!o) return; const n=waNumber(o.profiles?.phone); window.open(`https://wa.me/${n}?text=${encodeURIComponent(orderSummaryText(o))}`,'_blank'); }
 async function copyOrderSummary(id){ const o=findAnyOrder(id); if(!o) return; const t=orderSummaryText(o); try{ if(navigator.share){ await navigator.share({title:'Order #'+o.order_number,text:t}); return; } await navigator.clipboard.writeText(t); showToast('Order summary copied','ok'); }catch(e){ if(e&&e.name!=='AbortError') showToast('Could not share','err'); } }
@@ -1576,13 +1623,14 @@ async function setOrderExcluded(id, on){
   showToast(on ? 'Removed from sales' : 'Back in sales', 'ok');
   setState({ excludeArm: null });
 }
+function waFab(){ return shopWa() && !modalInUse() ? `<button class="wa-fab ${state.cart.length?'lift':''}" onclick="openShopWhatsApp()" aria-label="Chat on WhatsApp">${WA_SVG}<span>Chat</span></button>` : ''; }
 function renderMenuTab(){
   const prods = filteredProducts();
   const featured = state.products.filter(p=>p.is_featured && p.is_available);
   const drop = (state.promotions||[]).find(p=>p.is_drop && p.is_active && p.ends_at && new Date(p.ends_at) > new Date());
   const taste = computeTasteProfile();
   const recommendation = taste ? state.products.find(p=>p.name===taste.favorite && p.is_available) : null;
-  return `
+  return waFab() + `
   <div style="padding:16px 18px">
     ${renderAnnouncement()}
     ${renderShopStatus()}
@@ -1636,7 +1684,7 @@ function renderFeaturedCard(p){
 }
 function renderProductCard(p){
   const fav = state.favorites.has(p.id);
-  return `<div class="card hoverable" style="padding:12px;${!p.is_available?'opacity:.5':''}">
+  return `<div class="card hoverable pcard" style="padding:12px;${!p.is_available?'opacity:.5':''}">
     <div style="position:relative;height:96px;border-radius:12px;background:linear-gradient(135deg,#EFE0C4,var(--caramel-light));margin-bottom:8px;display:flex;align-items:center;justify-content:center;font-size:28px;overflow:hidden" onclick="${p.is_available?`openProduct('${p.id}')`:''}">
       ${p.image_url?`<img src="${esc(p.image_url)}" style="width:100%;height:100%;object-fit:cover">`:productEmoji(p)}
       <button onclick="event.stopPropagation(); toggleFavorite('${p.id}')" style="position:absolute;top:6px;right:6px;background:rgba(255,255,255,.85);border:none;border-radius:99px;width:26px;height:26px;font-size:13px;color:${fav?'var(--danger)':'var(--coffee-500)'}">${fav?'♥':'♡'}</button>
@@ -1981,6 +2029,7 @@ function renderOrderDetailSheet(fresh){
     ${o.status==='cancelled' && o.cancel_reason ? `<div style="font-size:12.5px;color:var(--danger);margin-bottom:12px"><b>Cancelled:</b> ${esc(o.cancel_reason)}</div>` : ''}
     ${['admin','worker'].includes(state.profile?.role) ? `<div style="display:flex;gap:8px;margin:0 0 12px"><button class="btn btn-ghost btn-sm" style="flex:1" onclick="shareOrderWhatsApp('${o.id}')">WhatsApp${o.profiles?.phone?' customer':''}</button><button class="btn btn-ghost btn-sm" style="flex:1" onclick="copyOrderSummary('${o.id}')">Share receipt</button>${o.profiles?.phone?`<a class="btn btn-ghost btn-sm" style="flex:1;text-decoration:none;display:inline-flex;align-items:center;justify-content:center" href="tel:${esc(o.profiles.phone)}">Call</a>`:''}</div>` : ''}
     ${o.status!=='cancelled' ? `<button class="btn btn-outline btn-sm" style="width:100%;margin:0 0 12px" onclick="openReceipt('${o.id}')">🧾 View receipt</button>` : ''}
+    ${state.profile?.role==='customer' ? `<div style="display:flex;gap:8px;margin:0 0 12px">${shopWa()?`<button class="btn btn-wa btn-sm" style="flex:1" onclick="openShopWhatsApp(findAnyOrder('${o.id}'))">${WA_SVG} Chat about this order</button>`:''}${['completed','cancelled'].includes(o.status)?`<button class="btn btn-ghost btn-sm" style="flex:1" onclick="setState({orderDetailId:null}); reorder('${o.id}')">Order again</button>`:''}</div>` : ''}
     ${canCancel(o) ? `<button class="link-danger" style="margin:0 0 16px" onclick="cancelOrder('${o.id}')">Cancel this order</button>` : ''}
     ${tipEditorHtml(o)}
     ${excludeSalesHtml(o)}
@@ -2306,7 +2355,7 @@ function renderProfileTab(){
         <b>${esc(n.title)}</b><br><span style="color:var(--coffee-500);font-size:12px">${esc(n.body||'')}</span>
       </div>`).join('') : `<div style="color:var(--coffee-500);font-size:13px">No notifications yet.</div>`}
     </div>
-    <button class="btn btn-outline" style="width:100%;margin-bottom:10px" onclick="showToast('Call or WhatsApp us: ${esc(state.settings?.support_phone||'03014022888')}')">💬 Customer Support</button>
+    <button class="btn btn-outline" style="width:100%;margin-bottom:10px" onclick="${shopWa()?'openShopWhatsApp()':`showToast('Call us: ${esc(state.settings?.support_phone||'')}')`}">💬 Customer Support${shopWa()?' (WhatsApp)':''}</button>
     <button class="btn btn-danger" style="width:100%" onclick="signOut()">Sign Out</button>
   </div>`;
 }
@@ -2873,7 +2922,8 @@ function adminOrdersListHtml(){
   const q = (state.adminOrderSearch||'').toLowerCase();
   const statusFilter = state.adminOrderStatusFilter || 'all';
   const filtered = state.workerOrders.filter(o => {
-    if (statusFilter !== 'all' && o.status !== statusFilter) return false;
+    if (statusFilter === 'unpaid') { if (o.payment_confirmed || o.status === 'cancelled') return false; }
+    else if (statusFilter !== 'all' && o.status !== statusFilter) return false;
     if (statusFilter === 'all' && o.status === 'cancelled') return false; // findable under the Cancelled chip
     if (q && !String(o.order_number).includes(q) && !(o.profiles?.full_name||'').toLowerCase().includes(q)) return false;
     return true;
@@ -2905,9 +2955,9 @@ window.filterAdminOrders = function(){
 function renderAdminOrders(){
   const unpaid = state.workerOrders.filter(o=>!o.payment_confirmed && o.status!=='cancelled').length;
   const statusFilter = state.adminOrderStatusFilter || 'all';
-  const statuses = ['all','pending','accepted','preparing','ready','completed','cancelled'];
+  const statuses = ['all','unpaid','pending','accepted','preparing','ready','completed','cancelled'];
   return `
-    ${unpaid>0 ? `<div class="card" style="padding:12px 14px;margin-bottom:14px;background:#FBF2E1;font-size:12.5px;font-weight:600;color:var(--caramel-dark)">${unpaid} order${unpaid>1?'s':''} awaiting payment confirmation</div>` : ''}
+    ${unpaid>0 ? `<div class="card" role="button" onclick="state.adminOrderStatusFilter='unpaid'; render()" style="cursor:pointer;padding:12px 14px;margin-bottom:14px;background:#FBF2E1;font-size:12.5px;font-weight:600;color:var(--caramel-dark)">${unpaid} order${unpaid>1?'s':''} awaiting payment confirmation</div>` : ''}
     <input class="input" placeholder="Search by order # or customer name" value="${esc(state.adminOrderSearch||'')}" oninput="state.adminOrderSearch=this.value; filterAdminOrders()" style="margin-bottom:10px">
     <div class="scrollx" style="margin-bottom:14px">
       ${statuses.map(s=>`<button class="chip ${statusFilter===s?'active':''}" onclick="state.adminOrderStatusFilter='${s}'; render()">${s==='all'?'All':s.charAt(0).toUpperCase()+s.slice(1)}</button>`).join('')}
@@ -3207,7 +3257,8 @@ function renderAdminSettings(){
   return `<div class="card" style="padding:16px;margin-bottom:16px">
     <label class="small">Business Name</label><input class="input" id="s-name" value="${esc(s.business_name||'')}" oninput="state.settingsDraft.business_name=this.value" style="margin:6px 0 12px">
     <label class="small">Tagline</label><input class="input" id="s-tag" value="${esc(s.tagline||'')}" oninput="state.settingsDraft.tagline=this.value" style="margin:6px 0 12px">
-    <label class="small">Contact / WhatsApp Number</label><input class="input" id="s-phone" value="${esc(s.support_phone||'')}" oninput="state.settingsDraft.support_phone=this.value" style="margin:6px 0 12px">
+    <label class="small">Contact / WhatsApp Number</label><input class="input" id="s-phone" value="${esc(s.support_phone||'')}" oninput="state.settingsDraft.support_phone=this.value; const h=document.getElementById('wa-hint'); if(h){const n=waNumber(this.value); h.textContent=/^92\d{10}$/.test(n)?'WhatsApp button links to wa.me/'+n:'Enter a Pakistani mobile (e.g. 0301 2345678) to show the WhatsApp button';}" style="margin:6px 0 4px">
+    <div class="meta" id="wa-hint" style="margin:0 0 12px">${/^92\d{10}$/.test(waNumber(s.support_phone))?'WhatsApp button links to wa.me/'+waNumber(s.support_phone):'Enter a Pakistani mobile (e.g. 0301 2345678) to show the WhatsApp button'}</div>
     <label class="small">Support Email</label><input class="input" id="s-email" name="support_email" type="email" inputmode="email" autocomplete="off" autocapitalize="off" spellcheck="false" value="${esc(s.support_email||'')}" oninput="state.settingsDraft.support_email=this.value" onchange="state.settingsDraft.support_email=this.value" style="margin:6px 0 12px">
     <div style="display:flex;gap:10px">
       <div style="flex:1"><label class="small">Open Time</label><input class="input" id="s-open" type="time" value="${s.open_time||'07:00'}" onchange="state.settingsDraft.open_time=this.value" style="margin:6px 0 12px"></div>
