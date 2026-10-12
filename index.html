@@ -178,7 +178,7 @@ textarea,input,select{font-family:inherit}
 .order-card{padding:16px;display:flex;flex-direction:column;gap:8px}
 .oc-head{display:flex;justify-content:space-between;align-items:flex-start;gap:8px}
 .oc-title{font-weight:700;font-size:15px}
-.oc-who{font-weight:500;color:var(--coffee-700);font-size:15px}
+.oc-who{font-weight:700;color:var(--coffee-900);font-size:15px}
 .oc-total{font-weight:700;font-size:15px;white-space:nowrap}
 .oc-badges{display:flex;gap:8px;flex-wrap:wrap}
 .oc-actions{display:flex;gap:8px;margin-top:8px}
@@ -295,6 +295,7 @@ select.input{padding-right:40px;text-overflow:ellipsis;white-space:nowrap;overfl
 .ann-timer{display:inline-flex;align-items:center;min-height:32px;padding:0 12px;border-radius:999px;background:rgba(251,247,239,.14);font-size:13px;font-weight:700;font-variant-numeric:tabular-nums}
 .ann-btn{background:var(--cream-2);color:var(--coffee-900);min-height:36px}
 /* ---- v16 payment ---- */
+.asap-note{font-size:13px;color:var(--coffee-700);background:#FBF4E6;border-radius:12px;padding:10px 12px;margin:0 0 16px;line-height:1.45}
 .pay-opts{display:flex;gap:8px;margin:8px 0 12px}
 .pay-opt{flex:1;min-height:64px;border:1.5px solid var(--line);background:var(--card);border-radius:14px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px;font-size:12.5px;font-weight:600;color:var(--coffee-700);padding:6px}
 .pay-opt .pi{font-size:18px;line-height:1}
@@ -321,7 +322,7 @@ select.input{padding-right:40px;text-overflow:ellipsis;white-space:nowrap;overfl
 // Bumped on every real deploy. Lets a running tab/installed PWA detect a
 // newer version is live on the server and prompt to refresh, instead of
 // silently running stale code forever (a common PWA gotcha).
-const APP_BUILD = '2026-10-12-01';
+const APP_BUILD = '2026-10-12-02';
 async function checkForUpdate(){
   try {
     const resp = await fetch('./index.html?_=' + Date.now(), { cache: 'no-store' });
@@ -1209,7 +1210,7 @@ function renderOrderAgain(){
 }
 function orderSummaryText(o){
   const lines=(o.order_items||[]).map(i=>`• ${i.quantity}× ${i.product_name}${i.size_name?' ('+i.size_name+')':''} — ${money(i.line_total ?? i.unit_price*i.quantity)}`);
-  return `${state.settings?.business_name||'Filter'} — Order #${o.order_number}\n${o.profiles?.full_name?'For: '+o.profiles.full_name+'\n':''}Pickup: ${o.pickup_date||''} ${o.pickup_time?fmtTime12(o.pickup_time.slice(0,5)):''}\n\n${lines.join('\n')}\n\nTotal: ${money(o.total)} (${o.payment_confirmed?'paid':'payment pending'} · ${PAY_LABELS[o.payment_method||'cash']||'Cash at pickup'})\nStatus: ${o.status}${o.special_instructions?'\nNotes: '+o.special_instructions:''}`;
+  return `${state.settings?.business_name||'Filter'} — Order #${o.order_number}\n${o.profiles?.full_name?'For: '+o.profiles.full_name+'\n':''}Pickup: ${o.pickup_time?(o.pickup_date||'')+' '+fmtTime12(o.pickup_time.slice(0,5)):'ASAP'}\n\n${lines.join('\n')}\n\nTotal: ${money(o.total)} (${o.payment_confirmed?'paid':'payment pending'} · ${PAY_LABELS[o.payment_method||'cash']||'Cash at pickup'})\nStatus: ${o.status}${o.special_instructions?'\nNotes: '+o.special_instructions:''}`;
 }
 function waNumber(ph){ let d=String(ph||'').replace(/\D/g,''); if(!d) return ''; if(d.startsWith('0')) d='92'+d.slice(1); return d; }
 function findAnyOrder(id){ return state.workerOrders.find(x=>x.id===id)||state.orders.find(x=>x.id===id)||(state.customerProfile?.orders||[]).find(x=>x.id===id); }
@@ -1228,7 +1229,7 @@ function receiptData(o){
   return {
     biz: st.business_name || 'Filter', tagline: st.tagline || 'Coffee & Tea', phone: st.support_phone || '',
     num: o.order_number, placed: new Date(o.created_at),
-    pickup: `${o.pickup_date ? new Date(o.pickup_date+'T12:00').toLocaleDateString([],{weekday:'short',day:'numeric',month:'short'}) : ''}${o.pickup_time ? ' · ' + fmtTime12(o.pickup_time.slice(0,5)) : ''}`,
+    pickup: `${o.pickup_date ? new Date(o.pickup_date+'T12:00').toLocaleDateString([],{weekday:'short',day:'numeric',month:'short'}) : ''}${o.pickup_time ? ' · ' + fmtTime12(o.pickup_time.slice(0,5)) : ' · ASAP'}`,
     items, sub, promo: promo > 0 ? promo : 0, ptsRedeemed: Number(o.loyalty_points_redeemed||0), ptsDiscount: pts,
     tax: Number(o.tax_amount||0), total: Number(o.total||0), paid: !!o.payment_confirmed, method: PAY_LABELS[o.payment_method||'cash'] || 'Cash at pickup',
     earned: Number(o.loyalty_points_earned||0), customer: o.profiles?.full_name || (o.customer_id===state.session?.user?.id ? state.profile?.full_name : '') || '',
@@ -1699,11 +1700,9 @@ function renderCheckoutSheet(fresh){
       <h2 class="display" style="margin:0;font-size:22px">Checkout</h2>
       <button class="btn btn-ghost" style="padding:6px 10px" onclick="setState({checkoutOpen:false})">✕</button>
     </div>
-    <label class="small">Pickup Time</label>
-    <select class="input" id="pickup-slot" style="margin:8px 0 4px">
-      ${slots.map(s=>`<option value="${s.date}|${s.time}">${s.label}${s.recommended?' — ⭐ Quiet, ready fastest':s.load>=(state.settings?.max_orders_per_slot||4)?' — Busy':''}</option>`).join('')}
-    </select>
-    ${slots.some(s=>s.recommended) ? `<p style="font-size:11.5px;color:var(--sage);margin:0 0 16px">⭐ We've marked the quietest upcoming slot — pick it for the fastest turnaround.</p>` : `<div style="margin-bottom:16px"></div>`}
+    ${!(state.profile?.full_name||'').trim() ? `<label class="small">Your name</label>
+    <input class="input" id="checkout-name" maxlength="60" autocomplete="name" placeholder="So we know whose order it is" style="margin:8px 0 16px">` : ''}
+    <div class="asap-note">☕ Made fresh as soon as you order — we'll notify you when it's ready to pick up.</div>
 
     <label class="small">Promo Code</label>
     <div style="display:flex;gap:8px;margin:8px 0 6px">
@@ -1756,9 +1755,16 @@ async function applyPromo(){
 async function submitOrder(){
   const btn = document.getElementById('place-order-btn');
   if (btn) { btn.disabled = true; btn.innerHTML = `<div class="spinner"></div>`; }
-  const slotVal = document.getElementById('pickup-slot').value.split('|');
   const notes = document.getElementById('order-notes').value.trim();
-  if (!slotVal[0] || !slotVal[1]) { showToast('Please choose a pickup time', 'err'); if (btn) { btn.disabled = false; btn.textContent = 'Place Order'; } return; }
+  const nameEl = document.getElementById('checkout-name');
+  if (nameEl) {
+    const nm = nameEl.value.trim();
+    if (nm.length < 2) { showToast('Please enter your name', 'err'); nameEl.focus(); if (btn) { btn.disabled = false; btn.textContent = 'Place Order'; } return; }
+    const { error: ne } = await sb.from('profiles').update({ full_name: nm }).eq('id', state.session.user.id);
+    if (ne) { showToast('Could not save your name: ' + ne.message, 'err'); if (btn) { btn.disabled = false; btn.textContent = 'Place Order'; } return; }
+    state.profile.full_name = nm;
+  }
+  const slotVal = [new Date().toLocaleDateString('en-CA', { timeZone: 'Asia/Karachi' }), null];
   if (state.settings && state.settings.is_accepting_orders === false) { showToast("Sorry, we're not taking orders right now.", 'err'); if (btn) { btn.disabled = false; btn.textContent = 'Place Order'; } return; }
   let order = null;
   try { order = await placeOrder({ pickupDate: slotVal[0], pickupTime: slotVal[1], notes }); }
@@ -1846,7 +1852,7 @@ function renderOrderDetailSheet(fresh){
     ${['admin','worker'].includes(state.profile?.role) ? `<div style="display:flex;gap:8px;margin:0 0 12px"><button class="btn btn-ghost btn-sm" style="flex:1" onclick="shareOrderWhatsApp('${o.id}')">WhatsApp${o.profiles?.phone?' customer':''}</button><button class="btn btn-ghost btn-sm" style="flex:1" onclick="copyOrderSummary('${o.id}')">Share receipt</button></div>` : ''}
     ${o.status!=='cancelled' ? `<button class="btn btn-outline btn-sm" style="width:100%;margin:0 0 12px" onclick="openReceipt('${o.id}')">🧾 View receipt</button>` : ''}
     ${canCancel(o) ? `<button class="link-danger" style="margin:0 0 16px" onclick="cancelOrder('${o.id}')">Cancel this order</button>` : ''}
-    <div style="font-size:12.5px;color:var(--coffee-500);margin-bottom:16px">Pickup: ${o.pickup_date||''} ${o.pickup_time?fmtTime12(o.pickup_time.slice(0,5)):''}</div>
+    <div style="font-size:12.5px;color:var(--coffee-500);margin-bottom:16px">Ordered ${new Date(o.created_at).toLocaleString([],{month:'short',day:'numeric',hour:'numeric',minute:'2-digit'})} · ${o.pickup_time?'pickup '+fmtTime12(o.pickup_time.slice(0,5)):'ASAP pickup'}</div>
     ${state.profile?.role==='admin' && o.status!=='cancelled' ? `<div class="card" style="padding:14px;margin-bottom:16px;background:${o.payment_confirmed?'#EAF2E9':'#FBF2E1'}">
       <div style="display:flex;justify-content:space-between;align-items:center;gap:10px">
         <div>
@@ -2221,9 +2227,9 @@ function renderWorkerOrderCard(o){
   return `<div class="card" data-order-id="${o.id}" style="padding:12px;${urgent?'border-color:var(--danger)':''}">
     <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px">
       <div style="font-weight:700;font-size:14px">#${o.order_number} ${payBadge(o,'font-size:10px;padding:2px 8px')}</div>
-      ${urgent ? `<span class="badge cancelled">⏱ ${urgency<=0?'DUE NOW':urgency+'m'}</span>` : `<span style="font-size:11px;color:var(--coffee-500)">${o.pickup_time||''}</span>`}
+      ${urgent ? `<span class="badge cancelled">⏱ ${urgency<=0?'DUE NOW':urgency+'m'}</span>` : `<span style="font-size:11px;color:var(--coffee-500)">${o.pickup_time?String(o.pickup_time).slice(0,5):'ASAP · '+Math.max(0,Math.round((Date.now()-new Date(o.created_at))/60000))+'m ago'}</span>`}
     </div>
-    <div style="font-size:12px;color:var(--coffee-500);margin-bottom:8px">${esc(o.profiles?.full_name||'Customer')}</div>
+    <div style="font-size:14px;font-weight:700;color:var(--coffee-900);margin-bottom:8px">${esc(o.profiles?.full_name||'Customer')}</div>
     <div style="font-size:12.5px;margin-bottom:8px">${(o.order_items||[]).map(oi=>`${oi.quantity}× ${esc(oi.product_name)}${oi.size_name?` (${esc(oi.size_name)})`:''}${(oi.order_item_options||[]).length?' — '+oi.order_item_options.map(c=>esc(c.choice_name)).join(', '):''}`).join('<br>')}</div>
     ${o.special_instructions?`<div style="font-size:11.5px;font-style:italic;color:var(--caramel-dark);margin-bottom:8px">"${esc(o.special_instructions)}"</div>`:''}
     <div style="display:flex;gap:6px">
