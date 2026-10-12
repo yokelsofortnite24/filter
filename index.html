@@ -299,6 +299,11 @@ select.input{padding-right:40px;text-overflow:ellipsis;white-space:nowrap;overfl
 .excl-box{display:flex;gap:12px;align-items:center;justify-content:space-between;background:#F6EFE4;border-radius:14px;padding:12px 14px;margin:0 0 16px;font-size:13.5px}
 .excl-box.warn{background:#F8E9E4;flex-wrap:wrap}
 .btn-danger-soft{background:var(--danger);color:#fff}
+.new-order-banner{position:fixed;left:12px;right:12px;top:calc(env(safe-area-inset-top) + 10px);z-index:140;display:flex;gap:12px;align-items:center;padding:12px 14px;border:0;border-radius:16px;background:var(--coffee-900);color:var(--cream-2);box-shadow:0 10px 30px rgba(42,24,15,.3);font:inherit;font-size:13.5px;line-height:1.35;animation:nobIn .28s ease-out;transition:opacity .4s,transform .4s}
+.new-order-banner.out{opacity:0;transform:translateY(-12px)}
+.nob-dot{width:10px;height:10px;border-radius:50%;background:#E8B04B;box-shadow:0 0 0 4px rgba(232,176,75,.25);flex-shrink:0}
+.nob-open{font-weight:700;font-size:12.5px;padding:6px 12px;border-radius:999px;background:rgba(255,255,255,.12)}
+@keyframes nobIn{from{opacity:0;transform:translateY(-16px)}to{opacity:1;transform:none}}
 .tip-chips,.note-chips{display:flex;gap:8px;flex-wrap:wrap;margin:8px 0 10px}
 .tip-chip{flex:1;min-width:64px;min-height:44px;border-radius:12px;border:1.5px solid var(--line);background:var(--card);font-weight:600;font-size:13px;color:var(--coffee-700)}
 .tip-chip.on{background:var(--coffee-900);border-color:var(--coffee-900);color:var(--cream-2)}
@@ -406,7 +411,7 @@ function clearSessionFromStorage(){
 // ---- session refresh (keeps the user signed in) ----
 let _refreshTimer = null;
 function scheduleRefresh(session){
-  clearTimeout(_refreshTimer);
+  clearTimeout(_refreshTimer); try { rtUpdateToken(); } catch (e) {}
   if (!session?.refresh_token || !session?.expires_in) return;
   const ms = Math.max((session.expires_in - 90) * 1000, 15000);
   _refreshTimer = setTimeout(refreshSession, ms);
@@ -532,8 +537,11 @@ function esc(s){ return (s||'').replace(/[&<>"']/g, c=>({'&':'&amp;','<':'&lt;',
 // ---------------- AUTH ----------------
 async function init(){
   registerServiceWorker();
+  // Fast first paint: show the cached menu immediately, fetch fresh data in parallel.
+  const cached = hydrateMenuCache();
+  const pub = loadPublicData();
   try {
-    await loadPublicData();
+    if (!cached) await pub; else pub.catch(() => {});
   } catch (e) {
     root.innerHTML = `<div style="min-height:100vh;display:flex;align-items:center;justify-content:center;padding:24px;text-align:center;color:var(--coffee-700)">
       <div><h2 class="display">Couldn't reach Filter's server</h2><p style="font-size:13px;max-width:340px">${esc(e.message || 'Please check your connection and reload.')}</p></div></div>`;
@@ -544,7 +552,7 @@ async function init(){
     state.session = stored;
     const ok = await refreshSession();
     if (ok) {
-      await loadProfile();
+      await Promise.all([loadProfile(), pub.catch(() => {})]);
       if (pushSupported()) { const sub = await currentPushSubscription(); state.pushEnabled = !!sub; }
       setState({ view: state.profile?.role || 'customer' }); maybeOpenReceiptFromUrl();
       startPolling();
@@ -568,8 +576,9 @@ async function onLoginSuccess(session){
   state.session = session;
   saveSessionToStorage(session);
   scheduleRefresh(session);
-  await loadPublicData();
-  await loadProfile();
+  hydrateMenuCache();
+  await Promise.all([loadPublicData(), loadProfile()]);
+  rtStart();
   if (pushSupported()) { const sub = await currentPushSubscription(); state.pushEnabled = !!sub; }
   setState({ view: state.profile?.role || 'customer' }); maybeOpenReceiptFromUrl();
   if ((state.profile?.role === 'admin' || state.profile?.role === 'worker') && pushSupported() && !state.pushEnabled) {
@@ -609,6 +618,11 @@ async function loadPublicData(){
   if (settings) state.settings = settings;
   if (rewards) state.rewards = rewards;
   if (promos) state.promotions = promos;
+  if (cats && prods && settings) { try { localStorage.setItem('filter_menu_cache', JSON.stringify({ t: Date.now(), cats, prods, settings, rewards: rewards || [], promos: promos || [] })); } catch (e) {} }
+}
+function hydrateMenuCache(){
+  try { const c = JSON.parse(localStorage.getItem('filter_menu_cache') || 'null'); if (!c || Date.now() - c.t > 7 * 864e5) return false;
+    if (!state.products?.length) { state.categories = c.cats; state.products = c.prods; state.settings = c.settings; state.rewards = c.rewards; state.promotions = c.promos; } return true; } catch (e) { return false; }
 }
 // Targeted refreshers — avoid re-fetching the whole nested menu tree (with sizes/options)
 // just to reflect a single small change, so admin edits feel instant.
@@ -636,7 +650,7 @@ async function signIn(email, password){
   if (error) { state.authError = error.message; return render(); }
   await onLoginSuccess(data.session);
 }
-async function signOut(){ clearTimeout(_refreshTimer); await sb.auth.signOut(); state.session = null; state.profile = null; clearSessionFromStorage(); setState({ view: 'auth', cart: [], tab: 'menu', notifPanelOpen: false }); }
+async function signOut(){ rtStop(); clearTimeout(_refreshTimer); await sb.auth.signOut(); state.session = null; state.profile = null; clearSessionFromStorage(); setState({ view: 'auth', cart: [], tab: 'menu', notifPanelOpen: false }); }
 
 // ---------------- PUSH NOTIFICATIONS (real OS notifications, home-screen app) ----------------
 let swRegistration = null;
@@ -763,12 +777,75 @@ function isEditingSomething(){
   const tag = el.tagName;
   return tag === 'INPUT' || tag === 'TEXTAREA' || tag === 'SELECT';
 }
+// ---------------- REALTIME (v19) ----------------
+// Tiny Supabase Realtime client (Phoenix websocket). Any change to orders /
+// my notifications triggers an immediate refresh; polling stays as fallback.
+const RT = { ws: null, ref: 0, hb: null, joined: false, retry: 1000, timer: null, topic: null, wantUid: null };
+function rtStart(){
+  if (!state.session || !('WebSocket' in window)) return;
+  const uid = state.session.user.id;
+  if (RT.ws && RT.wantUid === uid && RT.ws.readyState <= 1) return;
+  rtStop(); RT.wantUid = uid;
+  const url = SUPABASE_URL.replace(/^http/, 'ws') + '/realtime/v1/websocket?apikey=' + encodeURIComponent(SUPABASE_KEY) + '&vsn=1.0.0';
+  let ws; try { ws = new WebSocket(url); } catch (e) { return rtRetry(); }
+  RT.ws = ws;
+  const staff = ['admin','worker'].includes(state.profile?.role);
+  const changes = [
+    staff ? { event: '*', schema: 'public', table: 'orders' } : { event: '*', schema: 'public', table: 'orders', filter: 'customer_id=eq.' + uid },
+    { event: 'INSERT', schema: 'public', table: 'notifications', filter: 'user_id=eq.' + uid },
+  ];
+  RT.topic = 'realtime:filter-' + uid.slice(0, 8);
+  ws.onopen = () => {
+    RT.retry = 1000;
+    rtSend(RT.topic, 'phx_join', { config: { broadcast: { self: false }, presence: { key: '' }, postgres_changes: changes }, access_token: state.session.access_token });
+    clearInterval(RT.hb); RT.hb = setInterval(() => rtSend('phoenix', 'heartbeat', {}), 25000);
+  };
+  ws.onmessage = (ev) => {
+    let m; try { m = JSON.parse(ev.data); } catch (e) { return; }
+    if (m.topic !== RT.topic) return;
+    if (m.event === 'phx_reply' && m.payload?.status === 'ok' && !RT.joined) { RT.joined = true; setPollRate(); }
+    if (m.event === 'postgres_changes') rtKick();
+    if (m.event === 'system' && m.payload?.status === 'error') { RT.joined = false; setPollRate(); }
+  };
+  ws.onclose = () => { RT.joined = false; clearInterval(RT.hb); setPollRate(); if (RT.ws === ws) rtRetry(); };
+  ws.onerror = () => { try { ws.close(); } catch (e) {} };
+}
+function rtSend(topic, event, payload){ try { if (RT.ws && RT.ws.readyState === 1) RT.ws.send(JSON.stringify({ topic, event, payload, ref: String(++RT.ref) })); } catch (e) {} }
+function rtRetry(){ clearTimeout(RT.timer); if (!state.session) return; RT.timer = setTimeout(rtStart, RT.retry); RT.retry = Math.min(RT.retry * 2, 30000); }
+function rtStop(){ clearTimeout(RT.timer); clearInterval(RT.hb); RT.joined = false; const w = RT.ws; RT.ws = null; if (w) try { w.close(); } catch (e) {} }
+function rtUpdateToken(){ if (RT.joined && state.session) rtSend(RT.topic, 'access_token', { access_token: state.session.access_token }); }
+let _rtKickT = null;
+function rtKick(){ clearTimeout(_rtKickT); _rtKickT = setTimeout(() => pollTick({ fast: true }), 150); }
+// Poll every 4s without realtime; every 20s as a safety net when the socket is live.
+let _pollIv = null;
+function setPollRate(){ clearInterval(_pollIv); _pollIv = setInterval(pollTick, RT.joined ? 20000 : 4000); }
+
+// New-order alert: chime + vibration + tappable banner (when the app is open).
+let _audioCtx = null;
+function unlockAudio(){ try { if (!_audioCtx) _audioCtx = new (window.AudioContext || window.webkitAudioContext)(); if (_audioCtx.state === 'suspended') _audioCtx.resume(); } catch (e) {} }
+document.addEventListener('pointerdown', unlockAudio, { passive: true });
+function chime(){
+  try { unlockAudio(); const c = _audioCtx; if (!c) return; const t = c.currentTime;
+    [[880, 0], [1320, 0.16]].forEach(([f, d]) => { const o = c.createOscillator(), g = c.createGain(); o.type = 'sine'; o.frequency.value = f; g.gain.setValueAtTime(0.0001, t + d); g.gain.exponentialRampToValueAtTime(0.35, t + d + 0.02); g.gain.exponentialRampToValueAtTime(0.0001, t + d + 0.45); o.connect(g); g.connect(c.destination); o.start(t + d); o.stop(t + d + 0.5); });
+  } catch (e) {}
+  try { navigator.vibrate && navigator.vibrate([180, 80, 180]); } catch (e) {}
+}
+function showNewOrderBanner(o){
+  document.querySelector('.new-order-banner')?.remove();
+  const el = document.createElement('button'); el.className = 'new-order-banner';
+  const items = (o.order_items || []).reduce((a, i) => a + Number(i.quantity || 0), 0);
+  el.innerHTML = `<span class="nob-dot"></span><span style="flex:1;min-width:0;text-align:left"><b>New order #${o.order_number}</b><br><span>${esc(o.profiles?.full_name || 'Customer')}${items ? ' · ' + items + ' item' + (items > 1 ? 's' : '') : ''} · ${money(Number(o.total || 0) + Number(o.tip || 0))}</span></span><span class="nob-open">Open</span>`;
+  el.onclick = () => { el.remove(); setState({ orderDetailId: o.id }); };
+  document.body.appendChild(el); setTimeout(() => el.classList.add('out'), 9000); setTimeout(() => el.remove(), 9500);
+}
+
 let _polling = false;
+let _pollN = 0;
 function startPolling(){
-  setInterval(pollTick, 4000);
+  setPollRate(); rtStart();
   // Phones pause timers while the app is in the background — refresh the
   // instant the person comes back so they never look at stale data.
-  document.addEventListener('visibilitychange', () => { if (!document.hidden) pollTick(); });
+  document.addEventListener('visibilitychange', () => { if (!document.hidden) { rtStart(); pollTick(); } });
   window.addEventListener('focus', () => pollTick());
 }
 // Cheap fingerprint of everything polling can change; if it's identical after
@@ -780,8 +857,9 @@ function pollSignature(){
 // A customizer/sheet the person is using is never rebuilt by background data;
 // it picks up fresh data the next time they interact.
 function modalInUse(){ return !!(state.customerProfile || state.productModal || state.checkoutOpen || state.cartOpen || state.reviewModal || state.chatOpen || state.membershipCardOpen || state.orderDetailId || state.iosInstallModal || state.adminMoreOpen || state.receiptOrderId); }
-async function pollTick(){
-    if (_polling) return;
+async function pollTick(opts){
+    const fast = !!(opts && opts.fast);
+    if (_polling) { if (fast) setTimeout(() => pollTick(opts), 400); return; }
     if (!state.session || !state.profile) return;
     _polling = true;
     _bgDepth++;
@@ -790,7 +868,10 @@ async function pollTick(){
       // Keep the menu, categories, prices, availability, promos and rewards in
       // sync for EVERYONE signed in — so an admin's edit shows up for an
       // already-open customer session without them needing to reload.
-      await loadPublicData();
+      // Menu/settings change rarely: refresh them every 3rd tick (or on realtime
+      // order events skip them entirely) — keeps each poll light.
+      _pollN++;
+      if (!fast && (_pollN % 3 === 1 || !RT.joined)) await loadPublicData();
 
       if (state.profile.role === 'customer') {
         const prevStatus = Object.fromEntries(state.orders.map(o => [o.id, o.status]));
@@ -813,12 +894,12 @@ async function pollTick(){
         if (giftUnlocked) showToast('🎁 You unlocked a free gift! Check Rewards.', 'ok');
         if (pollSignature() !== _sigBefore && !modalInUse()) render();
       } else if (state.profile.role === 'worker' || state.profile.role === 'admin') {
-        const prevCount = state.workerOrders.length;
+        const prevIds = new Set(state.workerOrders.map(o => o.id)), hadAny = state.workerOrders.length > 0 || _pollN > 1;
         await Promise.all([loadWorkerOrders(), loadNotifications()]);
-        const newOrderArrived = state.workerOrders.length > prevCount;
+        const fresh = hadAny ? state.workerOrders.filter(o => !prevIds.has(o.id) && o.status === 'pending') : [];
+        if (fresh.length) { chime(); showNewOrderBanner(fresh[0]); }
 
         if (isEditingSomething()) return; // never wipe an in-progress edit (settings, product form, etc.)
-        if (newOrderArrived) showToast('New order received');
         if (pollSignature() !== _sigBefore && !modalInUse()) render();
       }
     } catch (e) { /* silent — retry on next tick */ }
