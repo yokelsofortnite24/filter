@@ -464,6 +464,17 @@ select.input{padding-right:40px;text-overflow:ellipsis;white-space:nowrap;overfl
 .order-card{transition:transform .2s;-webkit-user-select:none;user-select:none;-webkit-touch-callout:none}.order-card.pressed{transform:scale(.97)}
 @media (prefers-reduced-motion: reduce){.tab-pill,.admin-pill{transition:none}.new-tag{animation:none}}
 
+
+/* ---- v23 ---- */
+#force-update-bar{position:fixed;left:12px;right:12px;top:calc(env(safe-area-inset-top) + 10px);z-index:99999;background:#3B2618;color:#F6EFE3;border-radius:14px;padding:10px 12px 10px 16px;display:flex;align-items:center;justify-content:space-between;gap:10px;font-size:14px;font-weight:600;box-shadow:0 10px 30px rgba(42,24,15,.35);animation:nobIn .3s ease-out}
+#force-update-bar button{background:#F6EFE3;color:#3B2618;border:0;border-radius:10px;padding:10px 16px;font-weight:700;min-height:44px}
+#offline-bar{position:fixed;left:0;right:0;bottom:calc(env(safe-area-inset-bottom) + 72px);margin:0 auto;width:max-content;max-width:92vw;z-index:130;background:#5A3826;color:#F6EFE3;font-size:13px;font-weight:600;padding:8px 14px;border-radius:999px;animation:nobIn .3s ease-out;transition:opacity .6s}
+#offline-bar.back{opacity:0}
+.order-card.age-warn{box-shadow:0 0 0 2px #E8B04B,var(--soft)}
+.order-card.age-late{box-shadow:0 0 0 2px var(--danger),var(--soft)}
+.age-pill{font-size:11px;font-weight:700;padding:3px 9px;border-radius:999px;background:#FBEBC9;color:#8A5A1E}
+.age-late .age-pill{background:#F8DDD7;color:var(--danger)}
+
 @media (prefers-reduced-motion: reduce){*,*::before,*::after{animation-duration:.01ms!important;animation-delay:0s!important;transition-duration:.01ms!important}}
 </style>
 </head>
@@ -474,24 +485,64 @@ select.input{padding-right:40px;text-overflow:ellipsis;white-space:nowrap;overfl
 // Bumped on every real deploy. Lets a running tab/installed PWA detect a
 // newer version is live on the server and prompt to refresh, instead of
 // silently running stale code forever (a common PWA gotcha).
-const APP_BUILD = '2026-10-12-07';
+const APP_BUILD = '2026-10-12-08';
+// ---- v23 updates + features ----
+function safeToAutoReload(){ return !(state.cart||[]).length && !modalInUse() && !isEditingSomething() && !state.adminMoreOpen && !document.querySelector('.sheet'); }
+async function fetchLatestBuild(){
+  try { const r = await fetch('./version.json?_=' + Date.now(), { cache: 'no-store' }); if (r.ok) { const j = await r.json(); if (j && j.build) return j.build; } } catch (e) {}
+  try { const t = await (await fetch('./index.html?_=' + Date.now(), { cache: 'no-store' })).text(); const m = t.match(/const APP_BUILD = '([^']+)'/); return m && m[1]; } catch (e) { return null; }
+}
+async function hardReload(target){
+  try { sessionStorage.setItem('filter_reload_for', target); } catch (e) {}
+  try { const reg = await navigator.serviceWorker?.getRegistration(); if (reg) await reg.update(); } catch (e) {}
+  const u = new URL(location.href); u.searchParams.set('v', target); location.replace(u.toString());
+}
+// Home-screen icon badge (where supported): admin = pending orders, customer = ready orders.
+function updateAppBadge(){
+  try { if (!navigator.setAppBadge) return;
+    const n = ['admin','worker'].includes(state.profile?.role) ? (state.workerOrders||[]).filter(o => o.status === 'pending').length : (state.orders||[]).filter(o => o.status === 'ready').length;
+    n ? navigator.setAppBadge(n) : navigator.clearAppBadge();
+  } catch (e) {}
+}
+function pendingAgeClass(o){ if (o.status !== 'pending') return ''; const m = (Date.now() - new Date(o.created_at)) / 60000; return m > 10 ? 'age-late' : m > 5 ? 'age-warn' : ''; }
+function pendingAgeLabel(o){ if (o.status !== 'pending') return ''; const m = Math.floor((Date.now() - new Date(o.created_at)) / 60000); return m >= 5 ? `<span class="age-pill">waiting ${m}m</span>` : ''; }
+function todayReportText(){
+  const today = localDateStr(new Date());
+  const t = state.workerOrders.filter(o => localDateStr(new Date(o.created_at)) === today);
+  const ok = t.filter(o => o.status !== 'cancelled' && !o.excluded_from_sales);
+  const paid = ok.filter(o => o.payment_confirmed);
+  const sales = paid.reduce((a, o) => a + Number(o.total || 0), 0), tips = paid.reduce((a, o) => a + Number(o.tip || 0), 0);
+  const unpaid = ok.filter(o => !o.payment_confirmed).reduce((a, o) => a + Number(o.total || 0) + Number(o.tip || 0), 0);
+  const by = { cash: 0, bank: 0, qr: 0 }; paid.forEach(o => by[o.payment_method || 'cash'] += Number(o.total || 0) + Number(o.tip || 0));
+  const cnt = {}; ok.forEach(o => (o.order_items || []).forEach(i => cnt[i.product_name] = (cnt[i.product_name] || 0) + Number(i.quantity || 0)));
+  const top = Object.entries(cnt).sort((a, b) => b[1] - a[1]).slice(0, 3).map(([n, c]) => `${n} ×${c}`).join(', ');
+  return `${state.settings?.business_name || 'Filter'} — ${new Date().toLocaleDateString([], { weekday: 'short', day: 'numeric', month: 'short' })}\nOrders: ${ok.length}${t.length - ok.length ? ` (+${t.length - ok.length} cancelled/removed)` : ''}\nSales: ${money(sales)}\nTips: ${money(tips)}\nCash ${money(by.cash)} · Bank ${money(by.bank)} · QR ${money(by.qr)}\nStill to collect: ${money(unpaid)}${top ? `\nTop: ${top}` : ''}`;
+}
+async function shareTodayReport(){
+  const text = todayReportText();
+  if (navigator.share) { try { await navigator.share({ title: 'Today at Filter', text }); return; } catch (e) { if (e && e.name === 'AbortError') return; } }
+  try { await navigator.clipboard.writeText(text); showToast('Report copied', 'ok'); } catch (e) { showToast('Could not copy', 'err'); }
+}
+// Offline banner
+function setOnlineBanner(){ let b = document.getElementById('offline-bar'); if (navigator.onLine) { if (b) { b.classList.add('back'); setTimeout(() => b.remove(), 1200); } return; } if (!b) { b = document.createElement('div'); b.id = 'offline-bar'; b.textContent = "You're offline — we'll reconnect automatically"; document.body.appendChild(b); } }
+window.addEventListener('offline', setOnlineBanner); window.addEventListener('online', () => { setOnlineBanner(); try { pollTick(); rtStart(); } catch (e) {} });
+let _updChecking = false;
 async function checkForUpdate(){
+  if (_updChecking) return; _updChecking = true;
   try {
-    const resp = await fetch('./index.html?_=' + Date.now(), { cache: 'no-store' });
-    const text = await resp.text();
-    const m = text.match(/const APP_BUILD = '([^']+)'/);
-    if (m && m[1] !== APP_BUILD) {
-      if (document.hidden || !state.user) { location.reload(); return; }
-      state.updateAvailable = true;
-      render();
-      if (!document.getElementById('force-update-bar')) {
-        const b = document.createElement('div'); b.id='force-update-bar';
-        b.style.cssText='position:fixed;left:12px;right:12px;top:calc(env(safe-area-inset-top) + 10px);z-index:99999;background:#3B2618;color:#F6EFE3;border-radius:14px;padding:12px 14px;display:flex;align-items:center;justify-content:space-between;gap:10px;font-size:14px;box-shadow:0 6px 20px rgba(0,0,0,.2)';
-        b.innerHTML='<span>A new version of Filter is ready</span><button style="background:#F6EFE3;color:#3B2618;border:0;border-radius:10px;padding:10px 14px;font-weight:700;min-height:44px" onclick="location.reload()">Update Now</button>';
-        document.body.appendChild(b);
-      }
+    const latest = await fetchLatestBuild();
+    if (!latest || latest === APP_BUILD || latest < APP_BUILD) return;
+    let already = null; try { already = sessionStorage.getItem('filter_reload_for'); } catch (e) {}
+    // Auto-reload when nothing is in progress (and never loop on the same target).
+    if (already !== latest && (document.hidden || !state.session || safeToAutoReload())) { hardReload(latest); return; }
+    state.updateAvailable = true; render();
+    if (!document.getElementById('force-update-bar')) {
+      const b = document.createElement('div'); b.id = 'force-update-bar';
+      b.innerHTML = '<span>A new version of Filter is ready</span><button onclick="hardReload(\'' + latest + '\')">Update</button>';
+      document.body.appendChild(b);
     }
-  } catch (e) { /* offline or blocked — ignore, will retry */ }
+  } catch (e) { /* offline — retry later */ }
+  finally { _updChecking = false; }
 }
 function reloadForUpdate(){ location.reload(); }
 
@@ -706,7 +757,10 @@ async function init(){
 }
 function startUpdateChecks(){
   checkForUpdate();
-  setInterval(checkForUpdate, 30000);
+  setInterval(checkForUpdate, 60000);
+  window.addEventListener('pageshow', (e) => { if (e.persisted) checkForUpdate(); });
+  // Idle auto-update: re-check every 2 min and reload only when safe.
+  setInterval(() => { if (state.updateAvailable && safeToAutoReload()) checkForUpdate(); }, 120000);
   document.addEventListener('visibilitychange', ()=>{ if(!document.hidden) checkForUpdate(); });
   window.addEventListener('focus', checkForUpdate);
 }
@@ -844,7 +898,7 @@ async function registerServiceWorker(){
     swRegistration = await navigator.serviceWorker.register('./sw.js', { updateViaCache: 'none' });
     try { swRegistration.update(); } catch(e){}
     if (!window.__swReloadHooked) { window.__swReloadHooked = true; let had = !!navigator.serviceWorker.controller;
-      navigator.serviceWorker.addEventListener('controllerchange', () => { if (had) location.reload(); had = true; }); }
+      navigator.serviceWorker.addEventListener('controllerchange', () => { if (had) { if (typeof safeToAutoReload !== 'function' || safeToAutoReload()) location.reload(); else { state.updateAvailable = true; checkForUpdate(); } } had = true; }); }
     return swRegistration;
   }
   catch (e) { return null; }
@@ -897,7 +951,7 @@ async function toggleNotifPref(key, value){
 }
 async function shareReferral(){
   const code = state.profile?.referral_code || '';
-  const text = `Come get coffee & tea at Filter! Use my code ${code} when you sign up.`;
+  const text = `Come get coffee & tea at Filter! Use my code ${code} when you sign up: ${location.origin + location.pathname.replace(/index\.html$/, '')}`;
   if (navigator.share) {
     try { await navigator.share({ title: 'Filter', text }); } catch (e) { /* user cancelled */ }
   } else {
@@ -1326,7 +1380,7 @@ function render(){
   _lastCartCount = (state.cart||[]).reduce((a,i)=>a+i.qty,0);
   const _sk = [state.view, state.tab, state.adminTab, state.workerTab].join('|');
   if (_sk !== _screenKey) { _screenKey = _sk; root.classList.remove('enter'); void root.offsetWidth; root.classList.add('enter'); clearTimeout(_enterT); _enterT = setTimeout(() => root.classList.remove('enter'), 800); countUps(); }
-  runWidthAnims();
+  runWidthAnims(); updateAppBadge();
   restoreTypedValues(activeId, selStart, selEnd);
   restoreScrolls(scrolls);
 }
@@ -2782,6 +2836,7 @@ function renderAdminDashboard(){
     ${renderAdminQuickSearch()}
     <div style="margin:4px 0 16px"><div class="meta">${new Date().toLocaleDateString([],{weekday:'long',day:'numeric',month:'long'})}</div><div class="display" style="font-size:24px;margin-top:2px">${greet}, ${esc((state.profile?.full_name||'').split(' ')[0]||'there')}</div></div>
     ${renderDailyClose(orders, today)}
+    <button class="btn btn-outline" style="width:100%;margin:0 0 16px" onclick="shareTodayReport()">📋 Share today's report</button>
     ${goalCardHtml()}
     ${bestSellersToday()}
     ${quickStockHtml()}
@@ -3211,7 +3266,7 @@ function adminOrdersListHtml(){
     const ns={pending:'accepted',accepted:'preparing',preparing:'ready',ready:'completed'}[o.status];
     const nl={pending:'Accept order',accepted:'Start preparing',preparing:'Mark ready',ready:'Complete order'}[o.status];
     const who = esc(o.profiles?.full_name||(o.customer_id?'Customer':'Deleted customer'));
-    return `<div class="card order-card ${_freshOrderIds.has(o.id)?'slide-in':''}" data-order-id="${o.id}">
+    return `<div class="card order-card ${_freshOrderIds.has(o.id)?'slide-in':''} ${pendingAgeClass(o)}" data-order-id="${o.id}">
       <div class="oc-head">
         <div style="min-width:0">
           <div class="oc-title"><span style="cursor:pointer" onclick="setState({orderDetailId:'${o.id}'})">#${o.order_number}</span> ${o.customer_id?`<button class="oc-who linkish" onclick="openCustomerProfile('${o.customer_id}')">${who}</button>`:`<span class="oc-who">${who}</span>`}</div>
@@ -3219,7 +3274,7 @@ function adminOrdersListHtml(){
         </div>
         <div class="oc-total">${money(o.total)}${Number(o.tip)>0?`<div class="oc-tip">+ ${money(o.tip)} tip</div>`:''}</div>
       </div>
-      <div class="oc-badges"><span class="badge ${o.status}">${o.status.charAt(0).toUpperCase()+o.status.slice(1)}</span><span class="badge ${o.payment_confirmed?'ready':'pending'}">${o.payment_confirmed?'Paid':'Unpaid'}</span>${payBadge(o)}${o.excluded_from_sales?'<span class="badge excluded">Removed from sales</span>':''}</div>
+      <div class="oc-badges">${pendingAgeLabel(o)}<span class="badge ${o.status}">${o.status.charAt(0).toUpperCase()+o.status.slice(1)}</span><span class="badge ${o.payment_confirmed?'ready':'pending'}">${o.payment_confirmed?'Paid':'Unpaid'}</span>${payBadge(o)}${o.excluded_from_sales?'<span class="badge excluded">Removed from sales</span>':''}</div>
       ${(ns || (!o.payment_confirmed && o.status!=='cancelled')) ? `<div class="oc-actions">
         ${ns ? `<button class="btn btn-primary btn-sm" style="flex:1" onclick="updateOrderStatus('${o.id}','${ns}')">${nl}</button>` : ''}
         ${!o.payment_confirmed && o.status!=='cancelled' ? `<button class="btn btn-outline btn-sm" style="flex:1" onclick="confirmPayment('${o.id}')">Confirm paid</button>` : ''}

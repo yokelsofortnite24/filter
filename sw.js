@@ -3,12 +3,13 @@
 // basic install/offline shell support so the app can be added to the
 // home screen like a native app.
 
-const CACHE_NAME = 'filter-shell-2026-10-12-07';
+const CACHE_NAME = 'filter-shell-2026-10-12-08';
 // Push payloads use app-absolute paths like '/' or '/?tab=orders'. Map them onto
 // this SW's scope so they work at the domain root (Netlify) and under /filter/ (GitHub Pages).
 function appUrl(u){ try { const scope = self.registration.scope; if (!u || u === '/') return scope; if (/^https?:/i.test(u)) return u; return new URL(u.replace(/^\//, ''), scope).href; } catch (e) { return self.registration.scope; } }
 const STATIC_ASSETS = ['./icon.svg', './icon-192.png', './icon-512.png', './icon-maskable-512.png', './apple-touch-icon.png', './manifest.json'];
 
+self.addEventListener('message', (e) => { if (e.data === 'skipWaiting') self.skipWaiting(); });
 self.addEventListener('install', (event) => {
   self.skipWaiting();
   event.waitUntil(caches.open(CACHE_NAME).then((c) => c.addAll(STATIC_ASSETS)).catch(() => {}));
@@ -30,6 +31,7 @@ self.addEventListener('fetch', (event) => {
   if (req.method !== 'GET') return;
   const url = new URL(req.url);
   if (url.origin !== self.location.origin) return;
+  if (url.pathname.endsWith('version.json') || url.pathname.endsWith('sw.js')) return; // always network
   if (req.mode === 'navigate' || url.pathname.endsWith('/') || url.pathname.endsWith('index.html')) {
     if (url.search.includes('_=')) return; // version checks go straight to network
     event.respondWith((async () => {
