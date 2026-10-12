@@ -299,6 +299,12 @@ select.input{padding-right:40px;text-overflow:ellipsis;white-space:nowrap;overfl
 .excl-box{display:flex;gap:12px;align-items:center;justify-content:space-between;background:#F6EFE4;border-radius:14px;padding:12px 14px;margin:0 0 16px;font-size:13.5px}
 .excl-box.warn{background:#F8E9E4;flex-wrap:wrap}
 .btn-danger-soft{background:var(--danger);color:#fff}
+.tip-chips,.note-chips{display:flex;gap:8px;flex-wrap:wrap;margin:8px 0 10px}
+.tip-chip{flex:1;min-width:64px;min-height:44px;border-radius:12px;border:1.5px solid var(--line);background:var(--card);font-weight:600;font-size:13px;color:var(--coffee-700)}
+.tip-chip.on{background:var(--coffee-900);border-color:var(--coffee-900);color:var(--cream-2)}
+.chip-sm{min-height:34px;padding:4px 12px;border-radius:999px;border:1px solid var(--line);background:transparent;font-size:12.5px;color:var(--coffee-700)}
+.oc-tip{font-size:11.5px;font-weight:600;color:var(--sage);text-align:right}
+.tip-edit{display:flex;gap:8px;align-items:center;background:#F6EFE4;border-radius:14px;padding:8px 12px;margin:0 0 12px}
 .asap-note{font-size:13px;color:var(--coffee-700);background:#FBF4E6;border-radius:12px;padding:10px 12px;margin:0 0 16px;line-height:1.45}
 .pay-opts{display:flex;gap:8px;margin:8px 0 12px}
 .pay-opt{flex:1;min-height:64px;border:1.5px solid var(--line);background:var(--card);border-radius:14px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px;font-size:12.5px;font-weight:600;color:var(--coffee-700);padding:6px}
@@ -326,7 +332,7 @@ select.input{padding-right:40px;text-overflow:ellipsis;white-space:nowrap;overfl
 // Bumped on every real deploy. Lets a running tab/installed PWA detect a
 // newer version is live on the server and prompt to refresh, instead of
 // silently running stale code forever (a common PWA gotcha).
-const APP_BUILD = '2026-10-12-03';
+const APP_BUILD = '2026-10-12-04';
 async function checkForUpdate(){
   try {
     const resp = await fetch('./index.html?_=' + Date.now(), { cache: 'no-store' });
@@ -865,7 +871,7 @@ async function placeOrder({ pickupDate, pickupTime, notes }){
     customer_id: state.session.user.id, status: 'pending', fulfillment_type: 'pickup',
     pickup_date: pickupDate, pickup_time: pickupTime, subtotal, discount_amount: +discount.toFixed(2),
     tax_amount: tax, total, loyalty_points_redeemed: state.redeemPoints, loyalty_discount_amount: +loyaltyDiscount.toFixed(2),
-    loyalty_points_earned: pointsEarned, promo_id: promoId, special_instructions: notes, payment_method: availablePayMethods().includes(state.payMethod) ? state.payMethod : 'cash',
+    loyalty_points_earned: pointsEarned, promo_id: promoId, special_instructions: notes, payment_method: availablePayMethods().includes(state.payMethod) ? state.payMethod : 'cash', tip: tipAmt(),
   }).select().single();
   if (error) { showToast('Order failed: ' + error.message, 'err'); return null; }
 
@@ -887,7 +893,7 @@ async function placeOrder({ pickupDate, pickupTime, notes }){
   if (promoId) await sb.rpc('record_promo_redemption', { p_order_id: order.id, p_promo_id: promoId });
 
   await loadProfile();
-  setState({ cart: [], checkoutOpen: false, promoCode: '', promoResult: null, redeemPoints: 0, view: 'customer', tab: 'orders' });
+  setState({ cart: [], checkoutOpen: false, promoCode: '', promoResult: null, redeemPoints: 0, tip: 0, tipCustom: false, view: 'customer', tab: 'orders' });
   showToast(`Order #${order.order_number} placed! 🎉`, 'ok');
   return order;
 }
@@ -1235,7 +1241,7 @@ function receiptData(o){
     num: o.order_number, placed: new Date(o.created_at),
     pickup: `${o.pickup_date ? new Date(o.pickup_date+'T12:00').toLocaleDateString([],{weekday:'short',day:'numeric',month:'short'}) : ''}${o.pickup_time ? ' · ' + fmtTime12(o.pickup_time.slice(0,5)) : ' · ASAP'}`,
     items, sub, promo: promo > 0 ? promo : 0, ptsRedeemed: Number(o.loyalty_points_redeemed||0), ptsDiscount: pts,
-    tax: Number(o.tax_amount||0), total: Number(o.total||0), paid: !!o.payment_confirmed, method: PAY_LABELS[o.payment_method||'cash'] || 'Cash at pickup',
+    tax: Number(o.tax_amount||0), tip: Number(o.tip||0), total: Number(o.total||0) + Number(o.tip||0), paid: !!o.payment_confirmed, method: PAY_LABELS[o.payment_method||'cash'] || 'Cash at pickup',
     earned: Number(o.loyalty_points_earned||0), customer: o.profiles?.full_name || (o.customer_id===state.session?.user?.id ? state.profile?.full_name : '') || '',
     notes: o.special_instructions || '', status: o.status
   };
@@ -1269,6 +1275,7 @@ function receiptHtml(d){
     ${d.promo?row('Promo discount', '−'+money(d.promo)):''}
     ${d.ptsDiscount?row(`Points redeemed (${d.ptsRedeemed})`, '−'+money(d.ptsDiscount)):''}
     ${d.tax?row('Tax', money(d.tax)):''}
+    ${d.tip?row('Tip — thank you!', money(d.tip)):''}
     ${row('Total', money(d.total), 'rc-total')}
     <div class="rc-pay ${d.paid?'paid':''}">${d.paid?'✓ Paid':'Payment pending'} · ${esc(d.method)}</div>
     ${d.earned?`<div class="rc-small" style="text-align:center;margin-top:8px">⭐ ${d.earned} loyalty points ${d.paid?'earned':'on payment'}</div>`:''}
@@ -1323,6 +1330,7 @@ async function drawReceiptCanvas(d){
   if (d.promo) row('Promo discount', '−' + money(d.promo), {c:'#4A3020'});
   if (d.ptsDiscount) row(`Points redeemed (${d.ptsRedeemed})`, '−' + money(d.ptsDiscount), {c:'#4A3020'});
   if (d.tax) row('Tax', money(d.tax), {c:'#4A3020'});
+  if (d.tip) row('Tip — thank you!', money(d.tip), {c:'#4A3020'});
   y += 4; row('Total', money(d.total), { w: '700 17px', h: 30 });
   push(44, yy => { const bw = 250, bx = (W - bw)/2; x.fillStyle = d.paid ? '#E3EEDF' : '#F6E7CC'; x.beginPath(); x.roundRect ? x.roundRect(bx, yy + 6, bw, 30, 15) : x.rect(bx, yy + 6, bw, 30); x.fill(); x.font = sans('700 13px'); x.fillStyle = d.paid ? '#3F6B3A' : '#8A5A1E'; x.textAlign = 'center'; x.fillText((d.paid ? '✓ Paid' : 'Payment pending') + ' · ' + d.method, W/2, yy + 26); });
   if (d.earned) push(20, yy => { x.font = sans('500 12px'); x.fillStyle = '#6B4A34'; x.textAlign = 'center'; x.fillText(`★ ${d.earned} loyalty points ${d.paid ? 'earned' : 'on payment'}`, W/2, yy + 14); });
@@ -1456,6 +1464,22 @@ async function saveQrSettings(){
   refreshQrSettings(); showToast('QR settings saved', 'ok');
 }
 
+function tipAmt(){ return Math.max(0, Math.min(10000, Math.round(Number(state.tip) || 0))); }
+function updateCheckoutTotals(){ const el = document.getElementById('checkout-summary'); if (el) el.innerHTML = checkoutSummaryHtml(); const b = document.getElementById('place-order-btn'); const t = el && el.querySelector('.card > div:last-child > span:last-child'); if (b && !b.disabled && t) b.textContent = 'Place Order · ' + t.textContent; }
+function addNoteChip(t){ const el = document.getElementById('order-notes'); if (!el) return; const v = el.value.trim(); if (v.toLowerCase().includes(t.toLowerCase())) return; el.value = v ? v + ', ' + t : t; el.dispatchEvent(new Event('input', { bubbles: true })); }
+function tipEditorHtml(o){
+  if (state.profile?.role !== 'admin' || o.status === 'cancelled') return '';
+  return `<div class="tip-edit"><span class="meta" style="flex:1">Tip received${o.excluded_from_sales?' (not counted)':''}</span><span class="meta">Rs</span><input class="input" id="tip-edit-${o.id}" type="number" inputmode="numeric" min="0" value="${Number(o.tip||0)}" style="width:96px;min-height:40px;padding:8px 10px"><button class="btn btn-outline btn-sm" onclick="saveTip('${o.id}')">Save</button></div>`;
+}
+async function saveTip(id){
+  const v = Number(document.getElementById('tip-edit-' + id)?.value);
+  if (!(v >= 0) || v > 100000) return showToast('Enter a valid tip amount', 'err');
+  const { data, error } = await sb.rpc('admin_set_order_tip', { p_order_id: id, p_tip: v });
+  if (error) return showToast('Tip not saved: ' + error.message, 'err');
+  const row = Array.isArray(data) ? data[0] : data;
+  [state.workerOrders, state.orders].forEach(l => (l || []).forEach(o => { if (o.id === id) o.tip = Number(row?.tip ?? v); }));
+  forgetTyped && forgetTyped('tip-edit-'); showToast('Tip saved', 'ok'); render();
+}
 function excludeSalesHtml(o){
   if (state.profile?.role !== 'admin' || o.status === 'cancelled') return '';
   if (o.excluded_from_sales) return `<div class="excl-box"><div><b>Removed from sales</b><div class="meta">This order doesn't count in totals or summaries.</div></div><button class="btn btn-outline btn-sm" onclick="setOrderExcluded('${o.id}', false)">Undo</button></div>`;
@@ -1713,7 +1737,7 @@ function renderCheckoutSheet(fresh){
   const discount = (state.promoResult?Number(state.promoResult.calculated_discount):0) + state.redeemPoints*loyaltyValue;
   const taxable = Math.max(subtotal-discount,0);
   const tax = taxable * Number(state.settings?.tax_rate||0);
-  const total = taxable+tax;
+  const total = taxable+tax+tipAmt();
   return `<div class="scrim" onclick="if(event.target===this) setState({checkoutOpen:false})"><div class="sheet ${fresh?'':'no-anim'}">
     <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px">
       <h2 class="display" style="margin:0;font-size:22px">Checkout</h2>
@@ -1737,7 +1761,12 @@ function renderCheckoutSheet(fresh){
     </div>` : ''}
 
     <label class="small">Order Notes</label>
+    <div class="note-chips">${['Less sugar','No sugar','Extra hot','Less ice','Takeaway cup'].map(t=>`<button class="chip-sm" onclick="addNoteChip('${t}')">+ ${t}</button>`).join('')}</div>
     <textarea class="input" id="order-notes" style="margin:8px 0 16px;min-height:50px" placeholder="Anything else we should know?"></textarea>
+
+    <label class="small">Add a tip? <span style="text-transform:none;font-weight:500;letter-spacing:0">(optional, goes to the team)</span></label>
+    <div class="tip-chips">${[0,50,100,200].map(v=>`<button class="tip-chip ${!state.tipCustom&&tipAmt()===v?'on':''}" onclick="setState({tip:${v},tipCustom:false})">${v?'Rs '+v:'No tip'}</button>`).join('')}<button class="tip-chip ${state.tipCustom?'on':''}" onclick="setState({tipCustom:true})">Custom</button></div>
+    ${state.tipCustom?`<input class="input" id="tip-custom" type="number" inputmode="numeric" min="0" max="10000" placeholder="Tip amount in Rs" value="${state.tip||''}" style="margin:0 0 16px" oninput="state.tip=Math.max(0,Math.min(10000,Math.round(Number(this.value)||0))); updateCheckoutTotals()">`:'<div style="height:8px"></div>'}
 
     ${renderPayMethodPicker(total)}
 
@@ -1759,7 +1788,8 @@ function checkoutSummaryHtml(){
     <div style="display:flex;justify-content:space-between;margin-bottom:6px"><span>Subtotal</span><span>${money(subtotal)}</span></div>
     ${discount>0?`<div style="display:flex;justify-content:space-between;margin-bottom:6px;color:var(--sage)"><span>Discount</span><span>−${money(discount)}</span></div>`:''}
     ${tax>0?`<div style="display:flex;justify-content:space-between;margin-bottom:6px"><span>Tax</span><span>${money(tax)}</span></div>`:''}
-    <div style="display:flex;justify-content:space-between;font-weight:700;font-size:15px;padding-top:8px;border-top:1px solid var(--line)"><span>Total</span><span>${money(total)}</span></div>
+    ${tipAmt()>0?`<div style="display:flex;justify-content:space-between;margin-bottom:6px"><span>Tip</span><span>${money(tipAmt())}</span></div>`:''}
+    <div style="display:flex;justify-content:space-between;font-weight:700;font-size:15px;padding-top:8px;border-top:1px solid var(--line)"><span>Total</span><span>${money(total+tipAmt())}</span></div>
   </div>`;
 }
 async function applyPromo(){
@@ -1868,9 +1898,10 @@ function renderOrderDetailSheet(fresh){
     <span class="badge ${o.payment_confirmed?'ready':'pending'}" style="margin-left:6px">${o.payment_confirmed?'✓ PAID':'PAYMENT PENDING'}</span>${payBadge(o,'margin-left:6px')}${o.excluded_from_sales?'<span class="badge excluded" style="margin-left:6px">Removed from sales</span>':''}
     <div style="margin:16px 0">${renderOrderTimeline(o)}</div>
     ${o.status==='cancelled' && o.cancel_reason ? `<div style="font-size:12.5px;color:var(--danger);margin-bottom:12px"><b>Cancelled:</b> ${esc(o.cancel_reason)}</div>` : ''}
-    ${['admin','worker'].includes(state.profile?.role) ? `<div style="display:flex;gap:8px;margin:0 0 12px"><button class="btn btn-ghost btn-sm" style="flex:1" onclick="shareOrderWhatsApp('${o.id}')">WhatsApp${o.profiles?.phone?' customer':''}</button><button class="btn btn-ghost btn-sm" style="flex:1" onclick="copyOrderSummary('${o.id}')">Share receipt</button></div>` : ''}
+    ${['admin','worker'].includes(state.profile?.role) ? `<div style="display:flex;gap:8px;margin:0 0 12px"><button class="btn btn-ghost btn-sm" style="flex:1" onclick="shareOrderWhatsApp('${o.id}')">WhatsApp${o.profiles?.phone?' customer':''}</button><button class="btn btn-ghost btn-sm" style="flex:1" onclick="copyOrderSummary('${o.id}')">Share receipt</button>${o.profiles?.phone?`<a class="btn btn-ghost btn-sm" style="flex:1;text-decoration:none;display:inline-flex;align-items:center;justify-content:center" href="tel:${esc(o.profiles.phone)}">Call</a>`:''}</div>` : ''}
     ${o.status!=='cancelled' ? `<button class="btn btn-outline btn-sm" style="width:100%;margin:0 0 12px" onclick="openReceipt('${o.id}')">🧾 View receipt</button>` : ''}
     ${canCancel(o) ? `<button class="link-danger" style="margin:0 0 16px" onclick="cancelOrder('${o.id}')">Cancel this order</button>` : ''}
+    ${tipEditorHtml(o)}
     ${excludeSalesHtml(o)}
     <div style="font-size:12.5px;color:var(--coffee-500);margin-bottom:16px">Ordered ${new Date(o.created_at).toLocaleString([],{month:'short',day:'numeric',hour:'numeric',minute:'2-digit'})} · ${o.pickup_time?'pickup '+fmtTime12(o.pickup_time.slice(0,5)):'ASAP pickup'}</div>
     ${state.profile?.role==='admin' && o.status!=='cancelled' ? `<div class="card" style="padding:14px;margin-bottom:16px;background:${o.payment_confirmed?'#EAF2E9':'#FBF2E1'}">
@@ -2350,6 +2381,7 @@ function renderAdminDashboard(){
       ${statCard('Total sales', money(totalSales))}
       ${statCard('All orders', orders.length)}
       ${statCard("Today", todayOrders.length)}
+      ${statCard('Tips (all time)', money(completed.reduce((s,o)=>s+Number(o.tip||0),0)))}
       ${statCard('In progress', orders.filter(o=>['pending','accepted','preparing'].includes(o.status)).length)}
     </div>
     <div class="card" style="padding:16px;margin-bottom:16px">
@@ -2376,7 +2408,8 @@ function renderDailyClose(orders, today){
   const t = orders.filter(o => o.status !== 'cancelled' && !o.excluded_from_sales && localDateStr(new Date(o.created_at)) === today);
   const paid = t.filter(o => o.payment_confirmed).reduce((a, o) => a + Number(o.total || 0), 0);
   const unpaidOrders = t.filter(o => !o.payment_confirmed);
-  const unpaid = unpaidOrders.reduce((a, o) => a + Number(o.total || 0), 0);
+  const unpaid = unpaidOrders.reduce((a, o) => a + Number(o.total || 0) + Number(o.tip || 0), 0);
+  const tips = t.filter(o => o.payment_confirmed).reduce((a, o) => a + Number(o.tip || 0), 0);
   const cnt = {}; t.forEach(o => (o.order_items || []).forEach(i => cnt[i.product_name] = (cnt[i.product_name] || 0) + i.quantity));
   const top = Object.entries(cnt).sort((a, b) => b[1] - a[1])[0];
   const accepting = state.settings?.is_accepting_orders !== false;
@@ -2386,6 +2419,7 @@ function renderDailyClose(orders, today){
     <div class="close-grid">
       <div><span class="meta">Collected</span><b>${money(paid)}</b></div>
       <div><span class="meta">To collect</span><b style="color:${unpaid?'#8A5A1E':'inherit'}">${money(unpaid)}</b><span class="meta">${unpaidOrders.length} unpaid${unpaidOrders.some(o=>o.payment_method&&o.payment_method!=='cash')?` · ${unpaidOrders.filter(o=>o.payment_method&&o.payment_method!=='cash').length} to verify`:''}</span></div>
+      <div><span class="meta">Tips</span><b>${money(tips)}</b></div>
       <div><span class="meta">Top today</span><b style="font-size:14px">${top ? esc(top[0]) + ' ×' + top[1] : '—'}</b></div>
     </div></div>`;
 }
@@ -2773,7 +2807,7 @@ function adminOrdersListHtml(){
           <div class="oc-title"><span style="cursor:pointer" onclick="setState({orderDetailId:'${o.id}'})">#${o.order_number}</span> ${o.customer_id?`<button class="oc-who linkish" onclick="openCustomerProfile('${o.customer_id}')">${who}</button>`:`<span class="oc-who">${who}</span>`}</div>
           <div class="meta" style="cursor:pointer" onclick="setState({orderDetailId:'${o.id}'})">${new Date(o.created_at).toLocaleString([],{month:'short',day:'numeric',hour:'numeric',minute:'2-digit'})}${o.pickup_time?` · pickup ${String(o.pickup_time).slice(0,5)}`:''} · details ›</div>
         </div>
-        <div class="oc-total">${money(o.total)}</div>
+        <div class="oc-total">${money(o.total)}${Number(o.tip)>0?`<div class="oc-tip">+ ${money(o.tip)} tip</div>`:''}</div>
       </div>
       <div class="oc-badges"><span class="badge ${o.status}">${o.status.charAt(0).toUpperCase()+o.status.slice(1)}</span><span class="badge ${o.payment_confirmed?'ready':'pending'}">${o.payment_confirmed?'Paid':'Unpaid'}</span>${payBadge(o)}${o.excluded_from_sales?'<span class="badge excluded">Removed from sales</span>':''}</div>
       ${(ns || (!o.payment_confirmed && o.status!=='cancelled')) ? `<div class="oc-actions">
