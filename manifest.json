@@ -2,7 +2,7 @@
   "id": "./",
   "name": "Filter — Coffee & Tea",
   "short_name": "Filter",
-  "description": "Order ahead for pickup from Filter — coffee, karak tea, and green tea.",
+  "description": "Coffee, karak tea and green tea from Filter — ordered in a tap, delivered to your door.",
   "start_url": "./index.html?source=pwa",
   "scope": "./",
   "display": "standalone",
