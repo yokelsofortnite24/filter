@@ -475,6 +475,30 @@ select.input{padding-right:40px;text-overflow:ellipsis;white-space:nowrap;overfl
 .age-pill{font-size:11px;font-weight:700;padding:3px 9px;border-radius:999px;background:#FBEBC9;color:#8A5A1E}
 .age-late .age-pill{background:#F8DDD7;color:var(--danger)}
 
+
+/* ---- v24 ---- */
+.stamp-card{padding:16px;margin-bottom:20px}
+.stamps{display:grid;gap:10px;justify-items:center}
+.stamp-dot{width:46px;height:46px;border-radius:50%;border:2px dashed var(--line);display:flex;align-items:center;justify-content:center;font-size:20px;background:var(--cream-2)}
+.stamp-dot.on{border:2px solid var(--caramel-dark);background:#F3E2C8;animation:stampIn .5s cubic-bezier(.3,.7,.4,1.6) both}
+@keyframes stampIn{from{transform:scale(.3) rotate(-30deg);opacity:0}to{transform:none;opacity:1}}
+.seg-mini{display:inline-flex;background:#EFE4D0;border-radius:10px;padding:3px;gap:2px}
+.seg-mini button{border:0;background:transparent;font:inherit;font-size:12.5px;font-weight:600;padding:6px 12px;border-radius:8px;color:var(--coffee-700);min-height:32px}
+.seg-mini button.on{background:var(--card);color:var(--coffee-900);box-shadow:0 1px 4px rgba(42,24,15,.15)}
+.trend{font-size:12.5px;font-weight:700;padding:2px 8px;border-radius:999px}.trend.up{background:#E3EEDF;color:#3F6B3A}.trend.down{background:#F6E2DC;color:var(--danger)}
+.tchart{display:flex;gap:8px;align-items:flex-end;height:120px}
+.tcol{flex:1;display:flex;flex-direction:column;align-items:center;gap:6px;height:100%}
+.tcol span{font-size:11px;color:var(--coffee-500);font-weight:600}
+.tbars{flex:1;width:100%;display:flex;align-items:flex-end;justify-content:center;gap:3px}
+.tbars i{display:block;width:42%;border-radius:6px 6px 2px 2px;min-height:2px;transform-origin:bottom;animation:growUp .8s cubic-bezier(.3,.8,.3,1) both}
+.tp{background:#E9DCC6}.tv{background:var(--caramel)}.tv.today{background:var(--coffee-900)}
+@keyframes growUp{from{transform:scaleY(0)}}
+.lg{display:inline-block;width:10px;height:10px;border-radius:3px;margin-right:5px;vertical-align:-1px}
+.lb-row{display:flex;align-items:center;gap:10px;width:100%;border:0;background:transparent;font:inherit;padding:9px 0;border-bottom:1px solid rgba(230,217,194,.6);text-align:left;color:var(--coffee-900);font-size:14px}
+.lb-row:last-child{border-bottom:0}.lb-rank{width:26px;text-align:center;font-size:16px}.lb-name{flex:1;min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;font-weight:600}
+.bulk-card{padding:16px;margin-bottom:16px}
+.bulk-prev{background:#F8F1E5;border-radius:12px;padding:10px 12px;margin-bottom:10px;font-size:13px}.bulk-prev div{display:flex;justify-content:space-between;gap:8px;padding:3px 0}
+
 @media (prefers-reduced-motion: reduce){*,*::before,*::after{animation-duration:.01ms!important;animation-delay:0s!important;transition-duration:.01ms!important}}
 </style>
 </head>
@@ -485,7 +509,7 @@ select.input{padding-right:40px;text-overflow:ellipsis;white-space:nowrap;overfl
 // Bumped on every real deploy. Lets a running tab/installed PWA detect a
 // newer version is live on the server and prompt to refresh, instead of
 // silently running stale code forever (a common PWA gotcha).
-const APP_BUILD = '2026-10-12-08';
+const APP_BUILD = '2026-10-13-01';
 // ---- v23 updates + features ----
 function safeToAutoReload(){ return !(state.cart||[]).length && !modalInUse() && !isEditingSomething() && !state.adminMoreOpen && !document.querySelector('.sheet'); }
 async function fetchLatestBuild(){
@@ -637,6 +661,8 @@ function fromTable(table){
   const builder = {
     select(cols){ q.selectCols = cols || '*'; return builder; },
     eq(col, val){ q.filters.push(`${col}=eq.${encodeURIComponent(val)}`); return builder; },
+    gte(col, val){ q.filters.push(`${col}=gte.${encodeURIComponent(val)}`); return builder; },
+    lte(col, val){ q.filters.push(`${col}=lte.${encodeURIComponent(val)}`); return builder; },
     in(col, vals){ q.filters.push(`${col}=in.(${(vals||[]).map(v=>encodeURIComponent('"'+String(v).replace(/"/g,'\\"')+'"')).join(',')})`); return builder; },
     order(col, opts){ q.orderCol = col; q.orderAsc = !(opts && opts.ascending === false); return builder; },
     limit(n){ q.limitN = n; return builder; },
@@ -1342,6 +1368,102 @@ function renderQuickActions(){
   </div></div>`;
 }
 
+// ---- v24 features ----
+const SORTS = [['default','Sort'],['price-asc','Price ↑'],['price-desc','Price ↓'],['name','A–Z']];
+function cycleSort(){ const i = SORTS.findIndex(s => s[0] === (state.menuSort || 'default')); state.menuSort = SORTS[(i + 1) % SORTS.length][0]; render(); }
+function applySort(list){ const s = state.menuSort || 'default'; if (s === 'default') return list; const l = [...list];
+  if (s === 'price-asc') l.sort((a, b) => a.base_price - b.base_price); else if (s === 'price-desc') l.sort((a, b) => b.base_price - a.base_price); else l.sort((a, b) => a.name.localeCompare(b.name));
+  return l.sort((a, b) => (b.is_available ? 1 : 0) - (a.is_available ? 1 : 0)); }
+function stampCardHtml(){
+  const m = (state.milestones || []).filter(x => x.is_active && x.orders_required > 0 && x.orders_required <= 20).sort((a, b) => a.orders_required - b.orders_required)[0];
+  if (!m) return '';
+  const paid = state.profile?.paid_orders_count || 0, req = m.orders_required, have = paid % req === 0 && paid > 0 && (state.myGifts || []).length ? req : paid % req;
+  return `<div class="card stamp-card"><div style="display:flex;justify-content:space-between;align-items:baseline;margin-bottom:12px"><div class="display" style="font-size:17px">Stamp card</div><span class="meta">${have}/${req} · ${esc(m.gift_name || 'Free gift')}</span></div>
+    <div class="stamps" style="grid-template-columns:repeat(${Math.min(req, 5)},1fr)">${Array.from({ length: req }, (_, i) => `<div class="stamp-dot ${i < have ? 'on' : ''}" style="animation-delay:${i * 60}ms">${i < have ? '☕' : i === req - 1 ? '🎁' : ''}</div>`).join('')}</div>
+    <div class="meta" style="margin-top:10px;text-align:center">${req - have > 0 ? `${req - have} more paid order${req - have > 1 ? 's' : ''} to your ${esc(m.gift_name || 'gift')}` : 'Card complete — your gift is waiting!'}</div></div>`;
+}
+function birthdayCardHtml(){
+  const p = state.profile || {}, pts = state.settings?.birthday_points ?? 50;
+  if (p.birthday) { const d = new Date(p.birthday + 'T12:00'); return `<div class="card" style="padding:16px 18px;margin-bottom:16px;display:flex;gap:12px;align-items:center"><span style="font-size:26px">🎂</span><div><b>Birthday: ${d.toLocaleDateString([], { day: 'numeric', month: 'long' })}</b><div class="meta">We'll add ${pts} bonus points on your birthday.</div></div></div>`; }
+  return `<div class="card" style="padding:16px 18px;margin-bottom:16px"><div style="display:flex;gap:12px;align-items:center;margin-bottom:10px"><span style="font-size:26px">🎂</span><div><b>Get a birthday treat</b><div class="meta">Add your birthday and get ${pts} bonus points every year. You can set it once.</div></div></div><div style="display:flex;gap:8px"><input class="input" type="date" id="bday-in" max="${localDateStr(new Date())}" style="flex:1"><button class="btn btn-primary btn-sm" onclick="saveBirthday()">Save</button></div></div>`;
+}
+async function saveBirthday(){
+  const v = document.getElementById('bday-in')?.value;
+  if (!v) { showToast('Pick your birthday first', 'err'); return; }
+  const { data, error } = await sb.from('profiles').update({ birthday: v }).eq('id', state.session.user.id).select().maybeSingle();
+  if (error || !data) { showToast('Not saved: ' + (error?.message || 'try again'), 'err'); return; }
+  state.profile = data; burst(18); showToast('Birthday saved 🎂', 'ok'); render();
+}
+// ---- Admin analytics (separate light query, cached 60s) ----
+let _an = null, _anAt = 0, _anLoading = false;
+async function loadAnalytics(force){
+  if (_anLoading || (!force && _an && Date.now() - _anAt < 60000)) return;
+  _anLoading = true;
+  try {
+  const since = new Date(); since.setDate(since.getDate() - 62);
+  const { data } = await sb.from('orders').select('id, order_number, created_at, total, tip, status, payment_confirmed, payment_method, excluded_from_sales, customer_id, profiles!orders_customer_id_fkey(full_name, phone), order_items(product_name, quantity, unit_price)').gte('created_at', since.toISOString()).order('created_at', { ascending: false }).limit(2000);
+  _an = data || []; _anAt = Date.now();
+  } catch (e) { _an = _an || []; } finally { _anLoading = false; }
+  if (state.adminTab === 'dashboard' && !modalInUse() && !isEditingSomething()) render();
+}
+function salesIn(from, to){ return (_an || []).filter(o => o.payment_confirmed && o.status !== 'cancelled' && !o.excluded_from_sales && new Date(o.created_at) >= from && new Date(o.created_at) < to).reduce((a, o) => a + Number(o.total || 0), 0); }
+function trendsCardHtml(){
+  if (!_an) { loadAnalytics(); return `<div class="card" style="padding:16px;margin-bottom:16px"><div class="skel" style="height:18px;width:40%"></div><div class="skel" style="height:110px;margin-top:12px"></div></div>`; }
+  const mode = state.trendMode || 'week', day = 864e5, now = new Date(), start = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+  let bars = [], cur = 0, prev = 0, label = '';
+  if (mode === 'week') {
+    for (let i = 6; i >= 0; i--) { const a = new Date(start - i * day), b = new Date(+a + day), pa = new Date(+a - 7 * day), pb = new Date(+pa + day); bars.push({ l: a.toLocaleDateString([], { weekday: 'narrow' }), v: salesIn(a, b), p: salesIn(pa, pb), today: i === 0 }); }
+    cur = bars.reduce((s, x) => s + x.v, 0); prev = bars.reduce((s, x) => s + x.p, 0); label = 'Last 7 days vs the 7 before';
+  } else {
+    const m0 = new Date(now.getFullYear(), now.getMonth(), 1), p0 = new Date(now.getFullYear(), now.getMonth() - 1, 1), n = now.getDate();
+    for (let w = 0; w < 5; w++) { const a = new Date(+m0 + w * 7 * day); if (a > now) break; const b = new Date(Math.min(+a + 7 * day, +now + day)), pa = new Date(+p0 + w * 7 * day), pb = new Date(+pa + (b - a)); bars.push({ l: 'W' + (w + 1), v: salesIn(a, b), p: salesIn(pa, pb), today: b > now }); }
+    cur = salesIn(m0, new Date(+start + day)); prev = salesIn(p0, new Date(+p0 + n * day)); label = `This month vs same days last month`;
+  }
+  const max = Math.max(1, ...bars.map(b => Math.max(b.v, b.p))), diff = prev ? Math.round((cur - prev) / prev * 100) : null;
+  return `<div class="card" style="padding:16px;margin-bottom:16px"><div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px"><div class="display" style="font-size:17px">Sales trends</div><div class="seg-mini">${['week','month'].map(m => `<button class="${mode === m ? 'on' : ''}" onclick="state.trendMode='${m}'; render()">${m === 'week' ? 'Week' : 'Month'}</button>`).join('')}</div></div>
+    <div style="display:flex;align-items:baseline;gap:10px"><div class="display" style="font-size:24px">${money(cur)}</div>${diff === null ? '<span class="meta">no data to compare</span>' : `<span class="trend ${diff >= 0 ? 'up' : 'down'}">${diff >= 0 ? '▲' : '▼'} ${Math.abs(diff)}%</span>`}</div><div class="meta" style="margin-bottom:10px">${label} (${money(prev)})</div>
+    <div class="tchart">${bars.map(b => `<div class="tcol"><div class="tbars"><i class="tp" style="height:${b.p / max * 100}%"></i><i class="tv ${b.today ? 'today' : ''}" style="height:${b.v / max * 100}%"></i></div><span>${b.l}</span></div>`).join('')}</div>
+    <div class="meta" style="margin-top:8px;display:flex;gap:14px"><span><i class="lg tv"></i>This period</span><span><i class="lg tp"></i>Previous</span></div></div>`;
+}
+function topCustomersHtml(){
+  if (!_an) return '';
+  const agg = {}; _an.filter(o => o.customer_id && o.payment_confirmed && o.status !== 'cancelled' && !o.excluded_from_sales).forEach(o => { const a = agg[o.customer_id] ||= { name: o.profiles?.full_name || 'Customer', n: 0, s: 0 }; a.n++; a.s += Number(o.total || 0); });
+  const top = Object.entries(agg).sort((a, b) => b[1].s - a[1].s).slice(0, 5); if (!top.length) return '';
+  return `<div class="card" style="padding:16px;margin-bottom:16px"><div style="display:flex;justify-content:space-between;align-items:baseline;margin-bottom:8px"><div class="display" style="font-size:17px">Top customers</div><span class="meta">last 60 days</span></div>${top.map(([id, c], i) => `<button class="lb-row" onclick="openCustomerProfile('${id}')"><span class="lb-rank r${i + 1}">${i < 3 ? ['🥇','🥈','🥉'][i] : i + 1}</span><span class="lb-name">${esc(c.name)}</span><span class="meta">${c.n} order${c.n > 1 ? 's' : ''}</span><b>${money(c.s)}</b></button>`).join('')}</div>`;
+}
+function csvCell(v){ const s = String(v ?? ''); return /[",\n]/.test(s) ? '"' + s.replace(/"/g, '""') + '"' : s; }
+async function exportOrdersCsv(){
+  await loadAnalytics(true);
+  const rows = [['Order #','Date','Time','Customer','Phone','Items','Total (Rs)','Tip (Rs)','Status','Paid','Method','Counted in sales']];
+  (_an || []).forEach(o => { const d = new Date(o.created_at); rows.push([o.order_number, localDateStr(d), d.toTimeString().slice(0, 5), o.profiles?.full_name || '', o.profiles?.phone || '', (o.order_items || []).map(i => `${i.quantity}x ${i.product_name}`).join('; '), Number(o.total || 0), Number(o.tip || 0), o.status, o.payment_confirmed ? 'yes' : 'no', o.payment_method || 'cash', o.excluded_from_sales ? 'no' : 'yes']); });
+  const csv = '\ufeff' + rows.map(r => r.map(csvCell).join(',')).join('\n');
+  const file = new File([csv], `filter-orders-${localDateStr(new Date())}.csv`, { type: 'text/csv' });
+  try { if (navigator.canShare && navigator.canShare({ files: [file] }) && /iPhone|iPad|Android/.test(navigator.userAgent)) { await navigator.share({ files: [file], title: 'Filter orders' }); return; } } catch (e) { if (e && e.name === 'AbortError') return; }
+  const u = URL.createObjectURL(file), a = document.createElement('a'); a.href = u; a.download = file.name; document.body.appendChild(a); a.click(); a.remove(); setTimeout(() => URL.revokeObjectURL(u), 4000);
+  showToast(`Exported ${rows.length - 1} orders`, 'ok');
+}
+// ---- Bulk price edit (admin RLS on products) ----
+function bulkTargets(){ const c = state.bulkCat || 'all'; return state.products.filter(p => c === 'all' || p.category_id === c); }
+function bulkNewPrice(p){ const v = Number(state.bulkVal) || 0, mode = state.bulkMode || 'pct'; let n = mode === 'pct' ? p.base_price * (1 + v / 100) : Number(p.base_price) + v; n = Math.round(n / 5) * 5; return Math.max(0, n); }
+function bulkPriceHtml(){
+  if (!state.bulkOpen) return `<button class="btn btn-ghost" style="margin:0 0 16px 8px" onclick="setState({bulkOpen:true})">Bulk price change</button>`;
+  const t = bulkTargets(), v = Number(state.bulkVal) || 0;
+  return `<div class="card bulk-card"><div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px"><div class="display" style="font-size:17px">Bulk price change</div><button class="btn btn-ghost btn-sm" onclick="setState({bulkOpen:false,bulkArm:false})">✕</button></div>
+    <div style="display:flex;gap:8px;margin-bottom:8px"><select class="input" style="flex:1" onchange="state.bulkCat=this.value; state.bulkArm=false; render()"><option value="all">All items</option>${state.categories.map(c => `<option value="${c.id}" ${state.bulkCat === c.id ? 'selected' : ''}>${esc(c.name)}</option>`).join('')}</select>
+    <div class="seg-mini">${[['pct','%'],['rs','Rs']].map(([k, l]) => `<button class="${(state.bulkMode || 'pct') === k ? 'on' : ''}" onclick="state.bulkMode='${k}'; state.bulkArm=false; render()">${l}</button>`).join('')}</div></div>
+    <input class="input" id="bulk-val" type="number" inputmode="decimal" placeholder="${(state.bulkMode || 'pct') === 'pct' ? 'e.g. 10 or -10 (%)' : 'e.g. 20 or -20 (Rs)'}" value="${state.bulkVal ?? ''}" oninput="state.bulkVal=this.value; state.bulkArm=false; const el=document.getElementById('bulk-prev'); if(el) el.innerHTML=bulkPreviewHtml();" style="margin-bottom:8px">
+    <div id="bulk-prev">${bulkPreviewHtml()}</div>
+    ${state.bulkArm ? `<div class="excl-box warn"><div style="flex:1"><b>Change ${t.length} price${t.length > 1 ? 's' : ''}?</b><div class="meta">Rounded to the nearest Rs 5. Customers see it right away.</div></div><div style="display:flex;gap:8px"><button class="btn btn-ghost btn-sm" onclick="setState({bulkArm:false})">Back</button><button class="btn btn-sm btn-danger-soft" onclick="applyBulkPrices()">Apply</button></div></div>` : `<button class="btn btn-primary btn-sm" style="width:100%" onclick="if(!Number(state.bulkVal)||!bulkTargets().length){showToast('Enter an amount first','err')}else setState({bulkArm:true})">Review change</button>`}
+  </div>`;
+}
+function bulkPreviewHtml(){ const t = bulkTargets(); if (!Number(state.bulkVal)) return `<div class="meta" style="margin-bottom:10px">${t.length} item${t.length !== 1 ? 's' : ''} selected</div>`; return `<div class="bulk-prev">${t.slice(0, 6).map(p => `<div><span>${esc(p.name)}</span><span class="meta">${money(p.base_price)} → <b style="color:var(--coffee-900)">${money(bulkNewPrice(p))}</b></span></div>`).join('')}${t.length > 6 ? `<div class="meta">+ ${t.length - 6} more</div>` : ''}</div>`; }
+async function applyBulkPrices(){
+  const t = bulkTargets(); let ok = 0, fail = 0;
+  for (const p of t) { const n = bulkNewPrice(p); if (n === Number(p.base_price)) { ok++; continue; } const { data, error } = await sb.from('products').update({ base_price: n }).eq('id', p.id).select('id'); if (error || !data?.length) fail++; else ok++; }
+  await refreshProducts(); state.bulkArm = false; state.bulkVal = ''; state.bulkOpen = false;
+  showToast(fail ? `${ok} updated, ${fail} failed` : `Updated ${ok} price${ok !== 1 ? 's' : ''}`, fail ? 'err' : 'ok'); render();
+}
+
 let _screenKey = '', _enterT = null, _lastCartCount = 0, _freshOrderIds = new Set();
 function successPop(text){
   const el = document.createElement('div'); el.className = 'success-pop'; el.innerHTML = `<div class="sp-card"><div class="sp-check"><svg viewBox="0 0 52 52"><circle cx="26" cy="26" r="24"/><path d="M15 27l7 7 15-16"/></svg></div><div class="sp-text">${esc(text)}</div></div>`;
@@ -1613,7 +1735,7 @@ function productEmoji(p){
   return '☕';
 }
 function filteredProducts(){
-  return state.products.filter(p=>{
+  return applySort(state.products).filter(p=>{
     if (state.activeCategory!=='all' && p.category_id!==state.activeCategory) return false;
     if (state.search && !p.name.toLowerCase().includes(state.search.toLowerCase()) && !(p.description||'').toLowerCase().includes(state.search.toLowerCase())) return false;
     if (state.filters.hot && !p.is_hot) return false;
@@ -1975,6 +2097,7 @@ function renderMenuTab(){
     <div class="scrollx" style="margin-bottom:18px">
       <button class="chip ${state.filters.hot?'active':''}" onclick="state.filters.hot=!state.filters.hot; render()">🔥 Hot</button>
       <button class="chip ${state.filters.iced?'active':''}" onclick="state.filters.iced=!state.filters.iced; render()">🧊 Iced</button>
+      <button class="chip ${(state.menuSort||'default')!=='default'?'active':''}" onclick="cycleSort()">⇅ ${SORTS.find(s=>s[0]===(state.menuSort||'default'))[1]}</button>
     </div>
     ${(!state.search && state.activeCategory==='all' && featured.length) ? `
       <div style="margin-bottom:22px">
@@ -2578,6 +2701,7 @@ function renderRewardsTab(){
       ${state.myGifts.map(g=>`<div style="padding:8px 0;border-bottom:1px solid var(--line);font-size:13.5px"><b>${esc(g.loyalty_milestones?.gift_name||'Gift')}</b><br><span style="font-size:12px;color:var(--coffee-500)">${esc(g.loyalty_milestones?.gift_description||'')} — mention this next time you order</span></div>`).join('')}
     </div>` : ''}
 
+    ${stampCardHtml()}
     ${nextMilestones.length ? `<div class="card" style="padding:16px;margin-bottom:20px">
       <h3 style="margin:0 0 12px;font-size:15px">🎁 Free Gifts</h3>
       ${nextMilestones.map(m=>`<div style="margin-bottom:14px">
@@ -2653,6 +2777,7 @@ function renderProfileTab(){
       <div style="margin-top:10px;font-size:12px;color:var(--caramel-dark)">Referral Code: <b>${esc(p?.referral_code||'')}</b> — share for bonus points</div>
       <button class="btn btn-outline" style="width:100%;margin-top:12px" onclick="shareReferral()">📤 Invite a Friend</button>
     </div>
+    ${birthdayCardHtml()}
     ${taste ? `<div class="card" style="padding:18px;margin-bottom:16px">
       <h3 style="margin:0 0 10px;font-size:15px">☕ Your Taste Profile</h3>
       <div style="font-size:13px;margin-bottom:10px">Your go-to: <b>${esc(taste.favorite)}</b> (${taste.favoriteCount}× ordered)</div>
@@ -2839,6 +2964,9 @@ function renderAdminDashboard(){
     <button class="btn btn-outline" style="width:100%;margin:0 0 16px" onclick="shareTodayReport()">📋 Share today's report</button>
     ${goalCardHtml()}
     ${bestSellersToday()}
+    ${trendsCardHtml()}
+    ${topCustomersHtml()}
+    <button class="btn btn-ghost" style="width:100%;margin:0 0 16px" onclick="exportOrdersCsv()">⬇ Export orders (CSV, last 60 days)</button>
     ${quickStockHtml()}
     <div class="stat-grid" style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:16px">
       ${statCard('Total sales', money(totalSales))}
@@ -3012,7 +3140,7 @@ async function deleteMission(id){
 }
 
 function renderAdminMenu(){
-  return `<button class="btn btn-primary" style="margin-bottom:16px" onclick="openAdminProductEditor(null)">+ Add Product</button>
+  return `<button class="btn btn-primary" style="margin-bottom:16px" onclick="openAdminProductEditor(null)">+ Add Product</button>${bulkPriceHtml()}
     <div style="display:flex;flex-direction:column;gap:10px">
       ${state.products.map(p=>`<div class="card" style="padding:12px;display:flex;justify-content:space-between;align-items:center;gap:10px">
         <div>
