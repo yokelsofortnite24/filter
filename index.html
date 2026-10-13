@@ -382,7 +382,7 @@ select.input{padding-right:40px;text-overflow:ellipsis;white-space:nowrap;overfl
 @keyframes slideIn{from{opacity:0;transform:translateX(-40px) scale(.97)}to{opacity:1;transform:none}}
 /* tracker */
 .tracker{position:relative;display:flex;justify-content:space-between;padding-top:2px;margin-top:12px}
-.tr-line{position:absolute;left:12%;right:12%;top:13px;height:4px;border-radius:4px;background:rgba(119,90,60,.15)}
+.tr-line{position:absolute;left:10%;right:10%;top:13px;height:4px;border-radius:4px;background:rgba(119,90,60,.15)}
 .tracker.dark .tr-line{background:rgba(251,247,239,.22)}
 .tr-fill{height:100%;border-radius:4px;background:linear-gradient(90deg,var(--caramel),var(--caramel-dark));transition:width .9s cubic-bezier(.3,.8,.3,1)}
 .tracker.dark .tr-fill{background:var(--cream-2)}
@@ -394,7 +394,7 @@ select.input{padding-right:40px;text-overflow:ellipsis;white-space:nowrap;overfl
 .tr-step.cur .tr-dot{background:var(--caramel);border-color:var(--caramel);animation:pulse 1.6s ease-out infinite}
 .tracker.dark .tr-step.cur .tr-dot{background:#E8B04B;border-color:#E8B04B}
 @keyframes pulse{0%{box-shadow:0 0 0 0 rgba(200,140,80,.55)}70%{box-shadow:0 0 0 12px rgba(200,140,80,0)}100%{box-shadow:0 0 0 0 rgba(200,140,80,0)}}
-.tr-lbl{font-size:11px;font-weight:600;color:var(--coffee-500)}
+.tr-lbl{font-size:10.5px;font-weight:600;color:var(--coffee-500);text-align:center;line-height:1.2}
 .tracker.dark .tr-lbl{color:rgba(251,247,239,.75)}
 .tr-step.cur .tr-lbl{color:var(--coffee-900)}.tracker.dark .tr-step.cur .tr-lbl{color:#fff}
 .lo-eta{margin-top:10px;font-size:12.5px;font-weight:600;opacity:.9}
@@ -580,22 +580,6 @@ html.glass.dark .chip:not(.active),html.glass.dark .btn-ghost{background:rgba(25
 @media (prefers-reduced-transparency:reduce){html.glass .card,html.glass .topbar,html.glass .tabbar,html.glass .sheet{-webkit-backdrop-filter:none;backdrop-filter:none;background:var(--cream-2)!important}}
 html.dark .chip-timer{background:#3A2C20;color:var(--coffee-900)}html.dark .chip-timer.late{background:#4A2420;color:#F2A597}
 
-/* ---- v27 ---- */
-.addr-box{border:1px solid var(--line);border-radius:14px;padding:10px 12px;margin:0 0 12px;background:rgba(181,113,61,.06)}
-.addr-box.compact{margin:8px 0}
-.addr-txt{display:flex;gap:8px;align-items:flex-start;font-size:13px}.addr-ic{font-size:15px;line-height:1.2}.addr-line{font-weight:600;overflow-wrap:anywhere}
-.addr-acts{display:flex;gap:6px;flex-wrap:wrap;margin-top:8px}.addr-acts .btn{text-decoration:none;font-size:12px;padding:6px 10px;min-height:32px}
-.loc-row{display:flex;gap:10px;align-items:center;flex-wrap:wrap;margin:0 0 8px}
-.shake{animation:shake .45s}@keyframes shake{20%,60%{transform:translateX(-6px)}40%,80%{transform:translateX(6px)}}
-html.dark .addr-box{background:rgba(201,138,82,.08)}
-/* v27b */
-.contactless{display:flex;gap:10px;align-items:flex-start;font-size:13px;margin:0 0 16px;padding:10px 12px;border:1px dashed var(--line);border-radius:12px}
-.cl-badge{font-size:11.5px;font-weight:700;color:#5E6E45;background:rgba(119,135,95,.15);display:inline-block;padding:3px 8px;border-radius:99px;margin-bottom:6px}
-.min-note{margin-top:12px;padding:10px 12px;border-radius:12px;background:#FBF2E1;color:#8A5A1E;font-size:13px;font-weight:600;text-align:center;animation:riseIn .3s ease both}
-.rider-pick{display:flex;align-items:center;gap:8px;font-size:12.5px;font-weight:600;margin:6px 0}.rider-pick select{flex:1;padding:6px 10px;min-height:34px;font-size:13px}
-.rider-tag{margin:4px 0 8px;font-size:12px}
-.sa-form{display:grid;grid-template-columns:96px 1fr;gap:8px;margin-top:8px}.sa-form #sa-notes,.sa-form .btn{grid-column:1/-1}
-html.dark .min-note{background:#3A2C20;color:var(--caramel-dark)}
 /* ---- v24 ---- */
 .stamp-card{padding:16px;margin-bottom:20px}
 .stamps{display:grid;gap:10px;justify-items:center}
@@ -629,7 +613,7 @@ html.dark .min-note{background:#3A2C20;color:var(--caramel-dark)}
 // Bumped on every real deploy. Lets a running tab/installed PWA detect a
 // newer version is live on the server and prompt to refresh, instead of
 // silently running stale code forever (a common PWA gotcha).
-const APP_BUILD = '2026-10-13-04';
+const APP_BUILD = '2026-10-13-05';
 // ---- v23 updates + features ----
 function safeToAutoReload(){ return !(state.cart||[]).length && !modalInUse() && !isEditingSomething() && !state.adminMoreOpen && !document.querySelector('.sheet'); }
 async function fetchLatestBuild(){
@@ -657,7 +641,7 @@ function todayReportText(){
   const paid = ok.filter(o => o.payment_confirmed);
   const sales = paid.reduce((a, o) => a + Number(o.total || 0), 0), tips = paid.reduce((a, o) => a + Number(o.tip || 0), 0);
   const unpaid = ok.filter(o => !o.payment_confirmed).reduce((a, o) => a + Number(o.total || 0) + Number(o.tip || 0), 0);
-  const fees = paid.reduce((a, o) => a + Number(o.payment_fee || 0), 0); const by = { cash: 0, bank: 0, qr: 0, card: 0 }; paid.forEach(o => by[o.payment_method || 'cash'] += Number(o.total || 0) + Number(o.tip || 0));
+  const fees = paid.reduce((a, o) => a + Number(o.payment_fee || 0), 0); const by = { cash: 0, bank: 0, qr: 0 }; paid.forEach(o => by[o.payment_method || 'cash'] += Number(o.total || 0) + Number(o.tip || 0));
   const cnt = {}; ok.forEach(o => (o.order_items || []).forEach(i => cnt[i.product_name] = (cnt[i.product_name] || 0) + Number(i.quantity || 0)));
   const top = Object.entries(cnt).sort((a, b) => b[1] - a[1]).slice(0, 3).map(([n, c]) => `${n} ×${c}`).join(', ');
   return `${state.settings?.business_name || 'Filter'} — ${new Date().toLocaleDateString([], { weekday: 'short', day: 'numeric', month: 'short' })}\nOrders: ${ok.length}${t.length - ok.length ? ` (+${t.length - ok.length} cancelled/removed)` : ''}\nSales: ${money(sales)}\nTips: ${money(tips)}${fees ? `\nPayment fees: ${money(fees)}` : ''}\nCash ${money(by.cash)} · Bank ${money(by.bank)} · QR ${money(by.qr)}${by.card ? ` · Card ${money(by.card)}` : ''}\nStill to collect: ${money(unpaid)}${top ? `\nTop: ${top}` : ''}`;
@@ -1228,7 +1212,7 @@ async function pollTick(opts){
         const giftUnlocked = (state.myGifts||[]).length > prevGiftCount;
 
         if (isEditingSomething()) return; // data is fresh in state; screen updates next safe render
-        statusChanges.forEach(o => { if (o.status === 'ready') readyCelebration(o); else showToast(`Order #${o.order_number}: ${statusTxt(o.status)}`); });
+        statusChanges.forEach(o => { if (o.status === 'ready') readyCelebration(o); else showToast(`Order #${o.order_number} is now ${o.status}`); });
         if (pointsGained > 0) showToast(`+${pointsGained} loyalty points earned!`, 'ok');
         if (giftUnlocked) showToast('🎁 You unlocked a free gift! Check Rewards.', 'ok');
         if (pollSignature() !== _sigBefore && !modalInUse()) render();
@@ -1276,7 +1260,7 @@ function cartLineTotal(item){ return (item.unit_price) * item.qty; }
 function cartSubtotal(){ return state.cart.reduce((s,i)=>s+cartLineTotal(i),0); }
 
 // ---------------- ORDER PLACEMENT ----------------
-async function placeOrder({ pickupDate, pickupTime, notes, delivery }){
+async function placeOrder({ pickupDate, pickupTime, notes }){
   const subtotal = cartSubtotal();
   const taxRate = Number(state.settings?.tax_rate || 0);
   let discount = 0, promoId = null;
@@ -1286,13 +1270,12 @@ async function placeOrder({ pickupDate, pickupTime, notes, delivery }){
   const taxable = Math.max(subtotal - discount, 0);
   const tax = +(taxable * taxRate).toFixed(2);
   const payM = availablePayMethods().includes(state.payMethod) ? state.payMethod : 'cash';
-  const delFee = delFeeFor(taxable + tax);
-  const fee = feeFor(taxable + tax + delFee, payM);
-  const total = +(taxable + tax + delFee + fee).toFixed(2);
+  const fee = feeFor(taxable + tax, payM);
+  const total = +(taxable + tax + fee).toFixed(2);
   const pointsEarned = Math.floor((taxable + tax) * Number(state.settings?.loyalty_points_per_currency || 1));
 
   const { data: order, error } = await sb.from('orders').insert({
-    customer_id: state.session.user.id, status: 'pending', fulfillment_type: 'delivery', delivery_address: delivery.address, delivery_notes: delivery.notes || null, delivery_map_url: delivery.map || null, delivery_fee: delFee, contactless: !!delivery.contactless,
+    customer_id: state.session.user.id, status: 'pending', fulfillment_type: 'pickup',
     pickup_date: pickupDate, pickup_time: pickupTime, subtotal, discount_amount: +discount.toFixed(2),
     tax_amount: tax, total, loyalty_points_redeemed: state.redeemPoints, loyalty_discount_amount: +loyaltyDiscount.toFixed(2),
     loyalty_points_earned: pointsEarned, promo_id: promoId, special_instructions: notes, payment_method: payM, payment_fee: fee, tip: tipAmt(),
@@ -1389,11 +1372,11 @@ function countUps(){
 function runWidthAnims(){ const tx = document.querySelectorAll('[data-anim-tx]'); if (tx.length) requestAnimationFrame(() => requestAnimationFrame(() => tx.forEach(el => { el.style.transform = `translateX(${el.dataset.animTx})`; el.removeAttribute('data-anim-tx'); }))); const els = document.querySelectorAll('[data-anim-w]'); if (!els.length) return; requestAnimationFrame(() => requestAnimationFrame(() => els.forEach(el => { el.style.width = el.dataset.animW + '%'; el.removeAttribute('data-anim-w'); }))); }
 const _trackPrev = {};
 function renderTracker(o, dark){
-  const steps = ['pending','accepted','preparing','ready','completed'], labels = ['Received','Confirmed','Making','Out for delivery','Delivered'];
+  const steps = ['pending','accepted','preparing','ready','completed'], labels = ['Received','Confirmed','Making','Ready for pickup','Collected'];
   const n = steps.indexOf(o.status) + 1; if (n < 1) return '';
   const pct = (n - 1) / 4 * 100, prev = _trackPrev[o.id] ?? pct; _trackPrev[o.id] = pct;
   return `<div class="tracker ${dark?'dark':''}"><div class="tr-line"><div class="tr-fill" style="width:${prev}%" ${prev!==pct?`data-anim-w="${pct}"`:''}></div></div>
-    ${steps.map((s,i)=>`<div class="tr-step ${i+1<n?'done':''} ${i+1===n?'cur':''}"><span class="tr-dot">${i+1<n||(i+1===n&&n===5)?'✓':i===3&&i+1===n?'🛵':''}</span><span class="tr-lbl">${labels[i]}</span></div>`).join('')}</div>`;
+    ${steps.map((s,i)=>`<div class="tr-step ${i+1<n?'done':''} ${i+1===n?'cur':''}"><span class="tr-dot">${i+1<n||(i+1===n&&n===5)?'✓':''}</span><span class="tr-lbl">${labels[i]}</span></div>`).join('')}</div>`;
 }
 // Swipe-down to close sheets (spring back if not far enough).
 (function(){
@@ -1404,7 +1387,7 @@ function renderTracker(o, dark){
     if (dy > 110) { s.style.transform = 'translateY(100%)'; setTimeout(() => { const sc = s.closest('.scrim'); if (sc) sc.dispatchEvent(new MouseEvent('click', { bubbles: true })); }, 180); }
     else s.style.transform = ''; });
 })();
-function readyCelebration(o){ burst(30); successPop(`Order #${o.order_number} is on its way! 🛵`); try { navigator.vibrate && navigator.vibrate([120, 60, 120]); } catch (e) {} }
+function readyCelebration(o){ burst(30); successPop(`Order #${o.order_number} is ready! ☕`); try { navigator.vibrate && navigator.vibrate([120, 60, 120]); } catch (e) {} }
 // Estimated ready time: orders ahead in the queue × ~4 min + 6 min base.
 function etaMinutes(o){
   if (!['pending','accepted','preparing'].includes(o.status)) return 0;
@@ -1525,7 +1508,7 @@ async function loadAnalytics(force){
   _anLoading = true;
   try {
   const since = new Date(); since.setDate(since.getDate() - 62);
-  const { data } = await sb.from('orders').select('id, order_number, created_at, delivery_address, delivery_notes, delivery_map_url, delivery_fee, completed_at, preparing_at, ready_at, completed_by, payment_fee, total, tip, status, payment_confirmed, payment_method, excluded_from_sales, customer_id, profiles!orders_customer_id_fkey(full_name, phone), order_items(product_name, quantity, unit_price)').gte('created_at', since.toISOString()).order('created_at', { ascending: false }).limit(2000);
+  const { data } = await sb.from('orders').select('id, order_number, created_at, completed_at, preparing_at, ready_at, completed_by, payment_fee, total, tip, status, payment_confirmed, payment_method, excluded_from_sales, customer_id, profiles!orders_customer_id_fkey(full_name, phone), order_items(product_name, quantity, unit_price)').gte('created_at', since.toISOString()).order('created_at', { ascending: false }).limit(2000);
   _an = data || []; _anAt = Date.now();
   } catch (e) { _an = _an || []; } finally { _anLoading = false; }
   if (['dashboard','insights','shop'].includes(state.adminTab) && !modalInUse() && !isEditingSomething()) render();
@@ -1558,8 +1541,8 @@ function topCustomersHtml(){
 function csvCell(v){ const s = String(v ?? ''); return /[",\n]/.test(s) ? '"' + s.replace(/"/g, '""') + '"' : s; }
 async function exportOrdersCsv(){
   await loadAnalytics(true);
-  const rows = [['Order #','Date','Time','Customer','Phone','Items','Delivery address','Landmark','Map','Delivery fee (Rs)','Total (Rs)','Payment fee (Rs)','Tip (Rs)','Status','Paid','Method','Counted in sales']];
-  (_an || []).forEach(o => { const d = new Date(o.created_at); rows.push([o.order_number, localDateStr(d), d.toTimeString().slice(0, 5), o.profiles?.full_name || '', o.profiles?.phone || '', (o.order_items || []).map(i => `${i.quantity}x ${i.product_name}`).join('; '), o.delivery_address || '', o.delivery_notes || '', o.delivery_map_url || '', Number(o.delivery_fee || 0), Number(o.total || 0), Number(o.payment_fee || 0), Number(o.tip || 0), statusTxt(o.status), o.payment_confirmed ? 'yes' : 'no', o.payment_method || 'cash', o.excluded_from_sales ? 'no' : 'yes']); });
+  const rows = [['Order #','Date','Time','Customer','Phone','Items','Total (Rs)','Payment fee (Rs)','Tip (Rs)','Status','Paid','Method','Counted in sales']];
+  (_an || []).forEach(o => { const d = new Date(o.created_at); rows.push([o.order_number, localDateStr(d), d.toTimeString().slice(0, 5), o.profiles?.full_name || '', o.profiles?.phone || '', (o.order_items || []).map(i => `${i.quantity}x ${i.product_name}`).join('; '), Number(o.total || 0), Number(o.payment_fee || 0), Number(o.tip || 0), o.status, o.payment_confirmed ? 'yes' : 'no', o.payment_method || 'cash', o.excluded_from_sales ? 'no' : 'yes']); });
   const csv = '\ufeff' + rows.map(r => r.map(csvCell).join(',')).join('\n');
   const file = new File([csv], `filter-orders-${localDateStr(new Date())}.csv`, { type: 'text/csv' });
   try { if (navigator.canShare && navigator.canShare({ files: [file] }) && /iPhone|iPad|Android/.test(navigator.userAgent)) { await navigator.share({ files: [file], title: 'Filter orders' }); return; } } catch (e) { if (e && e.name === 'AbortError') return; }
@@ -1779,34 +1762,21 @@ function darkToggleHtml(){ return appearanceHtml(); }
 function toggleDark(){ setTheme(isDark() ? (document.documentElement.classList.contains('glass') ? 'glass' : 'normal') : (document.documentElement.classList.contains('glass') ? 'glass-dark' : 'dark')); }
 
 // Payment surcharge (display only — the server recomputes and enforces it)
-function feePct(m){ const s = state.settings || {}; const on = { card: s.card_fee_on, qr: s.qr_fee_on, bank: s.bank_fee_on }[m]; const pct = Number({ card: s.card_fee_pct, qr: s.qr_fee_pct, bank: s.bank_fee_pct }[m] || 0); return on && pct > 0 ? pct : 0; }
+function feePct(m){ const s = state.settings || {}; const on = { qr: s.qr_fee_on, bank: s.bank_fee_on }[m]; const pct = Number({ qr: s.qr_fee_pct, bank: s.bank_fee_pct }[m] || 0); return on && pct > 0 ? pct : 0; }
 function curPayMethod(){ const ms = availablePayMethods(); return ms.includes(state.payMethod) ? state.payMethod : 'cash'; }
 function feeFor(base, m){ return Math.round(Math.max(0, base) * feePct(m || curPayMethod()) / 100); }
-function feeLabel(m){ return ({ card: 'Card', qr: 'QR', bank: 'Bank' })[m] + ' fee'; }
+function feeLabel(m){ return ({ qr: 'QR', bank: 'Bank' })[m] + ' fee'; }
 function feeRowHtml(base){ const m = curPayMethod(), f = feeFor(base, m); return f > 0 ? `<div style="display:flex;justify-content:space-between;margin-bottom:6px"><span>${feeLabel(m)} (${feePct(m)}%)</span><span>${money(f)}</span></div>` : ''; }
 function feeSettingsHtml(){
-  const s = state.feeDraft || (state.feeDraft = { card_enabled: !!state.settings?.card_enabled, card_fee_on: !!state.settings?.card_fee_on, card_fee_pct: Number(state.settings?.card_fee_pct || 0), qr_fee_on: !!state.settings?.qr_fee_on, qr_fee_pct: Number(state.settings?.qr_fee_pct || 0), bank_fee_on: !!state.settings?.bank_fee_on, bank_fee_pct: Number(state.settings?.bank_fee_pct || 0), delivery_fee_on: !!state.settings?.delivery_fee_on, delivery_fee: Number(state.settings?.delivery_fee || 0), free_delivery_over: state.settings?.free_delivery_over ?? '', min_order_amount: Number(state.settings?.min_order_amount || 0), delivery_minutes: Number(state.settings?.delivery_minutes ?? 20) });
+  const s = state.feeDraft || (state.feeDraft = { qr_fee_on: !!state.settings?.qr_fee_on, qr_fee_pct: Number(state.settings?.qr_fee_pct || 0), bank_fee_on: !!state.settings?.bank_fee_on, bank_fee_pct: Number(state.settings?.bank_fee_pct || 0) });
   const row = (k, l) => `<div class="fee-row"><span style="flex:1"><b>${l}</b></span><button class="switch ${s[k + '_fee_on'] ? 'on' : ''}" role="switch" aria-checked="${!!s[k + '_fee_on']}" aria-label="${l} fee" onclick="state.feeDraft.${k}_fee_on=!state.feeDraft.${k}_fee_on; render()"><span></span></button><input class="input" type="number" inputmode="decimal" min="0" max="10" step="0.5" value="${s[k + '_fee_pct']}" ${s[k + '_fee_on'] ? '' : 'disabled'} oninput="state.feeDraft.${k}_fee_pct=this.value" aria-label="${l} fee percent"><span class="meta">%</span></div>`;
-  return `<div class="card" style="padding:16px;margin-top:16px"><h3 style="margin:0 0 4px;font-size:15px">💳 Payment & delivery fees</h3><p class="meta" style="margin:0 0 12px">A fee is added to the customer's total for that payment method (max 10%). Points are never earned on the fee. The server calculates it, so it can't be skipped.</p>
-    <label style="font-size:14px;display:flex;gap:8px;align-items:center;margin-bottom:12px"><input type="checkbox" ${s.card_enabled ? 'checked' : ''} onchange="state.feeDraft.card_enabled=this.checked"> Offer "Card on delivery" at checkout</label>
-    ${row('card', 'Card')}${row('qr', 'QR')}${row('bank', 'Bank transfer')}
-    <div class="sec-title" style="margin-top:16px">🛵 Delivery fee</div>
-    <div class="fee-row"><span style="flex:1"><b>Charge delivery</b><div class="meta">flat amount per order</div></span><button class="switch ${s.delivery_fee_on ? 'on' : ''}" role="switch" aria-checked="${!!s.delivery_fee_on}" aria-label="Delivery fee" onclick="state.feeDraft.delivery_fee_on=!state.feeDraft.delivery_fee_on; render()"><span></span></button><span class="meta">Rs</span><input class="input" type="number" inputmode="numeric" min="0" max="5000" step="10" value="${s.delivery_fee}" ${s.delivery_fee_on ? '' : 'disabled'} oninput="state.feeDraft.delivery_fee=this.value" aria-label="Delivery fee in rupees"></div>
-    <div class="fee-row"><span style="flex:1"><b>Free delivery over</b><div class="meta">leave empty for never</div></span><span class="meta">Rs</span><input class="input" type="number" inputmode="numeric" min="0" step="50" value="${s.free_delivery_over || ''}" ${s.delivery_fee_on ? '' : 'disabled'} placeholder="—" oninput="state.feeDraft.free_delivery_over=this.value" aria-label="Free delivery threshold" style="width:96px"></div>
-    <div class="fee-row"><span style="flex:1"><b>Minimum order</b><div class="meta">items total, 0 = none (checked by the server)</div></span><span class="meta">Rs</span><input class="input" type="number" inputmode="numeric" min="0" step="50" value="${s.min_order_amount || 0}" oninput="state.feeDraft.min_order_amount=this.value" aria-label="Minimum order in rupees" style="width:96px"></div>
-    <div class="fee-row"><span style="flex:1"><b>Typical delivery time</b><div class="meta">added to prep time for the customer's ETA</div></span><input class="input" type="number" inputmode="numeric" min="0" max="240" value="${s.delivery_minutes ?? 20}" oninput="state.feeDraft.delivery_minutes=this.value" aria-label="Delivery minutes" style="width:76px"><span class="meta">min</span></div>
+  return `<div class="card" style="padding:16px;margin-top:16px"><h3 style="margin:0 0 4px;font-size:15px">💳 Payment methods & fees</h3><p class="meta" style="margin:0 0 12px">A fee is added to the customer's total for that payment method (max 10%). Points are never earned on the fee. The server calculates it, so it can't be skipped.</p>
+    ${row('qr', 'QR')}${row('bank', 'Bank transfer')}
     <button class="btn btn-primary" style="width:100%;margin-top:12px" onclick="saveFeeSettings()">Save fees</button></div>`;
 }
 async function saveFeeSettings(){
-  const d = state.feeDraft, p = { card_enabled: !!d.card_enabled, delivery_fee_on: !!d.delivery_fee_on };
-  const df = Number(d.delivery_fee), fo = d.free_delivery_over === '' || d.free_delivery_over == null ? null : Number(d.free_delivery_over);
-  if (!(df >= 0 && df <= 5000)) { showToast('Delivery fee must be Rs 0–5000', 'err'); return; }
-  if (fo !== null && !(fo >= 0)) { showToast('Free-delivery amount must be a number', 'err'); return; }
-  const mo = Number(d.min_order_amount || 0), dm = Number(d.delivery_minutes);
-  if (!(mo >= 0 && mo <= 100000) || !(dm >= 0 && dm <= 240)) { showToast('Check the minimum order and delivery time', 'err'); return; }
-  p.min_order_amount = Math.round(mo); p.delivery_minutes = Math.round(dm);
-  p.delivery_fee = Math.round(df); p.free_delivery_over = fo === null || fo === 0 ? null : Math.round(fo);
-  for (const k of ['card', 'qr', 'bank']) { const v = Number(d[k + '_fee_pct']); if (!(v >= 0 && v <= 10)) { showToast('Fees must be between 0 and 10%', 'err'); return; } p[k + '_fee_on'] = !!d[k + '_fee_on']; p[k + '_fee_pct'] = Math.round(v * 100) / 100; }
+  const d = state.feeDraft, p = {};
+  for (const k of ['qr', 'bank']) { const v = Number(d[k + '_fee_pct']); if (!(v >= 0 && v <= 10)) { showToast('Fees must be between 0 and 10%', 'err'); return; } p[k + '_fee_on'] = !!d[k + '_fee_on']; p[k + '_fee_pct'] = Math.round(v * 100) / 100; }
   const { data, error } = await sb.from('business_settings').update(p).eq('id', true).select().maybeSingle();
   if (error || !data) { showToast('Not saved: ' + (error?.message || 'try again'), 'err'); return; }
   state.settings = { ...state.settings, ...data }; state.feeDraft = null; showToast('Payment fees saved', 'ok'); render();
@@ -1854,7 +1824,7 @@ async function loadDeletedOrders(){ state.showDeleted = true; state._deleted = n
 
 // Account editing (everyone: customers, staff, admin)
 function avatarHtml(p, size){ const s = size || 36, n = esc((p?.full_name || '?').trim().charAt(0).toUpperCase() || '?'); return p?.avatar_url ? `<img src="${esc(p.avatar_url)}" alt="" class="av-img" style="width:${s}px;height:${s}px">` : n; }
-function openAccount(){ const p = state.profile || {}; state.acct = { name: p.full_name || '', phone: p.phone || '', email: state.session?.user?.email || '', addr: p.delivery_address || '', dnotes: p.delivery_notes || '' }; setState({ accountOpen: true, notifPanelOpen: false }); }
+function openAccount(){ const p = state.profile || {}; state.acct = { name: p.full_name || '', phone: p.phone || '', email: state.session?.user?.email || '' }; setState({ accountOpen: true, notifPanelOpen: false }); }
 function renderAccountSheet(fresh){
   const a = state.acct || {}, p = state.profile || {}, pending = state.session?.user?.new_email;
   return `<div class="scrim" onclick="if(event.target===this) setState({accountOpen:false})"><div class="sheet ${fresh ? '' : 'no-anim'}">
@@ -1862,10 +1832,7 @@ function renderAccountSheet(fresh){
     <div style="display:flex;align-items:center;gap:14px;margin-bottom:16px"><div class="av-big">${avatarHtml(p, 72)}</div><div style="display:flex;flex-direction:column;gap:6px"><label class="btn btn-outline btn-sm" style="cursor:pointer">📷 ${p.avatar_url ? 'Change photo' : 'Add photo'}<input type="file" accept="image/*" style="display:none" onchange="uploadAvatar(this)"></label>${p.avatar_url ? `<button class="link-danger" style="font-size:12px;text-align:left" onclick="removeAvatar()">Remove photo</button>` : ''}</div></div>
     <label class="small">Name</label><input class="input" id="ac-name" maxlength="60" autocomplete="name" value="${esc(a.name)}" oninput="state.acct.name=this.value" style="margin:6px 0 12px">
     <label class="small">Phone</label><input class="input" id="ac-phone" type="tel" inputmode="tel" maxlength="20" autocomplete="tel" placeholder="03xx xxxxxxx" value="${esc(a.phone)}" oninput="state.acct.phone=this.value" style="margin:6px 0 12px">
-    <label class="small">Default delivery address</label><textarea class="input" id="ac-addr" maxlength="300" autocomplete="street-address" placeholder="House #, street, block, area, city" style="margin:6px 0 8px;min-height:56px" oninput="state.acct.addr=this.value">${esc(a.addr || '')}</textarea>
-    <input class="input" id="ac-dnotes" maxlength="200" placeholder="Landmark / directions (optional)" value="${esc(a.dnotes || '')}" oninput="state.acct.dnotes=this.value" style="margin:0 0 12px">
-    <button class="btn btn-primary" style="width:100%" id="ac-save" onclick="saveAccount()">Save details</button>
-    ${savedAddrManagerHtml()}
+    <button class="btn btn-primary" style="width:100%" id="ac-save" onclick="saveAccount()">Save name & phone</button>
     <div class="sec-title" style="margin-top:20px">Email</div>
     <input class="input" id="ac-email" type="email" inputmode="email" autocomplete="email" autocapitalize="off" spellcheck="false" value="${esc(a.email)}" oninput="state.acct.email=this.value" style="margin:6px 0 8px">
     <div class="meta" style="margin-bottom:8px">${pending ? `Waiting for you to confirm <b>${esc(pending)}</b> — check that inbox.` : "We'll email a confirmation link to the new address. Your email only changes after you tap it."}</div>
@@ -1877,9 +1844,7 @@ async function saveAccount(){
   if (name.length < 2) { showToast('Please enter your name', 'err'); return; }
   if (phone && !/^\+?[0-9 ()-]{7,20}$/.test(phone)) { showToast('That phone number looks wrong', 'err'); return; }
   const btn = document.getElementById('ac-save'); if (btn) btn.disabled = true;
-  const addr = (document.getElementById('ac-addr')?.value || '').trim(), dn = (document.getElementById('ac-dnotes')?.value || '').trim();
-  if (addr && addr.length < 5) { showToast('That address looks too short', 'err'); if (btn) btn.disabled = false; return; }
-  const { data, error } = await sb.from('profiles').update({ full_name: name, phone: phone || null, delivery_address: addr || null, delivery_notes: dn || null }).eq('id', state.session.user.id).select().maybeSingle();
+  const { data, error } = await sb.from('profiles').update({ full_name: name, phone: phone || null }).eq('id', state.session.user.id).select().maybeSingle();
   if (btn) btn.disabled = false;
   if (error || !data) { showToast('Not saved: ' + (error?.message || 'try again'), 'err'); return; }
   state.profile = data; showToast('Profile updated', 'ok'); render();
@@ -1919,7 +1884,7 @@ function accountBtnHtml(){ return `<button class="av-btn" aria-label="Your accou
 // Customer: share order status
 async function shareOrderStatus(id){
   const o = findAnyOrder(id); if (!o) return;
-  const st = { pending: 'sent — waiting for the café to accept', accepted: 'accepted', preparing: 'being made right now ☕', ready: 'out for delivery 🛵', completed: 'delivered', cancelled: 'cancelled' }[o.status] || o.status;
+  const st = { pending: 'sent — waiting for the café to accept', accepted: 'accepted', preparing: 'being made right now ☕', ready: 'READY for pickup!', completed: 'picked up', cancelled: 'cancelled' }[o.status] || o.status;
   const eta = etaMinutes && etaMinutes(o), text = `My ${state.settings?.business_name || 'Filter'} order #${o.order_number} is ${st}${eta && ['accepted', 'preparing'].includes(o.status) ? ` — about ${eta} min to go` : ''}.`;
   try { if (navigator.share) { await navigator.share({ text }); return; } } catch (e) { if (e && e.name === 'AbortError') return; }
   try { await navigator.clipboard.writeText(text); showToast('Status copied — paste it anywhere', 'ok'); } catch (e) { showToast(text); }
@@ -1979,91 +1944,6 @@ function staffPerfHtml(){
   return `<div class="card" style="padding:16px;margin-bottom:16px"><div style="display:flex;justify-content:space-between;align-items:baseline;margin-bottom:8px"><div class="display" style="font-size:17px">Team · last 7 days</div><span class="meta">completed · avg prep · hours</span></div>
     ${rows.length ? rows.map(r => `<div class="sp-row"><span class="av-sm">${avatarHtml(r.s.full_name ? r.s : { full_name: '?' }, 28)}</span><div style="flex:1;min-width:0"><div style="display:flex;justify-content:space-between;gap:8px"><b class="lb-name">${esc(r.s.full_name || 'Staff')}${r.on ? ' <span class="on-dot" title="On shift"></span>' : ''}</b><span class="meta">${r.n} · ${r.prep != null ? fmtMins(r.prep) : '—'} · ${r.mins ? fmtMins(r.mins) : '—'}</span></div><div class="eb" style="margin-top:5px"><i data-anim-w="${Math.round(r.n / max * 100)}%" style="width:${Math.round(r.n / max * 100)}%"></i></div></div></div>`).join('') : `<div class="meta">When staff clock in and complete orders, their stats show here.</div>`}</div>`;
 }
-
-// ---- v27: delivery ----
-const STATUS_TXT = { pending: 'Received', accepted: 'Confirmed', preparing: 'Making', ready: 'Out for delivery', completed: 'Delivered', cancelled: 'Cancelled' };
-function statusTxt(s){ return STATUS_TXT[s] || s; }
-function delFeeFor(base){ const s = state.settings || {}; if (!s.delivery_fee_on) return 0; const fo = Number(s.free_delivery_over || 0); if (fo > 0 && base >= fo) return 0; return Number(s.delivery_fee || 0); }
-function delRowHtml(base){ const s = state.settings || {}; if (!s.delivery_fee_on) return ''; const f = delFeeFor(base), fo = Number(s.free_delivery_over || 0);
-  return `<div style="display:flex;justify-content:space-between;margin-bottom:6px"><span>Delivery${fo > 0 && f > 0 ? ` <span class="meta">· free over ${money(fo)}</span>` : ''}</span><span>${f > 0 ? money(f) : '<b style="color:var(--sage)">Free</b>'}</span></div>`; }
-function mapsLink(o){ if (o.delivery_map_url) return o.delivery_map_url; if (o.delivery_address) return 'https://www.google.com/maps/search/?api=1&query=' + encodeURIComponent(o.delivery_address); return ''; }
-function telNum(p){ return String(p || '').replace(/[^\d+]/g, ''); }
-function custWa(p){ const n = waNumber ? waNumber(p) : ''; return /^92\d{10}$/.test(n) ? n : ''; }
-function deliveryBlockHtml(o, compact){
-  if (!o.delivery_address && !o.delivery_map_url) return compact ? '' : `<div class="meta" style="margin:0 0 10px">No delivery address on this order.</div>`;
-  const isStaffV = ['admin','worker'].includes(state.profile?.role), ph = isStaffV ? o.profiles?.phone : null, wa = custWa(ph), maps = mapsLink(o);
-  return `<div class="addr-box ${compact ? 'compact' : ''}">${o.contactless ? '<div class="cl-badge">🚪 Contactless — leave at door</div>' : ''}<div class="addr-txt"><span class="addr-ic">📍</span><div style="min-width:0"><div class="addr-line">${esc(o.delivery_address || 'Pinned location')}</div>${o.delivery_notes ? `<div class="meta">${esc(o.delivery_notes)}</div>` : ''}</div></div>
-    <div class="addr-acts">${maps ? `<a class="btn btn-ghost btn-sm" href="${esc(maps)}" target="_blank" rel="noopener" onclick="event.stopPropagation()">🗺 Open in Maps</a>` : ''}${ph ? `<a class="btn btn-ghost btn-sm" href="tel:${esc(telNum(ph))}" onclick="event.stopPropagation()">📞 Call</a>` : ''}${wa ? `<a class="btn btn-ghost btn-sm" href="https://wa.me/${wa}" target="_blank" rel="noopener" onclick="event.stopPropagation()">WhatsApp</a>` : ''}</div></div>`;
-}
-function checkoutAddressHtml(){
-  const p = state.profile || {}; if (state.coAddr == null) { state.coAddr = p.delivery_address || ''; state.coNotes = p.delivery_notes || ''; state.coSaveDefault = !p.delivery_address; }
-  return `<label class="small">Delivery address <span style="color:var(--danger)">*</span></label>
-    ${savedAddrChipsHtml()}
-    <textarea class="input" id="co-addr" maxlength="300" autocomplete="street-address" placeholder="House #, street, block, area, city" style="margin:8px 0 8px;min-height:58px" oninput="state.coAddr=this.value">${esc(state.coAddr)}</textarea>
-    <input class="input" id="co-notes" maxlength="200" placeholder="Landmark / directions for the rider (optional)" value="${esc(state.coNotes || '')}" oninput="state.coNotes=this.value" style="margin:0 0 8px">
-    <div class="loc-row"><button class="btn btn-ghost btn-sm" id="loc-btn" onclick="useMyLocation()">${state.coMap ? '✓ Location pinned' : '📍 Use my location'}</button>${state.coMap ? `<a class="meta" href="${esc(state.coMap)}" target="_blank" rel="noopener">view pin</a> <button class="link" style="font-size:12px" onclick="state.coMap=null; render()">remove</button>` : `<span class="meta">optional — helps the rider find you</span>`}</div>
-    ${(state.coAddr || '').trim() !== (p.delivery_address || '').trim() ? `<label style="font-size:13px;display:flex;gap:8px;align-items:center;margin:2px 0 14px"><input type="checkbox" ${state.coSaveDefault ? 'checked' : ''} onchange="state.coSaveDefault=this.checked"> Save as my default address</label>` : '<div style="height:10px"></div>'}
-    <label class="contactless"><input type="checkbox" ${state.coContactless ? 'checked' : ''} onchange="state.coContactless=this.checked"> <span><b>Contactless delivery</b><span class="meta"> — leave it at the door and ring/call me</span></span></label>`;
-}
-function useMyLocation(){
-  if (!navigator.geolocation) { showToast("Your phone doesn't support location here", 'err'); return; }
-  const b = document.getElementById('loc-btn'); if (b) { b.disabled = true; b.textContent = 'Finding you…'; }
-  navigator.geolocation.getCurrentPosition(pos => {
-    const la = pos.coords.latitude.toFixed(6), lo = pos.coords.longitude.toFixed(6);
-    state.coMap = `https://www.google.com/maps/search/?api=1&query=${la},${lo}`; showToast('Location pinned 📍', 'ok'); render();
-  }, err => { if (b) { b.disabled = false; b.textContent = '📍 Use my location'; } showToast(err.code === 1 ? 'Location permission was denied — you can still type your address' : "Couldn't get your location — please type your address", 'err'); }, { enableHighAccuracy: true, timeout: 12000, maximumAge: 60000 });
-}
-
-// ---- v27 delivery extras ----
-function deliveryEta(o){
-  const dm = Number(state.settings?.delivery_minutes ?? 20);
-  if (['pending','accepted','preparing'].includes(o.status)) return etaMinutes(o) + dm;
-  if (o.status === 'ready') return Math.max(2, Math.round(dm - (Date.now() - new Date(o.ready_at || o.created_at)) / 60000));
-  return 0;
-}
-function etaClock(min){ const d = new Date(Date.now() + min * 60000); return d.toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' }); }
-// Saved addresses (Home / Work / Other) on the profile
-function savedAddrs(){ return Array.isArray(state.profile?.saved_addresses) ? state.profile.saved_addresses : []; }
-const ADDR_ICONS = { Home: '🏠', Work: '💼', Other: '📍' };
-function savedAddrChipsHtml(){
-  const l = savedAddrs(); if (!l.length) return '';
-  return `<div class="scrollx addr-chips" style="margin:8px 0 2px">${l.map((a, i) => `<button class="chip ${(state.coAddr || '').trim() === a.address ? 'active' : ''}" onclick="pickSavedAddr(${i})">${ADDR_ICONS[a.label] || '📍'} ${esc(a.label)}</button>`).join('')}</div>`;
-}
-function pickSavedAddr(i){ const a = savedAddrs()[i]; if (!a) return; state.coAddr = a.address; state.coNotes = a.notes || ''; state.coSaveDefault = false; render(); }
-async function writeSavedAddrs(l){ const { data, error } = await sb.from('profiles').update({ saved_addresses: l }).eq('id', state.session.user.id).select().maybeSingle(); if (error || !data) { showToast('Not saved: ' + (error?.message || 'try again'), 'err'); return false; } state.profile = data; return true; }
-async function addSavedAddr(){
-  const label = document.getElementById('sa-label')?.value || 'Home', address = (document.getElementById('sa-addr')?.value || '').trim(), notes = (document.getElementById('sa-notes')?.value || '').trim();
-  if (address.length < 5) { showToast('Type the address first', 'err'); return; }
-  const l = savedAddrs().filter(a => !(a.label === label && label !== 'Other')); if (l.length >= 6) { showToast('You can save up to 6 addresses', 'err'); return; }
-  l.push({ label, address: address.slice(0, 300), notes: notes.slice(0, 200) });
-  if (await writeSavedAddrs(l)) { showToast(`${label} address saved`, 'ok'); render(); }
-}
-async function removeSavedAddr(i){ const l = savedAddrs().slice(); l.splice(i, 1); if (await writeSavedAddrs(l)) render(); }
-function savedAddrManagerHtml(){
-  const l = savedAddrs();
-  return `<div class="sec-title" style="margin-top:20px">Saved addresses</div>
-    ${l.map((a, i) => `<div class="lb-row"><span style="font-size:18px">${ADDR_ICONS[a.label] || '📍'}</span><span style="flex:1;min-width:0"><b>${esc(a.label)}</b><div class="meta" style="overflow-wrap:anywhere">${esc(a.address)}${a.notes ? ' · ' + esc(a.notes) : ''}</div></span><button class="link-danger" style="font-size:12px" aria-label="Remove ${esc(a.label)} address" onclick="removeSavedAddr(${i})">✕</button></div>`).join('') || '<div class="meta" style="margin-bottom:8px">Save Home, Work and more to pick them in one tap at checkout.</div>'}
-    <div class="sa-form"><select class="input" id="sa-label"><option>Home</option><option>Work</option><option>Other</option></select><input class="input" id="sa-addr" maxlength="300" placeholder="Address"><input class="input" id="sa-notes" maxlength="200" placeholder="Landmark (optional)"><button class="btn btn-outline btn-sm" onclick="addSavedAddr()">+ Save address</button></div>`;
-}
-// Minimum order (server enforces it too)
-function minOrderGap(){ const m = Number(state.settings?.min_order_amount || 0); return m > 0 ? Math.max(0, m - cartSubtotal()) : 0; }
-// Riders: assign a staff member, see "my deliveries"
-let _staffList = null;
-async function loadStaffList(){ if (_staffList) return; _staffList = []; const { data } = await sb.from('profiles').select('id, full_name, role, is_active').in('role', ['worker', 'admin']); _staffList = (data || []).filter(s => s.is_active !== false); if (!modalInUse() && !isEditingSomething()) render(); }
-function staffName(id){ return (_staffList || []).find(s => s.id === id)?.full_name || 'Staff'; }
-function riderPickerHtml(o){
-  if (['completed','cancelled'].includes(o.status)) return '';
-  if (!['admin'].includes(state.profile?.role)) return o.assigned_worker_id ? `<div class="meta rider-tag">🛵 Rider: <b>${esc(staffName(o.assigned_worker_id))}</b></div>` : '';
-  if (!_staffList) loadStaffList();
-  return `<label class="rider-pick" onclick="event.stopPropagation()"><span>🛵 Rider</span><select class="input" onchange="assignRider('${o.id}', this.value)"><option value="">Not assigned</option>${(_staffList || []).map(s => `<option value="${s.id}" ${o.assigned_worker_id === s.id ? 'selected' : ''}>${esc(s.full_name || 'Staff')}${s.id === state.session.user.id ? ' (me)' : ''}</option>`).join('')}</select></label>`;
-}
-async function assignRider(id, uid){
-  const { data, error } = await sb.from('orders').update({ assigned_worker_id: uid || null }).eq('id', id).select('id, assigned_worker_id');
-  if (error || !data?.length) { showToast('Not assigned: ' + (error?.message || 'try again'), 'err'); return; }
-  state.workerOrders.forEach(o => { if (o.id === id) o.assigned_worker_id = uid || null; });
-  showToast(uid ? `Assigned to ${staffName(uid)}` : 'Rider removed', 'ok'); render();
-}
-async function takeDelivery(id){ await assignRider(id, state.session.user.id); }
 
 let _screenKey = '', _enterT = null, _lastCartCount = 0, _freshOrderIds = new Set();
 function successPop(text){
@@ -2181,7 +2061,7 @@ function renderAuth(){
       <div style="text-align:center;margin-bottom:36px">
         <div class="stamp" style="margin:0 auto 18px;width:64px;height:64px;box-shadow:0 10px 24px -8px rgba(42,24,15,.4);background:${(isStaff||isStaffRegister)?'var(--caramel-dark)':'transparent'};overflow:hidden">${(isStaff||isStaffRegister)?'<span style="font-size:26px">🔑</span>':'<img src="./icon.svg" style="width:100%;height:100%;object-fit:cover">'}</div>
         <h1 class="display" style="margin:0;font-size:clamp(28px,7vw,34px);color:var(--coffee-900);letter-spacing:-.01em">Filter</h1>
-        <p style="color:var(--coffee-500);font-size:14px;margin-top:8px">${isStaffRegister?'Register with a Staff Code':isStaff?'Staff Portal — Workers & Owner':'Coffee & Tea, delivered to your door'}</p>
+        <p style="color:var(--coffee-500);font-size:14px;margin-top:8px">${isStaffRegister?'Register with a Staff Code':isStaff?'Staff Portal — Workers & Owner':'Coffee & Tea, Crafted Warmly'}</p>
       </div>
       ${!isStaff && !isStaffRegister ? `<div style="display:flex;background:var(--line);border-radius:14px;padding:4px;margin-bottom:28px">
         <button class="btn" style="flex:1;padding:12px;background:${mode==='signin'?'var(--card)':'transparent'};color:var(--coffee-900);box-shadow:${mode==='signin'?'var(--shadow)':'none'}" onclick="state.authError='';setState({authMode:'signin'})">Sign In</button>
@@ -2363,12 +2243,12 @@ function renderShopStatus(){
 function liveOrder(){ const cut=Date.now()-18*3600000; return (state.orders||[]).find(o=>['pending','accepted','preparing','ready'].includes(o.status) && new Date(o.created_at).getTime()>cut); }
 function renderLiveOrderBanner(){
   const o=liveOrder(); if(!o) return '';
-  const steps={pending:['Order received',"We'll confirm it shortly",1],accepted:['Order confirmed',"We'll start it soon",2],preparing:['Being made now','Almost there',3],ready:['Out for delivery 🛵','Your rider is on the way',4]};
+  const steps={pending:['Order received',"We'll confirm it shortly",1],accepted:['Order confirmed',"We'll start it soon",2],preparing:['Being made now','Almost there',3],ready:['Your order is ready!','Come pick it up at the counter',4]};
   const [t,sub,n]=steps[o.status];
   return `<div class="live-order ${o.status==='ready'?'ready':''}" onclick="setState({orderDetailId:'${o.id}'})">
-    <div style="display:flex;justify-content:space-between;align-items:center;gap:8px"><div><div class="lo-kicker">Order #${o.order_number}${o.pickup_time?' · '+fmtTime12(o.pickup_time.slice(0,5)):' · ASAP delivery'}</div><div class="lo-title">${t}</div><div class="lo-sub">${sub}</div></div><div style="font-size:28px">${o.status==='ready'?'🛎️':'☕'}</div></div>
+    <div style="display:flex;justify-content:space-between;align-items:center;gap:8px"><div><div class="lo-kicker">Order #${o.order_number}${o.pickup_time?' · pickup '+fmtTime12(o.pickup_time.slice(0,5)):''}</div><div class="lo-title">${t}</div><div class="lo-sub">${sub}</div></div><div style="font-size:28px">${o.status==='ready'?'🛎️':'☕'}</div></div>
     ${renderTracker(o, true)}
-    ${deliveryEta(o)?`<div class="lo-eta">🛵 Arriving around ${etaClock(deliveryEta(o))} · about ${deliveryEta(o)} min</div>`:''}
+    ${etaMinutes(o)?`<div class="lo-eta">⏱ Ready in about ${etaMinutes(o)} min</div>`:''}
   </div>`;
 }
 function renderRatePrompt(){
@@ -2389,7 +2269,7 @@ function renderOrderAgain(){
 }
 function orderSummaryText(o){
   const lines=(o.order_items||[]).map(i=>`• ${i.quantity}× ${i.product_name}${i.size_name?' ('+i.size_name+')':''} — ${money(i.line_total ?? i.unit_price*i.quantity)}`);
-  return `${state.settings?.business_name||'Filter'} — Order #${o.order_number}\n${o.profiles?.full_name?'For: '+o.profiles.full_name+'\n':''}Delivery: ${o.pickup_time?(o.pickup_date||'')+' '+fmtTime12(o.pickup_time.slice(0,5)):'ASAP'}${o.delivery_address?'\nAddress: '+o.delivery_address:''}${o.delivery_notes?'\nLandmark: '+o.delivery_notes:''}${mapsLink(o)?'\nMap: '+mapsLink(o):''}\n\n${lines.join('\n')}\n\nTotal: ${money(o.total)} (${o.payment_confirmed?'paid':'payment pending'} · ${PAY_LABELS[o.payment_method||'cash']||'Cash on delivery'})\nStatus: ${statusTxt(o.status)}${o.special_instructions?'\nNotes: '+o.special_instructions:''}`;
+  return `${state.settings?.business_name||'Filter'} — Order #${o.order_number}\n${o.profiles?.full_name?'For: '+o.profiles.full_name+'\n':''}Pickup: ${o.pickup_time?(o.pickup_date||'')+' '+fmtTime12(o.pickup_time.slice(0,5)):'ASAP'}\n\n${lines.join('\n')}\n\nTotal: ${money(o.total)} (${o.payment_confirmed?'paid':'payment pending'} · ${PAY_LABELS[o.payment_method||'cash']||'Cash at pickup'})\nStatus: ${o.status}${o.special_instructions?'\nNotes: '+o.special_instructions:''}`;
 }
 function waNumber(ph){ let d=String(ph||'').replace(/\D/g,''); if(!d) return ''; if(d.startsWith('0092')) d=d.slice(2); if(d.startsWith('0')) d='92'+d.slice(1); else if(d.length===10 && d.startsWith('3')) d='92'+d; return d; }
 function shopWa(){ const n = waNumber(state.settings?.support_phone); return /^92\d{10}$/.test(n) ? n : ''; }
@@ -2417,9 +2297,9 @@ function receiptData(o){
     num: o.order_number, placed: new Date(o.created_at),
     pickup: `${o.pickup_date ? new Date(o.pickup_date+'T12:00').toLocaleDateString([],{weekday:'short',day:'numeric',month:'short'}) : ''}${o.pickup_time ? ' · ' + fmtTime12(o.pickup_time.slice(0,5)) : ' · ASAP'}`,
     items, sub, promo: promo > 0 ? promo : 0, ptsRedeemed: Number(o.loyalty_points_redeemed||0), ptsDiscount: pts,
-    tax: Number(o.tax_amount||0), fee: Number(o.payment_fee||0), feeLabel: o.payment_method && o.payment_method!=='cash' ? feeLabel(o.payment_method) : 'Payment fee', tip: Number(o.tip||0), total: Number(o.total||0) + Number(o.tip||0), paid: !!o.payment_confirmed, method: PAY_LABELS[o.payment_method||'cash'] || 'Cash on delivery',
+    tax: Number(o.tax_amount||0), fee: Number(o.payment_fee||0), feeLabel: o.payment_method && o.payment_method!=='cash' ? feeLabel(o.payment_method) : 'Payment fee', tip: Number(o.tip||0), total: Number(o.total||0) + Number(o.tip||0), paid: !!o.payment_confirmed, method: PAY_LABELS[o.payment_method||'cash'] || 'Cash at pickup',
     earned: Number(o.loyalty_points_earned||0), customer: o.profiles?.full_name || (o.customer_id===state.session?.user?.id ? state.profile?.full_name : '') || '',
-    notes: o.special_instructions || '', status: o.status, address: [o.delivery_address, o.delivery_notes].filter(Boolean).join(' — '), delFee: Number(o.delivery_fee||0)
+    notes: o.special_instructions || '', status: o.status
   };
 }
 async function openReceipt(id){
@@ -2442,8 +2322,7 @@ function receiptHtml(d){
     <div class="rc-sep"></div>
     ${row('Order', `<b>#${d.num}</b>`)}
     ${row('Placed', d.placed.toLocaleDateString([],{day:'numeric',month:'short',year:'numeric'})+' · '+d.placed.toLocaleTimeString([],{hour:'numeric',minute:'2-digit'}))}
-    ${row('Delivery', esc(d.pickup))}
-    ${d.address?row('Deliver to', esc(d.address)):''}
+    ${row('Pickup', esc(d.pickup))}
     ${d.customer?row('Customer', esc(d.customer)):''}
     <div class="rc-sep"></div>
     ${d.items.map(i=>`<div class="rc-item"><div class="rc-row"><span>${esc(i.name)}</span><span>${money(i.price)}</span></div>${i.opts?`<div class="rc-opts">${esc(i.opts)}</div>`:''}</div>`).join('')}
@@ -2452,7 +2331,6 @@ function receiptHtml(d){
     ${d.promo?row('Promo discount', '−'+money(d.promo)):''}
     ${d.ptsDiscount?row(`Points redeemed (${d.ptsRedeemed})`, '−'+money(d.ptsDiscount)):''}
     ${d.tax?row('Tax', money(d.tax)):''}
-    ${d.delFee?row('Delivery', money(d.delFee)):''}
     ${d.fee?row(esc(d.feeLabel), money(d.fee)):''}
     ${d.tip?row('Tip — thank you!', money(d.tip)):''}
     ${row('Total', money(d.total), 'rc-total')}
@@ -2495,8 +2373,7 @@ async function drawReceiptCanvas(d){
   sep();
   row('Order', '#' + d.num, { vw: '700 14px' });
   row('Placed', d.placed.toLocaleDateString([], {day:'numeric',month:'short',year:'numeric'}) + ' · ' + d.placed.toLocaleTimeString([], {hour:'numeric',minute:'2-digit'}), {c:'#4A3020'});
-  row('Delivery', d.pickup, {c:'#4A3020'});
-  if (d.address) row('To', d.address.length > 38 ? d.address.slice(0, 37) + '…' : d.address, {c:'#4A3020'});
+  row('Pickup', d.pickup, {c:'#4A3020'});
   if (d.customer) row('Customer', d.customer, {c:'#4A3020'});
   sep();
   for (const i of d.items) {
@@ -2559,13 +2436,12 @@ async function shareReceipt(){
 function printReceipt(){ document.body.classList.add('printing-receipt'); setTimeout(() => { window.print(); setTimeout(() => document.body.classList.remove('printing-receipt'), 500); }, 50); }
 
 // ---- Payment method + QR (v16) ----
-const PAY_LABELS = { cash: 'Cash on delivery', bank: 'Bank transfer', qr: 'QR payment', card: 'Card on delivery' };
-function payBadge(o, style=''){ const m = o.payment_method || 'cash'; if (m === 'cash') return ''; return `<span class="badge pay-${m}" style="${style}">${m === 'qr' ? 'QR' : m === 'card' ? 'Card' : 'Bank'}</span>`; }
+const PAY_LABELS = { cash: 'Cash at pickup', bank: 'Bank transfer', qr: 'QR payment' };
+function payBadge(o, style=''){ const m = o.payment_method || 'cash'; if (m === 'cash') return ''; return `<span class="badge pay-${m}" style="${style}">${m === 'qr' ? 'QR' : 'Bank'}</span>`; }
 function availablePayMethods(){
   const m = ['cash'];
   if (state.payoutDetails?.show_to_customers && (state.payoutDetails.account_number || state.payoutDetails.iban)) m.push('bank');
   if (state.settings?.pay_qr_enabled && state.settings?.pay_qr_url) m.push('qr');
-  if (state.settings?.card_enabled) m.push('card');
   return m;
 }
 function renderPayMethodPicker(total){
@@ -2575,7 +2451,7 @@ function renderPayMethodPicker(total){
   const pd = state.payoutDetails || {}, st = state.settings || {};
   const icon = { cash:'💵', bank:'🏦', qr:'▦', card:'💳' };
   return `<label class="small">How will you pay?</label>
-  <div class="pay-opts">${methods.map(m=>`<button class="pay-opt ${cur===m?'on':''}" onclick="setState({payMethod:'${m}'})"><span class="pi">${icon[m]}</span>${m==='cash'?'Cash on delivery':m==='bank'?'Bank transfer':m==='card'?'Card on delivery':'Pay by QR'}${feePct(m)?`<span class="pay-fee">+${feePct(m)}%</span>`:''}</button>`).join('')}</div>
+  <div class="pay-opts">${methods.map(m=>`<button class="pay-opt ${cur===m?'on':''}" onclick="setState({payMethod:'${m}'})"><span class="pi">${icon[m]}</span>${m==='cash'?'Cash at pickup':m==='bank'?'Bank transfer':'Pay by QR'}${feePct(m)?`<span class="pay-fee">+${feePct(m)}%</span>`:''}</button>`).join('')}</div>
   ${cur==='bank' ? `<div class="card pay-panel">
       ${pd.bank_name?`<div class="kv"><span class="meta">Bank</span><span>${esc(pd.bank_name)}</span></div>`:''}
       ${pd.account_title?`<div class="kv"><span class="meta">Title</span><span>${esc(pd.account_title)}</span></div>`:''}
@@ -2589,8 +2465,7 @@ function renderPayMethodPicker(total){
       <div class="qr-amount">Amount: ${money(total)}</div>
       <div style="display:flex;gap:8px;margin-top:12px"><button class="btn btn-ghost btn-sm" style="flex:1" onclick="saveQrImage()">Save QR</button><button class="btn btn-ghost btn-sm" style="flex:1" onclick="setState({qrZoom:true})">Enlarge</button></div>
       <div class="pay-note">Scan with your banking app, pay <b>${money(total)}</b>, then tap Place Order — we'll confirm your payment.</div></div>` : ''}
-  ${cur==='cash' ? `<div class="meta" style="margin:-4px 0 16px">Pay the rider in cash when your order arrives.</div>` : ''}
-  ${cur==='card' ? `<div class="meta" style="margin:-4px 0 16px">The rider brings a card machine — tap or insert your card on delivery.${feePct('card')?` A ${feePct('card')}% card fee applies.`:''}</div>` : ''}
+  ${cur==='cash' ? `<div class="meta" style="margin:-4px 0 16px">Pay at the counter when you pick up.</div>` : ''}
   ${state.qrZoom && cur==='qr' ? `<div class="qr-zoom" onclick="setState({qrZoom:false})"><img src="${esc(st.pay_qr_url)}" alt="Payment QR"><div style="margin-top:16px;font-weight:700">${money(total)} · tap anywhere to close</div></div>` : ''}`;
 }
 async function copyText(t){ try { await navigator.clipboard.writeText(t); showToast('Copied', 'ok'); } catch (e) { showToast(t, 'info'); } }
@@ -2930,7 +2805,7 @@ function renderCheckoutSheet(fresh){
   const discount = (state.promoResult?Number(state.promoResult.calculated_discount):0) + state.redeemPoints*loyaltyValue;
   const taxable = Math.max(subtotal-discount,0);
   const tax = taxable * Number(state.settings?.tax_rate||0);
-  const total = taxable+tax+delFeeFor(taxable+tax)+feeFor(taxable+tax+delFeeFor(taxable+tax))+tipAmt();
+  const total = taxable+tax+feeFor(taxable+tax)+tipAmt();
   return `<div class="scrim" onclick="if(event.target===this) setState({checkoutOpen:false})"><div class="sheet ${fresh?'':'no-anim'}">
     <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px">
       <h2 class="display" style="margin:0;font-size:22px">Checkout</h2>
@@ -2938,8 +2813,7 @@ function renderCheckoutSheet(fresh){
     </div>
     ${!(state.profile?.full_name||'').trim() ? `<label class="small">Your name</label>
     <input class="input" id="checkout-name" maxlength="60" autocomplete="name" placeholder="So we know whose order it is" style="margin:8px 0 16px">` : ''}
-    <div class="asap-note">🛵 Made fresh and delivered ASAP — we'll let you know when it's on the way.</div>
-    ${checkoutAddressHtml()}
+    <div class="asap-note">☕ Made fresh as soon as you order — we'll notify you when it's ready to pick up.</div>
 
     <label class="small">Promo Code</label>
     <div style="display:flex;gap:8px;margin:8px 0 6px">
@@ -2966,9 +2840,7 @@ function renderCheckoutSheet(fresh){
 
     <div id="checkout-summary">${checkoutSummaryHtml()}</div>
 
-    ${minOrderGap() > 0 ? `<div class="min-note">Minimum order for delivery is ${money(state.settings.min_order_amount)} — add ${money(minOrderGap())} more.</div>` : ''}
-    <div class="meta" style="text-align:center;margin-top:12px">🛵 Estimated delivery in about ${8 + Number(state.settings?.delivery_minutes ?? 20)}–${18 + Number(state.settings?.delivery_minutes ?? 20)} min</div>
-    <button class="btn btn-primary" style="width:100%;margin-top:10px" id="place-order-btn" ${minOrderGap() > 0 ? 'disabled' : ''} onclick="submitOrder()">Place Order · ${money(total)}</button>
+    <button class="btn btn-primary" style="width:100%;margin-top:16px" id="place-order-btn" onclick="submitOrder()">Place Order · ${money(total)}</button>
   </div></div>`;
 }
 function checkoutSummaryHtml(){
@@ -2979,14 +2851,12 @@ function checkoutSummaryHtml(){
   const discount = promoDiscount+loyaltyDiscount;
   const taxable = Math.max(subtotal-discount,0);
   const tax = taxable * Number(state.settings?.tax_rate||0);
-  const dfee = delFeeFor(taxable+tax);
-  const total = taxable+tax+dfee+feeFor(taxable+tax+dfee);
+  const total = taxable+tax+feeFor(taxable+tax);
   return `<div class="card" style="padding:14px;font-size:13.5px">
     <div style="display:flex;justify-content:space-between;margin-bottom:6px"><span>Subtotal</span><span>${money(subtotal)}</span></div>
     ${discount>0?`<div style="display:flex;justify-content:space-between;margin-bottom:6px;color:var(--sage)"><span>Discount</span><span>−${money(discount)}</span></div>`:''}
     ${tax>0?`<div style="display:flex;justify-content:space-between;margin-bottom:6px"><span>Tax</span><span>${money(tax)}</span></div>`:''}
-    ${delRowHtml(taxable+tax)}
-    <div class="fee-line">${feeRowHtml(taxable+tax+dfee)}</div>
+    <div class="fee-line">${feeRowHtml(taxable+tax)}</div>
     ${tipAmt()>0?`<div style="display:flex;justify-content:space-between;margin-bottom:6px"><span>Tip</span><span>${money(tipAmt())}</span></div>`:''}
     <div style="display:flex;justify-content:space-between;font-weight:700;font-size:15px;padding-top:8px;border-top:1px solid var(--line)"><span>Total</span><span>${money(total+tipAmt())}</span></div>
   </div>`;
@@ -3015,11 +2885,7 @@ async function submitOrder(){
   const slotVal = [new Date().toLocaleDateString('en-CA', { timeZone: 'Asia/Karachi' }), null];
   if (state.settings && state.settings.is_accepting_orders === false) { showToast("Sorry, we're not taking orders right now.", 'err'); if (btn) { btn.disabled = false; btn.textContent = 'Place Order'; } return; }
   let order = null;
-  const addr = (document.getElementById('co-addr')?.value || state.coAddr || '').trim(), dnotes = (document.getElementById('co-notes')?.value || state.coNotes || '').trim();
-  if (minOrderGap() > 0) { showToast(`Add ${money(minOrderGap())} more to reach the delivery minimum`, 'err'); if (btn) { btn.disabled = false; btn.textContent = 'Place Order'; } return; }
-  if (addr.length < 5) { showToast('Please add your delivery address', 'err'); const ae = document.getElementById('co-addr'); if (ae) { ae.focus(); ae.classList.add('shake'); setTimeout(() => ae.classList.remove('shake'), 500); } if (btn) { btn.disabled = false; btn.textContent = 'Place Order'; } return; }
-  if (state.coSaveDefault || !state.profile?.delivery_address) { const { data: pd } = await sb.from('profiles').update({ delivery_address: addr, delivery_notes: dnotes || null }).eq('id', state.session.user.id).select().maybeSingle(); if (pd) state.profile = pd; }
-  try { order = await placeOrder({ pickupDate: slotVal[0], pickupTime: slotVal[1], notes, delivery: { address: addr, notes: dnotes, map: state.coMap, contactless: !!state.coContactless } }); if (order) { state.coAddr = null; state.coMap = null; state.coContactless = false; } }
+  try { order = await placeOrder({ pickupDate: slotVal[0], pickupTime: slotVal[1], notes }); }
   catch (e) { showToast('Order failed: ' + (e.message || e), 'err'); }
   if (!order) { const b = document.getElementById('place-order-btn'); if (b) { b.disabled = false; b.textContent = 'Place Order — try again'; } }
 }
@@ -3050,7 +2916,7 @@ function renderOrderCard(o, active){
   return `<div class="card" style="padding:14px;margin-bottom:12px;cursor:pointer" onclick="setState({orderDetailId:'${o.id}'})">
     <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px">
       <div style="font-weight:700;font-size:14.5px">Order #${o.order_number}</div>
-      <span class="badge ${o.status}">${statusTxt(o.status).toUpperCase()}</span>
+      <span class="badge ${o.status}">${o.status.toUpperCase()}</span>
     </div>
     <div style="font-size:12.5px;color:var(--coffee-500);margin-bottom:${active?'10px':'0'}">${new Date(o.created_at).toLocaleString([], {month:'short',day:'numeric',hour:'numeric',minute:'2-digit'})} · ${o.order_items?.length||0} items · ${money(o.total)}</div>
     ${active ? `<div class="progress-track"><div class="progress-fill" style="width:${statusProgress(o.status)}%"></div></div>` : `<button class="btn btn-outline" style="margin-top:8px;padding:6px 12px;font-size:12px" onclick="event.stopPropagation(); reorder('${o.id}')">Reorder</button>${o.status!=='cancelled'?`<button class="btn btn-ghost" style="margin:8px 0 0 8px;padding:6px 12px;font-size:12px" onclick="event.stopPropagation(); openReceipt('${o.id}')">Receipt</button>`:''}`}
@@ -3069,11 +2935,11 @@ function renderOrderTimeline(o){
     return `<div class="card" style="padding:12px;background:#EFD3CD;color:var(--danger);font-size:13px;font-weight:600">✕ Cancelled${o.cancelled_at?' at '+new Date(o.cancelled_at).toLocaleTimeString([],{hour:'numeric',minute:'2-digit'}):''}</div>`;
   }
   const steps = [
-    { label: 'Order Placed', time: o.created_at, done: true },
+    { label: 'Received', time: o.created_at, done: true },
     { label: 'Confirmed', time: o.accepted_at, done: !!o.accepted_at },
     { label: 'Making', time: o.preparing_at, done: !!o.preparing_at },
-    { label: 'Out for delivery', time: o.ready_at, done: !!o.ready_at },
-    { label: 'Delivered', time: o.completed_at, done: !!o.completed_at },
+    { label: 'Ready for pickup', time: o.ready_at, done: !!o.ready_at },
+    { label: 'Collected', time: o.completed_at, done: !!o.completed_at },
   ];
   return `<div style="display:flex;flex-direction:column">
     ${steps.map((s,i) => `<div style="display:flex;gap:12px">
@@ -3097,12 +2963,10 @@ function renderOrderDetailSheet(fresh){
       <h2 class="display" style="margin:0;font-size:22px">Order #${o.order_number}</h2>
       <button class="btn btn-ghost" style="padding:6px 10px" onclick="setState({orderDetailId:null})">✕</button>
     </div>
-    <span class="badge ${o.status}">${statusTxt(o.status).toUpperCase()}</span>
+    <span class="badge ${o.status}">${o.status.toUpperCase()}</span>
     <span class="badge ${o.payment_confirmed?'ready':'pending'}" style="margin-left:6px">${o.payment_confirmed?'✓ PAID':'PAYMENT PENDING'}</span>${payBadge(o,'margin-left:6px')}${o.excluded_from_sales?'<span class="badge excluded" style="margin-left:6px">Removed from sales</span>':''}
-    ${['pending','accepted','preparing','ready'].includes(o.status)?`<div style="margin:18px 0 6px">${renderTracker(o)}</div>${deliveryEta(o)?`<div class="meta" style="text-align:center">🛵 Estimated delivery around <b>${etaClock(deliveryEta(o))}</b> (about ${deliveryEta(o)} min)</div>`:''}`:''}
+    ${['pending','accepted','preparing','ready'].includes(o.status)?`<div style="margin:18px 0 6px">${renderTracker(o)}</div>${etaMinutes(o)?`<div class="meta" style="text-align:center">Estimated ready in about ${etaMinutes(o)} min</div>`:''}`:''}
     <div style="margin:16px 0">${renderOrderTimeline(o)}</div>
-    ${deliveryBlockHtml(o, false)}
-    ${['admin','worker'].includes(state.profile?.role) ? riderPickerHtml(o) : ''}
     ${o.status==='cancelled' && o.cancel_reason ? `<div style="font-size:12.5px;color:var(--danger);margin-bottom:12px"><b>Cancelled:</b> ${esc(o.cancel_reason)}</div>` : ''}
     ${['admin','worker'].includes(state.profile?.role) ? `<div style="display:flex;gap:8px;margin:0 0 12px"><button class="btn btn-ghost btn-sm" style="flex:1" onclick="shareOrderWhatsApp('${o.id}')">WhatsApp${o.profiles?.phone?' customer':''}</button><button class="btn btn-ghost btn-sm" style="flex:1" onclick="copyOrderSummary('${o.id}')">Share receipt</button>${o.profiles?.phone?`<a class="btn btn-ghost btn-sm" style="flex:1;text-decoration:none;display:inline-flex;align-items:center;justify-content:center" href="tel:${esc(o.profiles.phone)}">Call</a>`:''}</div>` : ''}
     ${o.status!=='cancelled' ? `<button class="btn btn-outline btn-sm" style="width:100%;margin:0 0 12px" onclick="openReceipt('${o.id}')">🧾 View receipt</button>` : ''}
@@ -3111,7 +2975,7 @@ function renderOrderDetailSheet(fresh){
     ${tipEditorHtml(o)}
     ${excludeSalesHtml(o)}
     ${deleteOrderHtml(o)}
-    <div style="font-size:12.5px;color:var(--coffee-500);margin-bottom:16px">Ordered ${new Date(o.created_at).toLocaleString([],{month:'short',day:'numeric',hour:'numeric',minute:'2-digit'})} · ${o.pickup_time?'delivery '+fmtTime12(o.pickup_time.slice(0,5)):'ASAP delivery'}</div>
+    <div style="font-size:12.5px;color:var(--coffee-500);margin-bottom:16px">Ordered ${new Date(o.created_at).toLocaleString([],{month:'short',day:'numeric',hour:'numeric',minute:'2-digit'})} · ${o.pickup_time?'pickup '+fmtTime12(o.pickup_time.slice(0,5)):'ASAP pickup'}</div>
     ${state.profile?.role==='admin' && o.status!=='cancelled' ? `<div class="card" style="padding:14px;margin-bottom:16px;background:${o.payment_confirmed?'#EAF2E9':'#FBF2E1'}">
       <div style="display:flex;justify-content:space-between;align-items:center;gap:10px">
         <div>
@@ -3191,7 +3055,7 @@ function fallbackAnswer(question){
     return `Here's what we have:\n${lines.join('\n')}`;
   }
   if (/point|loyalty|reward|gift/.test(q)) return `You earn 1 point for every Rs ${Math.round(1/(state.settings?.loyalty_points_per_currency||0.1))} spent, credited once your payment is confirmed. Check the Rewards tab for gifts you can unlock!`;
-  if (/pickup|deliver|order|how.*work/.test(q)) return `Browse the menu, add items to your cart, enter your delivery address at checkout, and pay the rider (or by QR/bank) when your order arrives.`;
+  if (/pickup|order|how.*work/.test(q)) return `Browse the menu, add items to your cart, pick a pickup time, and pay in person when you collect your order.`;
   return `I'm not sure about that one — for anything specific, message us directly at ${phone}.`;
 }
 function renderChatBubble(){
@@ -3297,7 +3161,7 @@ function renderMembershipCardModal(fresh){
       </div>
       <div style="display:flex;gap:2px;height:34px;margin-top:18px;align-items:center">${bars}</div>
     </div>
-    <p style="font-size:12px;color:var(--coffee-500);text-align:center;margin:14px 0 4px">Show this card to your rider, or tell staff your Member ID: <b>${esc(code)}</b></p>
+    <p style="font-size:12px;color:var(--coffee-500);text-align:center;margin:14px 0 4px">Show this card at pickup, or tell staff your Member ID: <b>${esc(code)}</b></p>
   </div></div>`;
 }
 
@@ -3380,7 +3244,7 @@ function renderPointsHistory(){
 async function redeemRewardUI(rewardId){
   const { error } = await sb.rpc('redeem_reward', { p_reward_id: rewardId });
   if (error) { showToast(error.message.replace(/^.*?: /,'')); return; }
-  await loadProfile(); showToast('Reward redeemed! Mention it with your next order.'); render();
+  await loadProfile(); showToast('Reward redeemed! Show this at pickup.'); render();
 }
 function computeTasteProfile(){
   const counts = {}; let hot = 0, cold = 0;
@@ -3403,7 +3267,6 @@ function renderProfileTab(){
       <div style="display:flex;gap:12px;align-items:center"><div class="av-btn" style="width:48px;height:48px;font-size:19px">${avatarHtml(p, 48)}</div><div style="font-weight:700;font-size:17px">${esc(p?.full_name||'')}</div></div>
       <div style="font-size:13px;color:var(--coffee-500)">${esc(state.session?.user?.email||'')}</div>
       <div style="font-size:13px;color:var(--coffee-500);margin-top:4px">${esc(p?.phone||'No phone on file')}</div>
-      <div style="font-size:13px;color:var(--coffee-500);margin-top:4px">📍 ${p?.delivery_address?esc(p.delivery_address):'No delivery address yet — add one in Edit profile'}</div>
       <div style="margin-top:10px;font-size:12px;color:var(--caramel-dark)">Referral Code: <b>${esc(p?.referral_code||'')}</b> — share for bonus points</div>
       <div style="display:flex;gap:8px;margin-top:12px"><button class="btn btn-outline" style="flex:1" onclick="openAccount()">✏️ Edit profile</button><button class="btn btn-outline" style="flex:1" onclick="shareReferral()">📤 Invite a Friend</button></div>
     </div>
@@ -3430,7 +3293,7 @@ function renderProfileTab(){
       ${state.pushEnabled ? `<div style="margin-top:14px;padding-top:14px;border-top:1px solid var(--line)">
         <label style="display:flex;justify-content:space-between;align-items:center;font-size:13px;margin-bottom:10px"><span>Promos & Drops</span><input type="checkbox" ${p?.notify_promos?'checked':''} onchange="toggleNotifPref('notify_promos', this.checked)"></label>
         <label style="display:flex;justify-content:space-between;align-items:center;font-size:13px"><span>Loyalty & Gifts</span><input type="checkbox" ${p?.notify_loyalty?'checked':''} onchange="toggleNotifPref('notify_loyalty', this.checked)"></label>
-        <p style="font-size:11px;color:var(--coffee-500);margin:8px 0 0">Order status alerts always stay on so you always know when your order is on the way.</p>
+        <p style="font-size:11px;color:var(--coffee-500);margin:8px 0 0">Order status alerts always stay on so you never miss a pickup.</p>
       </div>` : ''}
     </div>
     <div class="card" style="padding:18px;margin-bottom:16px">
@@ -3454,14 +3317,11 @@ function sortByUrgency(orders){
   return [...orders].sort((a,b) => orderUrgencyMinutes(a) - orderUrgencyMinutes(b));
 }
 function renderWorker(){
-  if (!_staffList) loadStaffList();
-  const mine = !!state.mineOnly, me = state.session.user.id, src = mine ? state.workerOrders.filter(o => o.assigned_worker_id === me) : state.workerOrders;
-  const pending = sortByUrgency(src.filter(o=>o.status==='pending'));
-  const accepted = sortByUrgency(src.filter(o=>o.status==='accepted'));
-  const preparing = sortByUrgency(src.filter(o=>o.status==='preparing'));
-  const ready = sortByUrgency(src.filter(o=>o.status==='ready'));
-  const myCount = state.workerOrders.filter(o => o.assigned_worker_id === me && ['preparing','ready'].includes(o.status)).length;
-  const columns = [['🆕 New', pending, '#FBF2E1'], ['✓ Confirmed', accepted, '#EDE0C8'], ['🔥 Making', preparing, '#F3D9B1'], ['🛵 Out for delivery', ready, '#CFE7DC']];
+  const pending = sortByUrgency(state.workerOrders.filter(o=>o.status==='pending'));
+  const accepted = sortByUrgency(state.workerOrders.filter(o=>o.status==='accepted'));
+  const preparing = sortByUrgency(state.workerOrders.filter(o=>o.status==='preparing'));
+  const ready = sortByUrgency(state.workerOrders.filter(o=>o.status==='ready'));
+  const columns = [['🆕 New', pending, '#FBF2E1'], ['✓ Accepted', accepted, '#EDE0C8'], ['🔥 Preparing', preparing, '#F3D9B1'], ['✅ Ready', ready, '#CFE7DC']];
   return `<div class="app-frame-wide" style="min-height:100vh">
     <div class="topbar" style="display:flex;justify-content:space-between;align-items:center">
       <div><div class="display" style="font-size:19px">Filter — Kitchen</div><div style="font-size:11px;color:var(--coffee-500)">${esc(state.profile?.full_name||'')}</div></div>
@@ -3475,7 +3335,6 @@ function renderWorker(){
     </div>
     ${state.notifPanelOpen ? renderNotifPanel() : ''}
     ${myStatsHtml()}
-    <div class="scrollx" style="padding:14px 18px 0"><button class="chip ${!mine?'active':''}" onclick="setState({mineOnly:false})">All orders</button><button class="chip ${mine?'active':''}" onclick="setState({mineOnly:true})">🛵 My deliveries${myCount?` (${myCount})`:''}</button></div>
     <div style="padding:16px 0 16px 18px;overflow-x:auto">
       <div style="display:flex;gap:14px;padding-right:18px">
         ${columns.map(([title, orders, bg]) => `<div style="min-width:270px;max-width:270px;flex-shrink:0">
@@ -3492,7 +3351,7 @@ function renderWorker(){
 }
 function renderWorkerOrderCard(o){
   const nextStatus = { pending: 'accepted', accepted: 'preparing', preparing: 'ready', ready: 'completed' }[o.status];
-  const nextLabel = { pending: 'Confirm', accepted: 'Start making', preparing: 'Send out 🛵', ready: 'Delivered ✓' }[o.status];
+  const nextLabel = { pending: 'Accept', accepted: 'Start Preparing', preparing: 'Mark Ready', ready: 'Complete' }[o.status];
   const urgency = orderUrgencyMinutes(o);
   const urgent = urgency <= 10 && o.status !== 'ready';
   return `<div class="card" data-order-id="${o.id}" style="padding:12px;${urgent?'border-color:var(--danger)':''}">
@@ -3503,8 +3362,6 @@ function renderWorkerOrderCard(o){
     <div style="font-size:14px;font-weight:700;color:var(--coffee-900);margin-bottom:8px">${esc(o.profiles?.full_name||'Customer')}</div>
     <div style="font-size:12.5px;margin-bottom:8px">${(o.order_items||[]).map(oi=>`${oi.quantity}× ${esc(oi.product_name)}${oi.size_name?` (${esc(oi.size_name)})`:''}${(oi.order_item_options||[]).length?' — '+oi.order_item_options.map(c=>esc(c.choice_name)).join(', '):''}`).join('<br>')}</div>
     ${o.special_instructions?`<div style="font-size:11.5px;font-style:italic;color:var(--caramel-dark);margin-bottom:8px">"${esc(o.special_instructions)}"</div>`:''}
-    ${deliveryBlockHtml(o, true)}
-    ${o.assigned_worker_id ? `<div class="rider-tag meta">🛵 ${o.assigned_worker_id === state.session.user.id ? '<b>Your delivery</b>' : esc(staffName(o.assigned_worker_id))}</div>` : ['preparing','ready'].includes(o.status) ? `<button class="btn btn-ghost btn-sm" style="width:100%;margin-bottom:8px" onclick="takeDelivery('${o.id}')">🛵 I'll deliver this</button>` : ''}
     <div style="display:flex;gap:6px">
       <button class="btn btn-outline" style="flex:1;font-size:11px;padding:7px" onclick="setState({orderDetailId:'${o.id}'})">Details</button>
       ${nextStatus ? `<button class="btn btn-primary" style="flex:2;font-size:11px;padding:7px" onclick="updateOrderStatus('${o.id}','${nextStatus}')">${nextLabel}</button>` : ''}
@@ -3537,9 +3394,7 @@ async function cancelOrder(id){
   await loadWorkerOrders(); render();
 }
 async function updateOrderStatus(id, status){
-  const cur = state.workerOrders.find(x => x.id === id), upd = { status };
-  if (cur && !cur.assigned_worker_id && status === 'ready' && state.profile?.role === 'worker') upd.assigned_worker_id = state.session.user.id;
-  const { error } = await sb.from('orders').update(upd).eq('id', id);
+  const { error } = await sb.from('orders').update({ status, assigned_worker_id: state.session.user.id }).eq('id', id);
   if (error) return showToast(error.message);
   await loadWorkerOrders(); render();
 }
@@ -3709,7 +3564,7 @@ function renderAdminInsightsBody(){
   if (topProducts[0]) recommendations.push(`${topProducts[0][0]} is your best seller — feature it prominently or bundle it with slower items.`);
   if (slowProduct && topProducts.length > 3) recommendations.push(`${slowProduct[0]} sells the least — consider a limited-time discount to move it, or retire it.`);
   if (repeatRate < 30 && totalCustomers >= 5) recommendations.push(`Only ${repeatRate}% of customers have ordered more than once — a loyalty mission or gift milestone could help bring them back.`);
-  if (peakHourIdx >= 0) recommendations.push(`Your busiest hour is around ${peakHourIdx}:00 — make sure you have a rider and enough hands then.`);
+  if (peakHourIdx >= 0) recommendations.push(`Your busiest hour is around ${peakHourIdx}:00 — make sure pickup slots have enough capacity then.`);
 
   const hr=new Date().getHours(); const greet = hr<12?'Good morning':hr<17?'Good afternoon':'Good evening';
   return `
@@ -4042,19 +3897,17 @@ function adminOrdersListHtml(){
   });
   return filtered.length ? filtered.map(o=>{
     const ns={pending:'accepted',accepted:'preparing',preparing:'ready',ready:'completed'}[o.status];
-    const nl={pending:'Confirm order',accepted:'Start making',preparing:'Out for delivery 🛵',ready:'Mark delivered'}[o.status];
+    const nl={pending:'Accept order',accepted:'Start preparing',preparing:'Mark ready',ready:'Complete order'}[o.status];
     const who = esc(o.profiles?.full_name||(o.customer_id?'Customer':'Deleted customer'));
     return `<div class="card order-card ${_freshOrderIds.has(o.id)?'slide-in':''} ${pendingAgeClass(o)}" data-order-id="${o.id}">
       <div class="oc-head">
         <div style="min-width:0">
           <div class="oc-title"><span style="cursor:pointer" onclick="setState({orderDetailId:'${o.id}'})">#${o.order_number}</span> ${o.customer_id?`<button class="oc-who linkish" onclick="openCustomerProfile('${o.customer_id}')">${who}</button>`:`<span class="oc-who">${who}</span>`}</div>
-          <div class="meta" style="cursor:pointer" onclick="setState({orderDetailId:'${o.id}'})">${new Date(o.created_at).toLocaleString([],{month:'short',day:'numeric',hour:'numeric',minute:'2-digit'})}${o.pickup_time?` · ${String(o.pickup_time).slice(0,5)}`:''} · details ›</div>
+          <div class="meta" style="cursor:pointer" onclick="setState({orderDetailId:'${o.id}'})">${new Date(o.created_at).toLocaleString([],{month:'short',day:'numeric',hour:'numeric',minute:'2-digit'})}${o.pickup_time?` · pickup ${String(o.pickup_time).slice(0,5)}`:''} · details ›</div>
         </div>
         <div class="oc-total">${money(o.total)}${Number(o.tip)>0?`<div class="oc-tip">+ ${money(o.tip)} tip</div>`:''}</div>
       </div>
-      ${deliveryBlockHtml(o, true)}
-      ${riderPickerHtml(o)}
-      <div class="oc-badges">${pendingAgeLabel(o)}<span class="badge ${o.status}">${statusTxt(o.status)}</span><span class="badge ${o.payment_confirmed?'ready':'pending'}">${o.payment_confirmed?'Paid':'Unpaid'}</span>${payBadge(o)}${o.excluded_from_sales?'<span class="badge excluded">Removed from sales</span>':''}</div>
+      <div class="oc-badges">${pendingAgeLabel(o)}<span class="badge ${o.status}">${o.status.charAt(0).toUpperCase()+o.status.slice(1)}</span><span class="badge ${o.payment_confirmed?'ready':'pending'}">${o.payment_confirmed?'Paid':'Unpaid'}</span>${payBadge(o)}${o.excluded_from_sales?'<span class="badge excluded">Removed from sales</span>':''}</div>
       ${(ns || (!o.payment_confirmed && o.status!=='cancelled')) ? `<div class="oc-actions">
         ${ns ? `<button class="btn btn-primary btn-sm" style="flex:1" onclick="updateOrderStatus('${o.id}','${ns}')">${nl}</button>` : ''}
         ${!o.payment_confirmed && o.status!=='cancelled' ? `<button class="btn btn-outline btn-sm" style="flex:1" onclick="confirmPayment('${o.id}')">Confirm paid</button>` : ''}
@@ -4074,7 +3927,7 @@ function renderAdminOrders(){
     ${unpaid>0 ? `<div class="card" role="button" onclick="state.adminOrderStatusFilter='unpaid'; render()" style="cursor:pointer;padding:12px 14px;margin-bottom:14px;background:#FBF2E1;font-size:12.5px;font-weight:600;color:var(--caramel-dark)">${unpaid} order${unpaid>1?'s':''} awaiting payment confirmation</div>` : ''}
     <input class="input" placeholder="Search by order # or customer name" value="${esc(state.adminOrderSearch||'')}" oninput="state.adminOrderSearch=this.value; filterAdminOrders()" style="margin-bottom:10px">
     <div class="scrollx" style="margin-bottom:14px">
-      ${statuses.map(s=>`<button class="chip ${statusFilter===s?'active':''}" onclick="state.adminOrderStatusFilter='${s}'; render()">${s==='all'?'All':s==='unpaid'?'Unpaid':statusTxt(s)}</button>`).join('')}
+      ${statuses.map(s=>`<button class="chip ${statusFilter===s?'active':''}" onclick="state.adminOrderStatusFilter='${s}'; render()">${s==='all'?'All':s.charAt(0).toUpperCase()+s.slice(1)}</button>`).join('')}
     </div>
     ${!state.workerOrders.some(o=>o.status!=='completed'&&o.status!=='cancelled') ? `<div class="meta" style="margin-bottom:8px">No active orders right now.</div>` : ''}
     <div id="admin-orders-list" style="display:flex;flex-direction:column;gap:10px">${adminOrdersListHtml()}</div>
@@ -4296,7 +4149,7 @@ function renderCustomerProfileSheet(fresh){
     <div class="meta" style="font-size:13px">${favNames.length ? favNames.map(esc).join(', ') : 'None saved'}${top.length ? `<br>Most ordered: ${top.map(([n, q]) => `${esc(n)} ×${q}`).join(', ')}` : ''}</div>
     <div class="sec-title">Recent orders</div>
     ${c.orders.length ? `<div class="card" style="padding:0 16px">${c.orders.slice(0, 10).map(o => `<button class="user-main kv" style="width:100%;display:flex" onclick="setState({orderDetailId:'${o.id}'})">
-      <span><b>#${o.order_number}</b> <span class="meta">${new Date(o.created_at).toLocaleDateString([], { month: 'short', day: 'numeric' })} · ${statusTxt(o.status)}${o.payment_confirmed ? ' · paid' : ''}</span></span><span>${money(o.total)} ›</span></button>`).join('')}</div>` : '<div class="meta">No orders yet</div>'}
+      <span><b>#${o.order_number}</b> <span class="meta">${new Date(o.created_at).toLocaleDateString([], { month: 'short', day: 'numeric' })} · ${o.status}${o.payment_confirmed ? ' · paid' : ''}</span></span><span>${money(o.total)} ›</span></button>`).join('')}</div>` : '<div class="meta">No orders yet</div>'}
     <div class="sec-title">Reviews</div>
     ${c.reviews.length ? c.reviews.slice(0, 5).map(r => `<div style="margin-bottom:8px;font-size:13px"><b>${esc(prodName(r.product_id))}</b> <span style="color:var(--caramel-dark)">${'★'.repeat(Math.max(0, Math.min(5, r.rating || 0)))}</span>${r.comment ? `<div class="meta">${esc(r.comment)}</div>` : ''}</div>`).join('') : '<div class="meta">No reviews yet</div>'}
     ${u.role !== 'admin' && u.id !== state.session.user.id ? `<div style="margin-top:24px;padding-top:8px;border-top:1px solid rgba(230,217,194,.6)"><button class="link-danger" onclick="deleteUserAccount('${u.id}')">Delete account</button></div>` : ''}
