@@ -611,6 +611,12 @@ html.dark .chip-timer{background:#3A2C20;color:var(--coffee-900)}html.dark .chip
 .arrived-badge{background:#77875F;color:#fff;font-size:10px;padding:2px 8px}.card.arrived{border-color:#77875F!important;box-shadow:0 0 0 2px rgba(119,135,95,.35),var(--soft)}
 .scan-box{position:relative;border-radius:18px;overflow:hidden;background:#000;aspect-ratio:1}.scan-box video{width:100%;height:100%;object-fit:cover}.scan-frame{position:absolute;inset:18%;border:3px solid rgba(255,255,255,.85);border-radius:18px}
 @media (prefers-reduced-motion:reduce){.here-btn{animation:none}}
+.pt-panel{margin-top:10px;padding:12px;border-radius:14px;background:rgba(201,138,82,.1);border:1.5px solid rgba(201,138,82,.35);animation:riseIn .3s cubic-bezier(.2,.8,.2,1) both}
+.pt-head{font-weight:700;font-size:13.5px;margin-bottom:8px;color:var(--coffee-900)}.pt-chips{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:10px;align-items:center}.pt-chips .chip{padding:7px 12px}.pt-chips .chip.on{background:var(--coffee-900);color:var(--cream-2);border-color:var(--coffee-900)}
+.pt-time{width:auto;flex:1;min-width:110px;padding:8px 10px}.pt-foot{display:flex;justify-content:space-between;margin-top:8px;font-size:12.5px}.linkish{background:none;border:0;color:var(--caramel-dark);font-weight:600;padding:4px 0;text-decoration:underline;text-underline-offset:2px}
+.pt-edit{display:block;margin:8px 0;background:none;border:1px dashed var(--line);border-radius:10px;padding:6px 10px;font-size:12.5px;font-weight:600;color:var(--coffee-700);width:100%;text-align:left}
+.pickup-at{font-size:14px}.eta-center{text-align:center}.meta.pickup-at{color:var(--coffee-900)}
+.pause-row{display:flex;flex-wrap:wrap;gap:6px;align-items:center;margin:10px 0 4px;font-size:13px}.pause-row .chip{padding:5px 12px}.pause-row span{margin-right:auto}
 </style>
 </head>
 <body>
@@ -620,7 +626,53 @@ html.dark .chip-timer{background:#3A2C20;color:var(--coffee-900)}html.dark .chip
 // Bumped on every real deploy. Lets a running tab/installed PWA detect a
 // newer version is live on the server and prompt to refresh, instead of
 // silently running stale code forever (a common PWA gotcha).
-const APP_BUILD = '2026-10-13-06';
+const APP_BUILD = '2026-10-13-07';
+// ===== v30: admin-set pickup time, timed pause =====
+function pickupAt(o){ if (!o?.pickup_time) return null; const d = new Date(`${o.pickup_date || localDateStr(new Date())}T${String(o.pickup_time).slice(0,5)}:00`); return isNaN(d) ? null : d; }
+function fmtClock(d){ return d.toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' }); }
+function pickupLabel(o){ const d = pickupAt(o); return d ? `Pickup at ${fmtClock(d)}` : ''; }
+function pickupInMins(o){ const d = pickupAt(o); return d ? Math.round((d - Date.now()) / 60000) : null; }
+function pickupCountdown(o){ const m = pickupInMins(o); if (m === null || !['accepted','preparing','ready'].includes(o.status)) return ''; return o.status === 'ready' ? 'ready now' : m > 1 ? `in ${m} min` : m >= -1 ? 'any minute now' : 'running a little late — sorry!'; }
+function etaLine(o, cls){
+  if (o.pickup_time && ['accepted','preparing','ready'].includes(o.status)) { const c = pickupCountdown(o); return `<div class="${cls} pickup-at">🕒 <b>${pickupLabel(o)}</b>${c ? ` · ${c}` : ''}</div>`; }
+  const e = etaMinutes(o); return e ? `<div class="${cls}">${cls === 'lo-eta' ? '⏱ Ready in about' : 'Estimated ready in about'} ${e} min</div>` : '';
+}
+function addMinsHHMM(m){ const d = new Date(Date.now() + m * 60000); return String(d.getHours()).padStart(2,'0') + ':' + String(d.getMinutes()).padStart(2,'0'); }
+function startPickupPanel(id, edit){ const o = findAnyOrder(id); state.pickupDraft = edit && o?.pickup_time ? String(o.pickup_time).slice(0,5) : null; setState({ acceptTimeFor: id, acceptEdit: !!edit }); }
+function pickupPanelHtml(o){
+  if (state.acceptTimeFor !== o.id || state.profile?.role !== 'admin') return '';
+  const t = state.pickupDraft, edit = state.acceptEdit;
+  return `<div class="pt-panel" onclick="event.stopPropagation()"><div class="pt-head">${edit ? 'Change pickup time' : 'Pickup time for #' + o.order_number}</div>
+    <div class="pt-chips">${[10,15,20,30].map(m => `<button class="chip ${t === addMinsHHMM(m) ? 'on' : ''}" onclick="state.pickupDraft=addMinsHHMM(${m}); render()">${m} min</button>`).join('')}<input class="input pt-time" type="time" value="${t || ''}" onchange="state.pickupDraft=this.value; render()" aria-label="Pickup time"></div>
+    <button class="btn btn-primary" style="width:100%" ${t ? '' : 'disabled'} onclick="savePickupTime('${o.id}')">${t ? (edit ? 'Save · ' : 'Confirm · pickup ') + fmtTime12(t) : 'Choose a time'}</button>
+    <div class="pt-foot">${edit ? `${o.pickup_time ? `<button class="linkish" onclick="savePickupTime('${o.id}', true)">Remove time</button>` : ''}` : `<button class="linkish" onclick="savePickupTime('${o.id}', true)">Skip — confirm without a time</button>`}<button class="linkish" onclick="setState({acceptTimeFor:null})">Cancel</button></div></div>`;
+}
+async function savePickupTime(id, skip){
+  const o = findAnyOrder(id), edit = state.acceptEdit, t = skip ? null : state.pickupDraft;
+  const p = {};
+  if (t) { const now = new Date(), d = new Date(`${localDateStr(now)}T${t}:00`); if (d < now - 5 * 60000) d.setDate(d.getDate() + 1); p.pickup_time = t; p.pickup_date = localDateStr(d); } else if (edit) { p.pickup_time = null; }
+  if (!edit) { p.status = 'accepted'; if (!o?.assigned_worker_id) p.assigned_worker_id = state.session.user.id; }
+  if (!Object.keys(p).length) { setState({ acceptTimeFor: null }); return; }
+  const { data, error } = await sb.from('orders').update(p).eq('id', id).select('id, status, pickup_time').maybeSingle();
+  if (error || !data) { showToast('Not saved: ' + (error?.message || 'try again'), 'err'); return; }
+  state.acceptTimeFor = null; state.pickupDraft = null;
+  showToast(edit ? (t ? 'Pickup time updated — customer notified' : 'Pickup time removed') : t ? `Confirmed · pickup ${fmtTime12(t)}` : 'Order confirmed', 'ok');
+  await loadWorkerOrders(); if (typeof loadAdminOrders === 'function') try { await loadAdminOrders(); } catch (e) {} render();
+}
+function pickupEditHtml(o){
+  if (state.profile?.role !== 'admin' || !['accepted','preparing','ready'].includes(o.status)) return '';
+  return state.acceptTimeFor === o.id ? pickupPanelHtml(o) : `<button class="pt-edit" onclick="event.stopPropagation(); startPickupPanel('${o.id}', true)">🕒 ${o.pickup_time ? pickupLabel(o) + ' · change' : 'Set pickup time'}</button>`;
+}
+// timed pause
+function pausedUntil(){ const p = state.settings?.paused_until; const d = p ? new Date(p) : null; return d && d > Date.now() ? d : null; }
+async function pauseFor(mins){
+  const until = mins ? new Date(Date.now() + mins * 60000).toISOString() : null;
+  const { data, error } = await sb.from('business_settings').update({ paused_until: until }).eq('id', true).select('paused_until').maybeSingle();
+  if (error || !data) return showToast('Not saved: ' + (error?.message || 'try again'), 'err');
+  state.settings.paused_until = data.paused_until; showToast(mins ? `Paused for ${mins} min` : 'Taking orders again', 'ok'); render();
+}
+function pauseRowHtml(){ const pu = pausedUntil(); return `<div class="pause-row">${pu ? `<span>⏸ Paused until <b>${fmtClock(pu)}</b></span><button class="btn btn-sm btn-outline" onclick="pauseFor(0)">Resume now</button>` : `<span class="meta">Quick break:</span>${[15,30,60].map(m => `<button class="chip" onclick="pauseFor(${m})">${m} min</button>`).join('')}`}</div>`; }
+
 // ===== v29: loyalty card QR, admin card scan, "I'm here" check-in =====
 function qrSvg(text, size){ try { const q = qrcode(0, 'M'); q.addData(text); q.make(); const n = q.getModuleCount(), m = 2, t = n + m * 2; let d = ''; for (let r = 0; r < n; r++) for (let c = 0; c < n; c++) if (q.isDark(r, c)) d += `M${c + m} ${r + m}h1v1h-1z`; return `<svg class="qr-svg" viewBox="0 0 ${t} ${t}" width="${size}" height="${size}" shape-rendering="crispEdges" role="img" aria-label="Loyalty QR code"><rect width="${t}" height="${t}" fill="#fff"/><path d="${d}" fill="#2A180F"/></svg>`; } catch (e) { return ''; } }
 function loyaltyQrText(){ return 'FILTER:' + (state.session?.user?.id || ''); }
@@ -1346,7 +1398,7 @@ async function placeOrder({ pickupDate, pickupTime, notes }){
 
   const { data: order, error } = await sb.from('orders').insert({
     customer_id: state.session.user.id, status: 'pending', fulfillment_type: 'pickup',
-    pickup_date: pickupDate, pickup_time: pickupTime, subtotal, discount_amount: +discount.toFixed(2),
+    subtotal, discount_amount: +discount.toFixed(2),
     tax_amount: tax, total, loyalty_points_redeemed: state.redeemPoints, loyalty_discount_amount: +loyaltyDiscount.toFixed(2),
     loyalty_points_earned: pointsEarned, promo_id: promoId, special_instructions: notes, payment_method: payM, payment_fee: fee, tip: tipAmt(),
   }).select().single();
@@ -1955,7 +2007,7 @@ function accountBtnHtml(){ return `<button class="av-btn" aria-label="Your accou
 async function shareOrderStatus(id){
   const o = findAnyOrder(id); if (!o) return;
   const st = { pending: 'sent — waiting for the café to accept', accepted: 'accepted', preparing: 'being made right now ☕', ready: 'READY for pickup!', completed: 'picked up', cancelled: 'cancelled' }[o.status] || o.status;
-  const eta = etaMinutes && etaMinutes(o), text = `My ${state.settings?.business_name || 'Filter'} order #${o.order_number} is ${st}${eta && ['accepted', 'preparing'].includes(o.status) ? ` — about ${eta} min to go` : ''}.`;
+  const eta = etaMinutes && etaMinutes(o), text = `My ${state.settings?.business_name || 'Filter'} order #${o.order_number} is ${st}${o.pickup_time && ['accepted','preparing','ready'].includes(o.status) ? ` — ${pickupLabel(o).toLowerCase()}` : eta && ['accepted', 'preparing'].includes(o.status) ? ` — about ${eta} min to go` : ''}.`;
   try { if (navigator.share) { await navigator.share({ text }); return; } } catch (e) { if (e && e.name === 'AbortError') return; }
   try { await navigator.clipboard.writeText(text); showToast('Status copied — paste it anywhere', 'ok'); } catch (e) { showToast(text); }
 }
@@ -2303,6 +2355,7 @@ function shopStatus(){
   const d=new Date(); const now=String(d.getHours()).padStart(2,'0')+':'+String(d.getMinutes()).padStart(2,'0');
   const hours=`${fmtTime12(o)} – ${fmtTime12(c)}`;
   if (st.is_accepting_orders===false) return {open:false, text:'Not taking orders right now', hours};
+  if (pausedUntil()) return {open:false, text:`Short break · back at ${fmtClock(pausedUntil())}`, hours};
   const inHours = o<=c ? (now>=o && now<c) : (now>=o || now<c);
   if (inHours) return {open:true, text:`Open now · until ${fmtTime12(c)}`, hours};
   return {open:false, text:`Closed · opens ${fmtTime12(o)}`, hours};
@@ -2317,9 +2370,9 @@ function renderLiveOrderBanner(){
   const steps={pending:['Order received',"We'll confirm it shortly",1],accepted:['Order confirmed',"We'll start it soon",2],preparing:['Being made now','Almost there',3],ready:['Your order is ready!','Come pick it up at the counter',4]};
   const [t,sub,n]=steps[o.status];
   return `<div class="live-order ${o.status==='ready'?'ready':''}" onclick="setState({orderDetailId:'${o.id}'})">
-    <div style="display:flex;justify-content:space-between;align-items:center;gap:8px"><div><div class="lo-kicker">Order #${o.order_number}${o.pickup_time?' · pickup '+fmtTime12(o.pickup_time.slice(0,5)):''}</div><div class="lo-title">${t}</div><div class="lo-sub">${sub}</div></div><div style="font-size:28px">${o.status==='ready'?'🛎️':'☕'}</div></div>
+    <div style="display:flex;justify-content:space-between;align-items:center;gap:8px"><div><div class="lo-kicker">Order #${o.order_number}</div><div class="lo-title">${t}</div><div class="lo-sub">${sub}</div></div><div style="font-size:28px">${o.status==='ready'?'🛎️':'☕'}</div></div>
     ${renderTracker(o, true)}
-    ${etaMinutes(o)?`<div class="lo-eta">⏱ Ready in about ${etaMinutes(o)} min</div>`:''}
+    ${etaLine(o,'lo-eta')}
   </div>`;
 }
 function renderRatePrompt(){
@@ -2824,53 +2877,16 @@ function renderCartSheet(fresh){
 }
 
 async function openCheckout(){
-  setState({ cartOpen: false, checkoutOpen: true, slotLoads: {} });
+  setState({ cartOpen: false, checkoutOpen: true });
   try {
-    const today = new Date(); const tomorrow = new Date(); tomorrow.setDate(today.getDate()+1);
-    const [r1, r2, r3] = await Promise.all([
-      sb.rpc('get_slot_load', { p_date: localDateStr(today) }),
-      sb.rpc('get_slot_load', { p_date: localDateStr(tomorrow) }),
-      sb.from('payout_details').select('*').maybeSingle(),
-    ]);
-    const loads = {};
-    (r1.data||[]).forEach(row => loads[`${localDateStr(today)}|${row.slot_time.slice(0,5)}`] = Number(row.order_count));
-    (r2.data||[]).forEach(row => loads[`${localDateStr(tomorrow)}|${row.slot_time.slice(0,5)}`] = Number(row.order_count));
-    state.slotLoads = loads;
+    const r3 = await sb.from('payout_details').select('*').maybeSingle();
     state.payoutDetails = r3.data || {};
     render();
   } catch (e) { /* non-critical — checkout still works without load data */ }
 }
 function localDateStr(d){ return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`; }
-function pickupSlotOptions(){
-  const open = state.settings?.open_time || '07:00', close = state.settings?.close_time || '19:00';
-  const interval = state.settings?.pickup_slot_interval_minutes || 15;
-  const buffer = state.settings?.order_prep_buffer_minutes || 5;
-  const maxPerSlot = state.settings?.max_orders_per_slot || 4;
-  const now = new Date();
-  const slots = [];
-  for (let d=0; d<2; d++){
-    const date = new Date(now); date.setDate(now.getDate()+d);
-    const dateStr = localDateStr(date);
-    let [oh,om] = open.split(':').map(Number), [ch,cm] = close.split(':').map(Number);
-    let cur = new Date(date); cur.setHours(oh,om,0,0);
-    const end = new Date(date); end.setHours(ch,cm,0,0);
-    const earliest = new Date(now.getTime() + buffer*60000);
-    while (cur < end) {
-      if (d>0 || cur >= earliest) {
-        const timeStr = cur.toTimeString().slice(0,5);
-        const load = (state.slotLoads||{})[`${dateStr}|${timeStr}`] || 0;
-        slots.push({ date: dateStr, time: timeStr, label: `${d===0?'Today':'Tomorrow'} · ${cur.toLocaleTimeString([], {hour:'numeric',minute:'2-digit'})}`, load });
-      }
-      cur = new Date(cur.getTime() + interval*60000);
-    }
-  }
-  const candidates = slots.slice(0, 24);
-  const quietest = candidates.filter(s=>s.load < maxPerSlot).sort((a,b)=>a.load-b.load)[0];
-  return candidates.map(s => ({ ...s, recommended: quietest && s.date===quietest.date && s.time===quietest.time }));
-}
 function renderCheckoutSheet(fresh){
   const subtotal = cartSubtotal();
-  const slots = pickupSlotOptions();
   const loyaltyValue = Number(state.settings?.loyalty_point_value || 0.01);
   const maxRedeemable = Math.min(state.profile?.loyalty_points||0, Math.floor(subtotal/loyaltyValue));
   const discount = (state.promoResult?Number(state.promoResult.calculated_discount):0) + state.redeemPoints*loyaltyValue;
@@ -2954,6 +2970,7 @@ async function submitOrder(){
     state.profile.full_name = nm;
   }
   const slotVal = [new Date().toLocaleDateString('en-CA', { timeZone: 'Asia/Karachi' }), null];
+  if (pausedUntil() && state.profile?.role === 'customer') { showToast(`We're on a short break — ordering opens again at ${fmtClock(pausedUntil())}.`, 'err'); if (btn) { btn.disabled = false; btn.textContent = 'Place Order'; } return; }
   if (state.settings && state.settings.is_accepting_orders === false) { showToast("Sorry, we're not taking orders right now.", 'err'); if (btn) { btn.disabled = false; btn.textContent = 'Place Order'; } return; }
   let order = null;
   try { order = await placeOrder({ pickupDate: slotVal[0], pickupTime: slotVal[1], notes }); }
@@ -3036,7 +3053,8 @@ function renderOrderDetailSheet(fresh){
     </div>
     <span class="badge ${o.status}">${o.status.toUpperCase()}</span>
     <span class="badge ${o.payment_confirmed?'ready':'pending'}" style="margin-left:6px">${o.payment_confirmed?'✓ PAID':'PAYMENT PENDING'}</span>${payBadge(o,'margin-left:6px')}${o.excluded_from_sales?'<span class="badge excluded" style="margin-left:6px">Removed from sales</span>':''}
-    ${['pending','accepted','preparing','ready'].includes(o.status)?`<div style="margin:18px 0 6px">${renderTracker(o)}</div>${etaMinutes(o)?`<div class="meta" style="text-align:center">Estimated ready in about ${etaMinutes(o)} min</div>`:''}`:''}
+    ${['pending','accepted','preparing','ready'].includes(o.status)?`<div style="margin:18px 0 6px">${renderTracker(o)}</div>${etaLine(o,'meta eta-center')}`:''}
+    ${state.profile?.role==='admin' && o.status==='pending' && state.acceptTimeFor===o.id ? pickupPanelHtml(o) : ''}${pickupEditHtml(o)}
     <div style="margin:16px 0">${renderOrderTimeline(o)}</div>
     ${o.status==='cancelled' && o.cancel_reason ? `<div style="font-size:12.5px;color:var(--danger);margin-bottom:12px"><b>Cancelled:</b> ${esc(o.cancel_reason)}</div>` : ''}
     ${['admin','worker'].includes(state.profile?.role) ? `<div style="display:flex;gap:8px;margin:0 0 12px"><button class="btn btn-ghost btn-sm" style="flex:1" onclick="shareOrderWhatsApp('${o.id}')">WhatsApp${o.profiles?.phone?' customer':''}</button><button class="btn btn-ghost btn-sm" style="flex:1" onclick="copyOrderSummary('${o.id}')">Share receipt</button>${o.profiles?.phone?`<a class="btn btn-ghost btn-sm" style="flex:1;text-decoration:none;display:inline-flex;align-items:center;justify-content:center" href="tel:${esc(o.profiles.phone)}">Call</a>`:''}</div>` : ''}
@@ -3047,7 +3065,7 @@ function renderOrderDetailSheet(fresh){
     ${tipEditorHtml(o)}
     ${excludeSalesHtml(o)}
     ${deleteOrderHtml(o)}
-    <div style="font-size:12.5px;color:var(--coffee-500);margin-bottom:16px">Ordered ${new Date(o.created_at).toLocaleString([],{month:'short',day:'numeric',hour:'numeric',minute:'2-digit'})} · ${o.pickup_time?'pickup '+fmtTime12(o.pickup_time.slice(0,5)):'ASAP pickup'}</div>
+    <div style="font-size:12.5px;color:var(--coffee-500);margin-bottom:16px">Ordered ${new Date(o.created_at).toLocaleString([],{month:'short',day:'numeric',hour:'numeric',minute:'2-digit'})} · ${o.pickup_time?pickupLabel(o):'ASAP pickup'}</div>
     ${state.profile?.role==='admin' && o.status!=='cancelled' ? `<div class="card" style="padding:14px;margin-bottom:16px;background:${o.payment_confirmed?'#EAF2E9':'#FBF2E1'}">
       <div style="display:flex;justify-content:space-between;align-items:center;gap:10px">
         <div>
@@ -3437,9 +3455,10 @@ function renderWorkerOrderCard(o){
     ${o.special_instructions?`<div style="font-size:11.5px;font-style:italic;color:var(--caramel-dark);margin-bottom:8px">"${esc(o.special_instructions)}"</div>`:''}
     <div style="display:flex;gap:6px">
       <button class="btn btn-outline" style="flex:1;font-size:11px;padding:7px" onclick="setState({orderDetailId:'${o.id}'})">Details</button>
-      ${nextStatus ? `<button class="btn btn-primary" style="flex:2;font-size:11px;padding:7px" onclick="updateOrderStatus('${o.id}','${nextStatus}')">${nextLabel}</button>` : ''}
+      ${nextStatus && state.acceptTimeFor !== o.id ? `<button class="btn btn-primary" style="flex:2;font-size:11px;padding:7px" onclick="updateOrderStatus('${o.id}','${nextStatus}')">${nextLabel}</button>` : ''}
       ${canCancel(o) ? `<button class="btn btn-ghost" style="font-size:16px;padding:0;min-width:44px;color:var(--danger);background:rgba(230,217,194,.5)" aria-label="Cancel order" title="Cancel order" onclick="cancelOrder('${o.id}')">✕</button>` : ''}
     </div>
+    ${o.status==='pending'?pickupPanelHtml(o):pickupEditHtml(o)}
   </div>`;
 }
 function canCancel(o){
@@ -3467,6 +3486,7 @@ async function cancelOrder(id){
   await loadWorkerOrders(); render();
 }
 async function updateOrderStatus(id, status){
+  if (status === 'accepted' && state.profile?.role === 'admin') { const o = findAnyOrder(id); if (o && o.status === 'pending') { if (!document.querySelector(`[data-order-id="${id}"]`) || state.quickActionsId || state.notifPanelOpen) state.orderDetailId = id; state.notifPanelOpen = false; startPickupPanel(id, false); return; } }
   const { error } = await sb.from('orders').update({ status, assigned_worker_id: state.session.user.id }).eq('id', id);
   if (error) return showToast(error.message);
   await loadWorkerOrders(); render();
@@ -3578,6 +3598,7 @@ function renderDailyClose(orders, today){
   return `<div class="card close-card">
     <div style="display:flex;justify-content:space-between;align-items:center;gap:8px"><div class="display" style="font-size:17px">Daily close</div>
       <button class="pill-toggle ${accepting?'on':''}" onclick="toggleAccepting()" aria-pressed="${accepting}"><span class="dot"></span>${accepting?'Taking orders':'Orders paused'}</button></div>
+    ${pauseRowHtml()}
     <div class="close-grid">
       <div><span class="meta">Collected</span><b>${money(paid)}</b></div>
       <div><span class="meta">To collect</span><b style="color:${unpaid?'#8A5A1E':'inherit'}">${money(unpaid)}</b><span class="meta">${unpaidOrders.length} unpaid${unpaidOrders.some(o=>o.payment_method&&o.payment_method!=='cash')?` · ${unpaidOrders.filter(o=>o.payment_method&&o.payment_method!=='cash').length} to verify`:''}</span></div>
@@ -3976,15 +3997,16 @@ function adminOrdersListHtml(){
       <div class="oc-head">
         <div style="min-width:0">
           <div class="oc-title"><span style="cursor:pointer" onclick="setState({orderDetailId:'${o.id}'})">#${o.order_number}</span> ${o.customer_id?`<button class="oc-who linkish" onclick="openCustomerProfile('${o.customer_id}')">${who}</button>`:`<span class="oc-who">${who}</span>`}</div>
-          <div class="meta" style="cursor:pointer" onclick="setState({orderDetailId:'${o.id}'})">${new Date(o.created_at).toLocaleString([],{month:'short',day:'numeric',hour:'numeric',minute:'2-digit'})}${o.pickup_time?` · pickup ${String(o.pickup_time).slice(0,5)}`:''} · details ›</div>
+          <div class="meta" style="cursor:pointer" onclick="setState({orderDetailId:'${o.id}'})">${new Date(o.created_at).toLocaleString([],{month:'short',day:'numeric',hour:'numeric',minute:'2-digit'})}${o.pickup_time?` · pickup ${fmtTime12(String(o.pickup_time).slice(0,5))}`:''} · details ›</div>
         </div>
         <div class="oc-total">${money(o.total)}${Number(o.tip)>0?`<div class="oc-tip">+ ${money(o.tip)} tip</div>`:''}</div>
       </div>
       <div class="oc-badges">${pendingAgeLabel(o)}<span class="badge ${o.status}">${o.status.charAt(0).toUpperCase()+o.status.slice(1)}</span><span class="badge ${o.payment_confirmed?'ready':'pending'}">${o.payment_confirmed?'Paid':'Unpaid'}</span>${payBadge(o)}${o.excluded_from_sales?'<span class="badge excluded">Removed from sales</span>':''}</div>
       ${(ns || (!o.payment_confirmed && o.status!=='cancelled')) ? `<div class="oc-actions">
-        ${ns ? `<button class="btn btn-primary btn-sm" style="flex:1" onclick="updateOrderStatus('${o.id}','${ns}')">${nl}</button>` : ''}
+        ${ns && state.acceptTimeFor !== o.id ? `<button class="btn btn-primary btn-sm" style="flex:1" onclick="updateOrderStatus('${o.id}','${ns}')">${nl}</button>` : ''}
         ${!o.payment_confirmed && o.status!=='cancelled' ? `<button class="btn btn-outline btn-sm" style="flex:1" onclick="confirmPayment('${o.id}')">Confirm paid</button>` : ''}
       </div>` : ''}
+      ${o.status==='pending'?pickupPanelHtml(o):pickupEditHtml(o)}
       ${canCancel(o) ? `<button class="link-danger" onclick="event.stopPropagation(); cancelOrder('${o.id}')">Cancel order</button>` : ''}
     </div>`; }).join('') : `<div class="empty">No orders match.</div>`;
 }
