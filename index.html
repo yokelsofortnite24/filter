@@ -7,7 +7,7 @@
 <meta http-equiv="Pragma" content="no-cache">
 <meta http-equiv="Expires" content="0">
 <meta name="theme-color" content="#F6F0E4">
-<script>try{if(localStorage.getItem('filter_theme')==='dark'){document.documentElement.classList.add('dark');document.querySelector('meta[name=theme-color]').content='#17110D'}}catch(e){}</script>
+<script>try{var t=localStorage.getItem('filter_theme')||'normal',c=document.documentElement.classList;if(t==='dark'||t==='glass-dark')c.add('dark');if(t==='glass'||t==='glass-dark')c.add('glass');if(c.contains('dark'))document.querySelector('meta[name=theme-color]').content='#17110D';else if(c.contains('glass'))document.querySelector('meta[name=theme-color]').content='#EADCC8'}catch(e){}</script>
 <link rel="manifest" href="./manifest.json">
 <link rel="icon" href="./icon.svg" type="image/svg+xml">
 <link rel="apple-touch-icon" sizes="180x180" href="./apple-touch-icon.png">
@@ -318,6 +318,7 @@ select.input{padding-right:40px;text-overflow:ellipsis;white-space:nowrap;overfl
 .asap-note{font-size:13px;color:var(--coffee-700);background:#FBF4E6;border-radius:12px;padding:10px 12px;margin:0 0 16px;line-height:1.45}
 .pay-opts{display:flex;gap:8px;margin:8px 0 12px}
 .pay-opt{flex:1;min-height:64px;border:1.5px solid var(--line);background:var(--card);border-radius:14px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px;font-size:12.5px;font-weight:600;color:var(--coffee-700);padding:6px}
+.pay-fee{font-size:10.5px;font-weight:700;opacity:.75}
 .pay-opt .pi{font-size:18px;line-height:1}
 .pay-opt.on{border-color:var(--coffee-900);background:var(--coffee-900);color:var(--cream-2)}
 .pay-panel{padding:14px 16px;margin-bottom:16px;background:#FBF4E6}
@@ -517,6 +518,68 @@ html.dark .tab-pill::before{background:#3A2C20}
 html.dark .wa-fab{background:#2E241C!important;color:var(--coffee-900)!important}
 html.dark .progress-bar,html.dark .progress{background:#3A2E25}
 
+/* ---- v26 ---- */
+.theme-opts{display:grid;grid-template-columns:repeat(4,1fr);gap:8px}
+.theme-opt{border:1.5px solid var(--line);background:var(--card);border-radius:14px;padding:8px 4px 8px;font-size:11.5px;font-weight:600;color:var(--coffee-700);display:flex;flex-direction:column;align-items:center;gap:6px;transition:transform .15s,border-color .15s}
+.theme-opt.on{border-color:var(--caramel);box-shadow:0 0 0 3px rgba(181,113,61,.18)}.theme-opt:active{transform:scale(.96)}
+.th-swatch{width:100%;height:38px;border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:17px}
+.th-normal .th-swatch{background:#F6F0E4;border:1px solid #E6D9C2}.th-dark .th-swatch{background:#1D1611}
+.th-glass .th-swatch{background:linear-gradient(135deg,#F4D9B8,#D9C7E8 55%,#BFD8E6)}.th-glass .th-swatch span,.th-glass-dark .th-swatch span{background:rgba(255,255,255,.35);border:1px solid rgba(255,255,255,.6);border-radius:8px;padding:2px 6px;backdrop-filter:blur(4px)}
+.th-glass-dark .th-swatch{background:linear-gradient(135deg,#3A2416,#2A2340 55%,#14303A)}
+.fee-row{display:flex;align-items:center;gap:10px;padding:8px 0;border-top:1px solid var(--line)}.fee-row .input{width:76px;text-align:right}.fee-row .input:disabled{opacity:.45}
+.undo-toast{position:fixed;left:50%;bottom:calc(env(safe-area-inset-bottom) + 92px);transform:translateX(-50%);z-index:150;display:flex;gap:14px;align-items:center;background:var(--coffee-900);color:var(--cream-2);padding:10px 10px 10px 16px;border-radius:14px;font-size:13.5px;box-shadow:var(--shadow);animation:toastUp .3s cubic-bezier(.2,.9,.3,1.2)}
+.undo-toast button{background:var(--caramel);color:#fff;border:0;border-radius:10px;padding:7px 12px;font-weight:700}.undo-toast.out{opacity:0;transform:translate(-50%,10px);transition:.3s}
+@keyframes toastUp{from{opacity:0;transform:translate(-50%,16px) scale(.96)}to{opacity:1;transform:translate(-50%,0) scale(1)}}
+.poof{animation:poof .26s ease forwards}@keyframes poof{to{opacity:0;transform:scale(.92);filter:blur(2px)}}
+.av-btn{width:36px;height:36px;border-radius:50%;border:0;padding:0;background:var(--line);color:var(--coffee-700);font-weight:700;font-size:14px;overflow:hidden;display:inline-flex;align-items:center;justify-content:center;flex-shrink:0}
+.av-img{border-radius:50%;object-fit:cover;display:block}
+.av-big{width:72px;height:72px;border-radius:50%;background:linear-gradient(135deg,var(--caramel-light),var(--caramel));display:flex;align-items:center;justify-content:center;font-size:28px;font-weight:700;color:#fff;overflow:hidden;flex-shrink:0;animation:popIn .4s cubic-bezier(.2,.9,.3,1.3)}
+@keyframes popIn{from{transform:scale(.6);opacity:0}to{transform:scale(1);opacity:1}}
+.av-sm{width:28px;height:28px;border-radius:50%;background:var(--line);display:inline-flex;align-items:center;justify-content:center;font-size:12px;font-weight:700;overflow:hidden;flex-shrink:0}
+.sp-row{display:flex;gap:10px;align-items:center;padding:8px 0;border-top:1px solid var(--line)}.sp-row:first-of-type{border-top:0}
+.on-dot{display:inline-block;width:7px;height:7px;border-radius:50%;background:var(--sage);vertical-align:middle;box-shadow:0 0 0 0 rgba(119,135,95,.6);animation:pulseDot 1.8s infinite}
+@keyframes pulseDot{0%{box-shadow:0 0 0 0 rgba(119,135,95,.55)}70%{box-shadow:0 0 0 7px rgba(119,135,95,0)}100%{box-shadow:0 0 0 0 rgba(119,135,95,0)}}
+.my-stats{display:grid;grid-template-columns:1fr 1fr 1.3fr;gap:10px;padding:14px 18px 0}
+.ms-card{background:var(--card);border:1px solid var(--line);border-radius:16px;padding:12px;display:flex;flex-direction:column;gap:2px;box-shadow:var(--soft);animation:riseIn .45s cubic-bezier(.2,.8,.2,1) both}
+.ms-card:nth-child(2){animation-delay:.06s}.ms-card:nth-child(3){animation-delay:.12s}
+.ms-card b{font-family:'Fraunces',serif;font-size:22px}.ms-card span{font-size:11.5px;color:var(--coffee-500)}.ms-card .btn{margin-top:6px}
+.ms-card b span{font-size:inherit;color:inherit}
+.ms-clock.on{border-color:var(--sage);background:linear-gradient(135deg,var(--card),rgba(119,135,95,.12))}
+@keyframes riseIn{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:none}}
+@media(max-width:560px){.my-stats{grid-template-columns:1fr 1fr}.ms-clock{grid-column:1/-1;flex-direction:row;align-items:center;gap:10px}.ms-clock span{flex:1}.ms-clock .btn{margin:0}}
+.chip-timer{font-size:11px;font-weight:700;padding:2px 8px;border-radius:99px;background:#EFE6D6;color:var(--coffee-700);white-space:nowrap}
+.chip-timer.late{background:#F7E1D9;color:#8A3527;animation:nudge 2.4s ease-in-out infinite}
+@keyframes nudge{0%,90%,100%{transform:none}93%{transform:translateX(-2px)}96%{transform:translateX(2px)}}
+.card[data-order-id]{animation:riseIn .35s cubic-bezier(.2,.8,.2,1) both}
+.chip,.pay-opt,.tip-chip,.theme-opt{transition:transform .12s ease,background-color .2s,border-color .2s,color .2s}
+.chip:active,.pay-opt:active,.tip-chip:active{transform:scale(.95)}
+.fee-line{animation:riseIn .3s ease both}
+@media (prefers-reduced-motion:reduce){.ms-card,.card[data-order-id],.av-big,.undo-toast,.fee-line{animation:none!important}.chip-timer.late,.on-dot{animation:none}}
+/* Liquid glass */
+html.glass body{background:radial-gradient(1200px 600px at 10% -10%,#F3D3AE 0%,transparent 60%),radial-gradient(900px 700px at 110% 10%,#D8C9EC 0%,transparent 55%),radial-gradient(900px 700px at 50% 120%,#BFDCE8 0%,transparent 60%),#EFE5D8;background-attachment:fixed;min-height:100vh}
+html.glass .app-frame,html.glass .app-frame-wide{background:transparent!important;box-shadow:none}
+html.glass{--card:rgba(255,253,249,.55);--cream-2:rgba(251,247,239,.72);--line:rgba(120,90,60,.16);--shadow:0 10px 30px -14px rgba(60,40,20,.28)}
+html.glass .card:not([style*="gradient"]),html.glass .ms-card,html.glass .theme-opt{background:rgba(255,255,255,.42)!important;border:1px solid rgba(255,255,255,.65)!important;-webkit-backdrop-filter:blur(18px) saturate(1.6);backdrop-filter:blur(18px) saturate(1.6);box-shadow:inset 0 1px 0 rgba(255,255,255,.75),0 10px 30px -14px rgba(60,40,20,.3)}
+html.glass .theme-opt.on{border-color:var(--caramel)!important}
+html.glass .topbar,html.glass .tabbar,html.glass .admin-nav{background:rgba(255,255,255,.38)!important;-webkit-backdrop-filter:blur(22px) saturate(1.7);backdrop-filter:blur(22px) saturate(1.7);border-color:rgba(255,255,255,.6)!important;box-shadow:inset 0 1px 0 rgba(255,255,255,.7)}
+html.glass .sheet{background:rgba(250,245,238,.72)!important;-webkit-backdrop-filter:blur(26px) saturate(1.6);backdrop-filter:blur(26px) saturate(1.6);border:1px solid rgba(255,255,255,.6)}
+html.glass .input,html.glass input,html.glass select,html.glass textarea{background:rgba(255,255,255,.55);border-color:rgba(120,90,60,.18)}
+html.glass .chip:not(.active),html.glass .btn-ghost{background:rgba(255,255,255,.45);border-color:rgba(255,255,255,.6)}
+html.glass .card{position:relative}
+html.glass .card::before{content:'';position:absolute;inset:0;border-radius:inherit;pointer-events:none;background:linear-gradient(160deg,rgba(255,255,255,.55),rgba(255,255,255,0) 38%)}
+html.glass .card>*{position:relative}
+html.glass.dark body{background:radial-gradient(1000px 600px at 0% -10%,#4A2A16 0%,transparent 60%),radial-gradient(900px 700px at 110% 10%,#2B2450 0%,transparent 55%),radial-gradient(900px 700px at 50% 120%,#123440 0%,transparent 60%),#120D0A;background-attachment:fixed}
+html.glass.dark{--card:rgba(40,30,24,.5);--cream-2:rgba(29,22,17,.75);--line:rgba(255,255,255,.1)}
+html.glass.dark .card:not([style*="gradient"]),html.glass.dark .ms-card,html.glass.dark .theme-opt{background:rgba(255,255,255,.06)!important;border-color:rgba(255,255,255,.12)!important;box-shadow:inset 0 1px 0 rgba(255,255,255,.08),0 10px 30px -14px rgba(0,0,0,.6)}
+html.glass.dark .card::before{background:linear-gradient(160deg,rgba(255,255,255,.08),rgba(255,255,255,0) 40%)}
+html.glass.dark .topbar,html.glass.dark .tabbar,html.glass.dark .admin-nav{background:rgba(20,15,12,.45)!important;border-color:rgba(255,255,255,.08)!important}
+html.glass.dark .sheet{background:rgba(26,20,16,.78)!important;border-color:rgba(255,255,255,.08)}
+html.glass.dark .input,html.glass.dark input,html.glass.dark select,html.glass.dark textarea{background:rgba(0,0,0,.25)}
+html.glass.dark .chip:not(.active),html.glass.dark .btn-ghost{background:rgba(255,255,255,.07);border-color:rgba(255,255,255,.1)}
+@supports not ((backdrop-filter:blur(1px)) or (-webkit-backdrop-filter:blur(1px))){html.glass .card,html.glass .ms-card,html.glass .topbar,html.glass .tabbar,html.glass .admin-nav,html.glass .sheet{background:rgba(255,253,249,.94)!important}html.glass.dark .card,html.glass.dark .topbar,html.glass.dark .tabbar,html.glass.dark .sheet{background:rgba(36,27,21,.96)!important}}
+@media (prefers-reduced-transparency:reduce){html.glass .card,html.glass .topbar,html.glass .tabbar,html.glass .sheet{-webkit-backdrop-filter:none;backdrop-filter:none;background:var(--cream-2)!important}}
+html.dark .chip-timer{background:#3A2C20;color:var(--coffee-900)}html.dark .chip-timer.late{background:#4A2420;color:#F2A597}
+
 /* ---- v24 ---- */
 .stamp-card{padding:16px;margin-bottom:20px}
 .stamps{display:grid;gap:10px;justify-items:center}
@@ -550,7 +613,7 @@ html.dark .progress-bar,html.dark .progress{background:#3A2E25}
 // Bumped on every real deploy. Lets a running tab/installed PWA detect a
 // newer version is live on the server and prompt to refresh, instead of
 // silently running stale code forever (a common PWA gotcha).
-const APP_BUILD = '2026-10-13-02';
+const APP_BUILD = '2026-10-13-03';
 // ---- v23 updates + features ----
 function safeToAutoReload(){ return !(state.cart||[]).length && !modalInUse() && !isEditingSomething() && !state.adminMoreOpen && !document.querySelector('.sheet'); }
 async function fetchLatestBuild(){
@@ -578,10 +641,10 @@ function todayReportText(){
   const paid = ok.filter(o => o.payment_confirmed);
   const sales = paid.reduce((a, o) => a + Number(o.total || 0), 0), tips = paid.reduce((a, o) => a + Number(o.tip || 0), 0);
   const unpaid = ok.filter(o => !o.payment_confirmed).reduce((a, o) => a + Number(o.total || 0) + Number(o.tip || 0), 0);
-  const by = { cash: 0, bank: 0, qr: 0 }; paid.forEach(o => by[o.payment_method || 'cash'] += Number(o.total || 0) + Number(o.tip || 0));
+  const fees = paid.reduce((a, o) => a + Number(o.payment_fee || 0), 0); const by = { cash: 0, bank: 0, qr: 0, card: 0 }; paid.forEach(o => by[o.payment_method || 'cash'] += Number(o.total || 0) + Number(o.tip || 0));
   const cnt = {}; ok.forEach(o => (o.order_items || []).forEach(i => cnt[i.product_name] = (cnt[i.product_name] || 0) + Number(i.quantity || 0)));
   const top = Object.entries(cnt).sort((a, b) => b[1] - a[1]).slice(0, 3).map(([n, c]) => `${n} ×${c}`).join(', ');
-  return `${state.settings?.business_name || 'Filter'} — ${new Date().toLocaleDateString([], { weekday: 'short', day: 'numeric', month: 'short' })}\nOrders: ${ok.length}${t.length - ok.length ? ` (+${t.length - ok.length} cancelled/removed)` : ''}\nSales: ${money(sales)}\nTips: ${money(tips)}\nCash ${money(by.cash)} · Bank ${money(by.bank)} · QR ${money(by.qr)}\nStill to collect: ${money(unpaid)}${top ? `\nTop: ${top}` : ''}`;
+  return `${state.settings?.business_name || 'Filter'} — ${new Date().toLocaleDateString([], { weekday: 'short', day: 'numeric', month: 'short' })}\nOrders: ${ok.length}${t.length - ok.length ? ` (+${t.length - ok.length} cancelled/removed)` : ''}\nSales: ${money(sales)}\nTips: ${money(tips)}${fees ? `\nPayment fees: ${money(fees)}` : ''}\nCash ${money(by.cash)} · Bank ${money(by.bank)} · QR ${money(by.qr)}${by.card ? ` · Card ${money(by.card)}` : ''}\nStill to collect: ${money(unpaid)}${top ? `\nTop: ${top}` : ''}`;
 }
 async function shareTodayReport(){
   const text = todayReportText();
@@ -1052,6 +1115,7 @@ function rtStart(){
   const changes = [
     staff ? { event: '*', schema: 'public', table: 'orders' } : { event: '*', schema: 'public', table: 'orders', filter: 'customer_id=eq.' + uid },
     { event: 'INSERT', schema: 'public', table: 'notifications', filter: 'user_id=eq.' + uid },
+    staff ? { event: 'INSERT', schema: 'public', table: 'order_events' } : { event: 'INSERT', schema: 'public', table: 'order_events', filter: 'customer_id=eq.' + uid },
   ];
   RT.topic = 'realtime:filter-' + uid.slice(0, 8);
   ws.onopen = () => {
@@ -1063,7 +1127,7 @@ function rtStart(){
     let m; try { m = JSON.parse(ev.data); } catch (e) { return; }
     if (m.topic !== RT.topic) return;
     if (m.event === 'phx_reply' && m.payload?.status === 'ok' && !RT.joined) { RT.joined = true; setPollRate(); }
-    if (m.event === 'postgres_changes') rtKick();
+    if (m.event === 'postgres_changes') { const rec = m.payload?.data?.record; if (m.payload?.data?.table === 'order_events' && rec?.kind === 'deleted' && rec.order_id) { dropOrderLocally(rec.order_id); if (state.orderDetailId === rec.order_id) state.orderDetailId = null; if (!isEditingSomething()) render(); } else if (rec?.kind === 'restored') _deletedIds.delete(rec.order_id); rtKick(); }
     if (m.event === 'system' && m.payload?.status === 'error') { RT.joined = false; setPollRate(); }
   };
   ws.onclose = () => { RT.joined = false; clearInterval(RT.hb); setPollRate(); if (RT.ws === ws) rtRetry(); };
@@ -1115,7 +1179,7 @@ function pollSignature(){
 }
 // A customizer/sheet the person is using is never rebuilt by background data;
 // it picks up fresh data the next time they interact.
-function modalInUse(){ return !!(state.quickActionsId || state.customerProfile || state.productModal || state.checkoutOpen || state.cartOpen || state.reviewModal || state.chatOpen || state.membershipCardOpen || state.orderDetailId || state.iosInstallModal || state.adminMoreOpen || state.receiptOrderId); }
+function modalInUse(){ return !!(state.accountOpen || state.quickActionsId || state.customerProfile || state.productModal || state.checkoutOpen || state.cartOpen || state.reviewModal || state.chatOpen || state.membershipCardOpen || state.orderDetailId || state.iosInstallModal || state.adminMoreOpen || state.receiptOrderId); }
 async function pollTick(opts){
     const fast = !!(opts && opts.fast);
     if (_polling) { if (fast) setTimeout(() => pollTick(opts), 400); return; }
@@ -1172,7 +1236,7 @@ async function loadFavorites(){
 }
 async function loadOrders(){
   const { data } = await sb.from('orders').select('*, order_items(*, order_item_options(*))').eq('customer_id', state.session.user.id).order('created_at', { ascending: false });
-  state.orders = data || [];
+  state.orders = (data || []).filter(o => !_deletedIds.has(o.id));
 }
 async function loadNotifications(){
   const { data } = await sb.from('notifications').select('*').eq('user_id', state.session.user.id).order('created_at', { ascending: false }).limit(30);
@@ -1180,7 +1244,7 @@ async function loadNotifications(){
 }
 async function loadWorkerOrders(){
   const { data } = await sb.from('orders').select('*, order_items(*, order_item_options(*)), profiles!orders_customer_id_fkey(full_name, phone)').order('created_at', { ascending: false }).limit(100);
-  state.workerOrders = data || [];
+  state.workerOrders = (data || []).filter(o => !_deletedIds.has(o.id));
 }
 
 // ---------------- CART ----------------
@@ -1205,14 +1269,16 @@ async function placeOrder({ pickupDate, pickupTime, notes }){
   discount += loyaltyDiscount;
   const taxable = Math.max(subtotal - discount, 0);
   const tax = +(taxable * taxRate).toFixed(2);
-  const total = +(taxable + tax).toFixed(2);
-  const pointsEarned = Math.floor(total * Number(state.settings?.loyalty_points_per_currency || 1));
+  const payM = availablePayMethods().includes(state.payMethod) ? state.payMethod : 'cash';
+  const fee = feeFor(taxable + tax, payM);
+  const total = +(taxable + tax + fee).toFixed(2);
+  const pointsEarned = Math.floor((taxable + tax) * Number(state.settings?.loyalty_points_per_currency || 1));
 
   const { data: order, error } = await sb.from('orders').insert({
     customer_id: state.session.user.id, status: 'pending', fulfillment_type: 'pickup',
     pickup_date: pickupDate, pickup_time: pickupTime, subtotal, discount_amount: +discount.toFixed(2),
     tax_amount: tax, total, loyalty_points_redeemed: state.redeemPoints, loyalty_discount_amount: +loyaltyDiscount.toFixed(2),
-    loyalty_points_earned: pointsEarned, promo_id: promoId, special_instructions: notes, payment_method: availablePayMethods().includes(state.payMethod) ? state.payMethod : 'cash', tip: tipAmt(),
+    loyalty_points_earned: pointsEarned, promo_id: promoId, special_instructions: notes, payment_method: payM, payment_fee: fee, tip: tipAmt(),
   }).select().single();
   if (error) { showToast('Order failed: ' + error.message, 'err'); return null; }
 
@@ -1442,7 +1508,7 @@ async function loadAnalytics(force){
   _anLoading = true;
   try {
   const since = new Date(); since.setDate(since.getDate() - 62);
-  const { data } = await sb.from('orders').select('id, order_number, created_at, total, tip, status, payment_confirmed, payment_method, excluded_from_sales, customer_id, profiles!orders_customer_id_fkey(full_name, phone), order_items(product_name, quantity, unit_price)').gte('created_at', since.toISOString()).order('created_at', { ascending: false }).limit(2000);
+  const { data } = await sb.from('orders').select('id, order_number, created_at, completed_at, preparing_at, ready_at, completed_by, payment_fee, total, tip, status, payment_confirmed, payment_method, excluded_from_sales, customer_id, profiles!orders_customer_id_fkey(full_name, phone), order_items(product_name, quantity, unit_price)').gte('created_at', since.toISOString()).order('created_at', { ascending: false }).limit(2000);
   _an = data || []; _anAt = Date.now();
   } catch (e) { _an = _an || []; } finally { _anLoading = false; }
   if (['dashboard','insights','shop'].includes(state.adminTab) && !modalInUse() && !isEditingSomething()) render();
@@ -1475,8 +1541,8 @@ function topCustomersHtml(){
 function csvCell(v){ const s = String(v ?? ''); return /[",\n]/.test(s) ? '"' + s.replace(/"/g, '""') + '"' : s; }
 async function exportOrdersCsv(){
   await loadAnalytics(true);
-  const rows = [['Order #','Date','Time','Customer','Phone','Items','Total (Rs)','Tip (Rs)','Status','Paid','Method','Counted in sales']];
-  (_an || []).forEach(o => { const d = new Date(o.created_at); rows.push([o.order_number, localDateStr(d), d.toTimeString().slice(0, 5), o.profiles?.full_name || '', o.profiles?.phone || '', (o.order_items || []).map(i => `${i.quantity}x ${i.product_name}`).join('; '), Number(o.total || 0), Number(o.tip || 0), o.status, o.payment_confirmed ? 'yes' : 'no', o.payment_method || 'cash', o.excluded_from_sales ? 'no' : 'yes']); });
+  const rows = [['Order #','Date','Time','Customer','Phone','Items','Total (Rs)','Payment fee (Rs)','Tip (Rs)','Status','Paid','Method','Counted in sales']];
+  (_an || []).forEach(o => { const d = new Date(o.created_at); rows.push([o.order_number, localDateStr(d), d.toTimeString().slice(0, 5), o.profiles?.full_name || '', o.profiles?.phone || '', (o.order_items || []).map(i => `${i.quantity}x ${i.product_name}`).join('; '), Number(o.total || 0), Number(o.payment_fee || 0), Number(o.tip || 0), o.status, o.payment_confirmed ? 'yes' : 'no', o.payment_method || 'cash', o.excluded_from_sales ? 'no' : 'yes']); });
   const csv = '\ufeff' + rows.map(r => r.map(csvCell).join(',')).join('\n');
   const file = new File([csv], `filter-orders-${localDateStr(new Date())}.csv`, { type: 'text/csv' });
   try { if (navigator.canShare && navigator.canShare({ files: [file] }) && /iPhone|iPad|Android/.test(navigator.userAgent)) { await navigator.share({ files: [file], title: 'Filter orders' }); return; } } catch (e) { if (e && e.name === 'AbortError') return; }
@@ -1594,7 +1660,7 @@ async function loadShop(force){
 function renderAdminShop(){
   if (!_shop) { loadShop(); return `<div class="card" style="padding:16px"><div class="skel" style="height:160px"></div></div>`; }
   if (!_an) loadAnalytics();
-  return profitCardHtml() + inventoryHtml() + shiftNotesHtml();
+  return staffPerfHtml() + profitCardHtml() + inventoryHtml() + shiftNotesHtml();
 }
 const EXP_CATS = ['Beans & tea', 'Milk & dairy', 'Supplies', 'Packaging', 'Utilities', 'Other'];
 function profitCardHtml(){
@@ -1678,6 +1744,208 @@ async function saveCustNote(tagsOnly){
 }
 function toggleCustTag(t){ const n = state.customerProfile?.note; if (!n) return; const el = document.getElementById('cust-note'); if (el) n.note = el.value; n.tags = n.tags.includes(t) ? n.tags.filter(x => x !== t) : [...n.tags, t]; render(); saveCustNote(true); }
 
+// ---- v26 features ----
+// Appearance: normal / glass / dark (per device)
+function themeMode(){ const c = document.documentElement.classList; return c.contains('glass') ? (c.contains('dark') ? 'glass-dark' : 'glass') : c.contains('dark') ? 'dark' : 'normal'; }
+function setTheme(m){
+  const c = document.documentElement.classList; c.toggle('dark', m === 'dark' || m === 'glass-dark'); c.toggle('glass', m === 'glass' || m === 'glass-dark');
+  try { localStorage.setItem('filter_theme', m); } catch (e) {}
+  const meta = document.querySelector('meta[name=theme-color]'); if (meta) meta.content = c.contains('dark') ? '#17110D' : c.contains('glass') ? '#EADCC8' : '#F6F0E4';
+  render();
+}
+function appearanceHtml(){
+  const cur = themeMode(), opts = [['normal', 'Classic', '☀️'], ['glass', 'Liquid glass', '🫧'], ['dark', 'Dark', '🌙'], ['glass-dark', 'Glass dark', '🌌']];
+  return `<div class="card" style="padding:16px 18px;margin-bottom:16px"><div style="display:flex;justify-content:space-between;align-items:baseline;margin-bottom:10px"><b>Appearance</b><span class="meta">saved on this device</span></div>
+    <div class="theme-opts">${opts.map(([k, l, i]) => `<button class="theme-opt th-${k} ${cur === k ? 'on' : ''}" aria-pressed="${cur === k}" onclick="setTheme('${k}')"><span class="th-swatch"><span>${i}</span></span>${l}</button>`).join('')}</div></div>`;
+}
+function darkToggleHtml(){ return appearanceHtml(); }
+function toggleDark(){ setTheme(isDark() ? (document.documentElement.classList.contains('glass') ? 'glass' : 'normal') : (document.documentElement.classList.contains('glass') ? 'glass-dark' : 'dark')); }
+
+// Payment surcharge (display only — the server recomputes and enforces it)
+function feePct(m){ const s = state.settings || {}; const on = { card: s.card_fee_on, qr: s.qr_fee_on, bank: s.bank_fee_on }[m]; const pct = Number({ card: s.card_fee_pct, qr: s.qr_fee_pct, bank: s.bank_fee_pct }[m] || 0); return on && pct > 0 ? pct : 0; }
+function curPayMethod(){ const ms = availablePayMethods(); return ms.includes(state.payMethod) ? state.payMethod : 'cash'; }
+function feeFor(base, m){ return Math.round(Math.max(0, base) * feePct(m || curPayMethod()) / 100); }
+function feeLabel(m){ return ({ card: 'Card', qr: 'QR', bank: 'Bank' })[m] + ' fee'; }
+function feeRowHtml(base){ const m = curPayMethod(), f = feeFor(base, m); return f > 0 ? `<div style="display:flex;justify-content:space-between;margin-bottom:6px"><span>${feeLabel(m)} (${feePct(m)}%)</span><span>${money(f)}</span></div>` : ''; }
+function feeSettingsHtml(){
+  const s = state.feeDraft || (state.feeDraft = { card_enabled: !!state.settings?.card_enabled, card_fee_on: !!state.settings?.card_fee_on, card_fee_pct: Number(state.settings?.card_fee_pct || 0), qr_fee_on: !!state.settings?.qr_fee_on, qr_fee_pct: Number(state.settings?.qr_fee_pct || 0), bank_fee_on: !!state.settings?.bank_fee_on, bank_fee_pct: Number(state.settings?.bank_fee_pct || 0) });
+  const row = (k, l) => `<div class="fee-row"><span style="flex:1"><b>${l}</b></span><button class="switch ${s[k + '_fee_on'] ? 'on' : ''}" role="switch" aria-checked="${!!s[k + '_fee_on']}" aria-label="${l} fee" onclick="state.feeDraft.${k}_fee_on=!state.feeDraft.${k}_fee_on; render()"><span></span></button><input class="input" type="number" inputmode="decimal" min="0" max="10" step="0.5" value="${s[k + '_fee_pct']}" ${s[k + '_fee_on'] ? '' : 'disabled'} oninput="state.feeDraft.${k}_fee_pct=this.value" aria-label="${l} fee percent"><span class="meta">%</span></div>`;
+  return `<div class="card" style="padding:16px;margin-top:16px"><h3 style="margin:0 0 4px;font-size:15px">💳 Payment methods & fees</h3><p class="meta" style="margin:0 0 12px">A fee is added to the customer's total for that payment method (max 10%). Points are never earned on the fee. The server calculates it, so it can't be skipped.</p>
+    <label style="font-size:14px;display:flex;gap:8px;align-items:center;margin-bottom:12px"><input type="checkbox" ${s.card_enabled ? 'checked' : ''} onchange="state.feeDraft.card_enabled=this.checked"> Offer "Card at pickup" at checkout</label>
+    ${row('card', 'Card')}${row('qr', 'QR')}${row('bank', 'Bank transfer')}
+    <button class="btn btn-primary" style="width:100%;margin-top:12px" onclick="saveFeeSettings()">Save fees</button></div>`;
+}
+async function saveFeeSettings(){
+  const d = state.feeDraft, p = { card_enabled: !!d.card_enabled };
+  for (const k of ['card', 'qr', 'bank']) { const v = Number(d[k + '_fee_pct']); if (!(v >= 0 && v <= 10)) { showToast('Fees must be between 0 and 10%', 'err'); return; } p[k + '_fee_on'] = !!d[k + '_fee_on']; p[k + '_fee_pct'] = Math.round(v * 100) / 100; }
+  const { data, error } = await sb.from('business_settings').update(p).eq('id', true).select().maybeSingle();
+  if (error || !data) { showToast('Not saved: ' + (error?.message || 'try again'), 'err'); return; }
+  state.settings = { ...state.settings, ...data }; state.feeDraft = null; showToast('Payment fees saved', 'ok'); render();
+}
+
+// Delete order (admin) — soft delete on the server; hidden everywhere by RLS
+function deleteOrderHtml(o){
+  if (state.profile?.role !== 'admin') return '';
+  if (state.deleteArm === o.id) return `<div class="excl-box warn"><div style="flex:1"><b>Delete order #${o.order_number}?</b><div class="meta">It disappears from every list and report. Points already given aren't changed. You can restore it from Orders → Recently deleted.</div></div><div style="display:flex;gap:8px"><button class="btn btn-ghost btn-sm" onclick="setState({deleteArm:null})">Keep</button><button class="btn btn-sm btn-danger-soft" onclick="deleteOrder('${o.id}')">Delete</button></div></div>`;
+  return `<button class="link-danger" style="margin:0 0 16px;display:block" onclick="setState({deleteArm:'${o.id}'})">🗑 Delete order</button>`;
+}
+const _deletedIds = new Set();
+function dropOrderLocally(id){
+  _deletedIds.add(id);
+  state.workerOrders = state.workerOrders.filter(o => o.id !== id); state.orders = state.orders.filter(o => o.id !== id);
+  if (_an) _an = _an.filter(o => o.id !== id); if (state.customerProfile?.orders) state.customerProfile.orders = state.customerProfile.orders.filter(o => o.id !== id);
+  state.notifications = (state.notifications || []).filter(n => n.related_order_id !== id);
+}
+async function deleteOrder(id){
+  const { error } = await sb.rpc('admin_delete_order', { p_order_id: id, p_deleted: true });
+  if (error) { showToast('Not deleted: ' + error.message, 'err'); return; }
+  const card = document.querySelector(`[data-order-id="${id}"]`); if (card && !RM()) { card.classList.add('poof'); }
+  dropOrderLocally(id); state._deleted = null; showUndoToast('Order deleted', () => restoreOrder(id));
+  setTimeout(() => setState({ deleteArm: null, orderDetailId: null }), card && !RM() ? 260 : 0);
+}
+async function restoreOrder(id){
+  const { error } = await sb.rpc('admin_delete_order', { p_order_id: id, p_deleted: false });
+  if (error) { showToast('Not restored: ' + error.message, 'err'); return; }
+  _deletedIds.delete(id); state._deleted = null; showToast('Order restored', 'ok'); _anAt = 0; await loadWorkerOrders(); render();
+}
+function showUndoToast(text, undo){
+  document.querySelectorAll('.undo-toast').forEach(e => e.remove());
+  const el = document.createElement('div'); el.className = 'undo-toast'; el.innerHTML = `<span>${esc(text)}</span><button>Undo</button>`;
+  el.querySelector('button').onclick = () => { el.remove(); undo(); }; document.body.appendChild(el);
+  setTimeout(() => { el.classList.add('out'); setTimeout(() => el.remove(), 300); }, 6000);
+}
+function deletedOrdersHtml(){
+  if (state.profile?.role !== 'admin') return '';
+  if (!state.showDeleted) return `<button class="link" style="display:block;margin:18px auto 0;font-size:13px" onclick="loadDeletedOrders()">🗑 Recently deleted orders</button>`;
+  const l = state._deleted;
+  return `<div class="card" style="padding:14px 16px;margin-top:18px"><div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px"><b>Recently deleted</b><button class="btn btn-ghost btn-sm" onclick="setState({showDeleted:false})">Hide</button></div>
+    ${!l ? '<div class="skel" style="height:40px"></div>' : l.length ? l.map(o => `<div class="lb-row"><span style="flex:1;min-width:0"><b>#${o.order_number}</b> <span class="meta">· ${money(o.total)} · deleted ${timeAgo(o.deleted_at)}</span></span><button class="btn btn-outline btn-sm" onclick="restoreOrder('${o.id}')">Restore</button></div>`).join('') : '<div class="meta">Nothing deleted.</div>'}</div>`;
+}
+async function loadDeletedOrders(){ state.showDeleted = true; state._deleted = null; render(); const { data, error } = await sb.rpc('admin_list_deleted_orders', {}); state._deleted = error ? [] : (data || []); if (error) showToast(error.message, 'err'); render(); }
+
+// Account editing (everyone: customers, staff, admin)
+function avatarHtml(p, size){ const s = size || 36, n = esc((p?.full_name || '?').trim().charAt(0).toUpperCase() || '?'); return p?.avatar_url ? `<img src="${esc(p.avatar_url)}" alt="" class="av-img" style="width:${s}px;height:${s}px">` : n; }
+function openAccount(){ const p = state.profile || {}; state.acct = { name: p.full_name || '', phone: p.phone || '', email: state.session?.user?.email || '' }; setState({ accountOpen: true, notifPanelOpen: false }); }
+function renderAccountSheet(fresh){
+  const a = state.acct || {}, p = state.profile || {}, pending = state.session?.user?.new_email;
+  return `<div class="scrim" onclick="if(event.target===this) setState({accountOpen:false})"><div class="sheet ${fresh ? '' : 'no-anim'}">
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px"><h2 class="display" style="margin:0;font-size:22px">Your account</h2><button class="btn btn-ghost btn-sm" aria-label="Close" onclick="setState({accountOpen:false})">✕</button></div>
+    <div style="display:flex;align-items:center;gap:14px;margin-bottom:16px"><div class="av-big">${avatarHtml(p, 72)}</div><div style="display:flex;flex-direction:column;gap:6px"><label class="btn btn-outline btn-sm" style="cursor:pointer">📷 ${p.avatar_url ? 'Change photo' : 'Add photo'}<input type="file" accept="image/*" style="display:none" onchange="uploadAvatar(this)"></label>${p.avatar_url ? `<button class="link-danger" style="font-size:12px;text-align:left" onclick="removeAvatar()">Remove photo</button>` : ''}</div></div>
+    <label class="small">Name</label><input class="input" id="ac-name" maxlength="60" autocomplete="name" value="${esc(a.name)}" oninput="state.acct.name=this.value" style="margin:6px 0 12px">
+    <label class="small">Phone</label><input class="input" id="ac-phone" type="tel" inputmode="tel" maxlength="20" autocomplete="tel" placeholder="03xx xxxxxxx" value="${esc(a.phone)}" oninput="state.acct.phone=this.value" style="margin:6px 0 12px">
+    <button class="btn btn-primary" style="width:100%" id="ac-save" onclick="saveAccount()">Save name & phone</button>
+    <div class="sec-title" style="margin-top:20px">Email</div>
+    <input class="input" id="ac-email" type="email" inputmode="email" autocomplete="email" autocapitalize="off" spellcheck="false" value="${esc(a.email)}" oninput="state.acct.email=this.value" style="margin:6px 0 8px">
+    <div class="meta" style="margin-bottom:8px">${pending ? `Waiting for you to confirm <b>${esc(pending)}</b> — check that inbox.` : "We'll email a confirmation link to the new address. Your email only changes after you tap it."}</div>
+    <button class="btn btn-outline" style="width:100%" id="ac-email-btn" onclick="changeEmail()">Change email</button>
+  </div></div>`;
+}
+async function saveAccount(){
+  const name = (document.getElementById('ac-name')?.value || '').trim(), phone = (document.getElementById('ac-phone')?.value || '').trim();
+  if (name.length < 2) { showToast('Please enter your name', 'err'); return; }
+  if (phone && !/^\+?[0-9 ()-]{7,20}$/.test(phone)) { showToast('That phone number looks wrong', 'err'); return; }
+  const btn = document.getElementById('ac-save'); if (btn) btn.disabled = true;
+  const { data, error } = await sb.from('profiles').update({ full_name: name, phone: phone || null }).eq('id', state.session.user.id).select().maybeSingle();
+  if (btn) btn.disabled = false;
+  if (error || !data) { showToast('Not saved: ' + (error?.message || 'try again'), 'err'); return; }
+  state.profile = data; showToast('Profile updated', 'ok'); render();
+}
+async function changeEmail(){
+  const email = (document.getElementById('ac-email')?.value || '').trim().toLowerCase();
+  if (!/^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(email)) { showToast('Enter a valid email address', 'err'); return; }
+  if (email === (state.session?.user?.email || '').toLowerCase()) { showToast("That's already your email"); return; }
+  const btn = document.getElementById('ac-email-btn'); if (btn) { btn.disabled = true; btn.textContent = 'Sending…'; }
+  try {
+    const resp = await fetch(`${SUPABASE_URL}/auth/v1/user?redirect_to=${encodeURIComponent(location.origin + location.pathname)}`, { method: 'PUT', headers: authHeaders({ 'Content-Type': 'application/json' }), body: JSON.stringify({ email }) });
+    const json = await parseJsonSafe(resp);
+    if (!resp.ok) { const m = (json && (json.msg || json.error_description || json.message)) || 'Could not change email'; showToast(/already|registered|exists/i.test(m) ? 'That email is already used by another account' : /rate|seconds/i.test(m) ? 'Please wait a minute before trying again' : m, 'err'); return; }
+    if (json && json.email) state.session.user = { ...state.session.user, ...json };
+    showToast(`Check ${email} for a confirmation link`, 'ok'); render();
+  } catch (e) { showToast('Network error — try again', 'err'); }
+  finally { if (btn) { btn.disabled = false; btn.textContent = 'Change email'; } }
+}
+function shrinkImage(file, max){ return new Promise((res, rej) => { const img = new Image(); img.onload = () => { const r = Math.min(1, max / Math.max(img.width, img.height)), c = document.createElement('canvas'); const side = Math.min(img.width, img.height); c.width = c.height = Math.round(Math.min(max, side)); const x = c.getContext('2d'); x.drawImage(img, (img.width - side) / 2, (img.height - side) / 2, side, side, 0, 0, c.width, c.height); c.toBlob(b => b ? res(b) : rej(new Error('Could not read image')), 'image/jpeg', .85); URL.revokeObjectURL(img.src); }; img.onerror = () => rej(new Error('Could not read image')); img.src = URL.createObjectURL(file); }); }
+async function uploadAvatar(input){
+  const f = input.files && input.files[0]; if (!f) return;
+  if (!/^image\//.test(f.type)) { showToast('Choose an image', 'err'); return; }
+  try {
+    const blob = await shrinkImage(f, 320), uid = state.session.user.id, path = `${uid}/avatar-${Date.now()}.jpg`;
+    const resp = await fetch(`${SUPABASE_URL}/storage/v1/object/avatars/${path}`, { method: 'POST', headers: { apikey: SUPABASE_KEY, Authorization: `Bearer ${state.session.access_token}`, 'Content-Type': 'image/jpeg', 'x-upsert': 'true' }, body: blob });
+    if (!resp.ok) { const j = await parseJsonSafe(resp); throw new Error(j?.message || 'Upload failed'); }
+    const url = `${SUPABASE_URL}/storage/v1/object/public/avatars/${path}`, old = state.profile?.avatar_url;
+    const { data, error } = await sb.from('profiles').update({ avatar_url: url }).eq('id', uid).select().maybeSingle();
+    if (error || !data) throw new Error(error?.message || 'Not saved');
+    state.profile = data; showToast('Photo updated', 'ok'); render(); removeAvatarFile(old);
+  } catch (e) { showToast(e.message, 'err'); }
+}
+function removeAvatarFile(url){ const m = url && url.match(/\/avatars\/(.+)$/); if (m && m[1].startsWith(state.session.user.id + '/')) fetch(`${SUPABASE_URL}/storage/v1/object/avatars/${m[1]}`, { method: 'DELETE', headers: { apikey: SUPABASE_KEY, Authorization: `Bearer ${state.session.access_token}` } }).catch(() => {}); }
+async function removeAvatar(){ const old = state.profile?.avatar_url; const { data, error } = await sb.from('profiles').update({ avatar_url: null }).eq('id', state.session.user.id).select().maybeSingle(); if (error || !data) { showToast('Not saved', 'err'); return; } state.profile = data; removeAvatarFile(old); render(); }
+function accountBtnHtml(){ return `<button class="av-btn" aria-label="Your account" title="Your account" onclick="openAccount()">${avatarHtml(state.profile, 34)}</button>`; }
+
+// Customer: share order status
+async function shareOrderStatus(id){
+  const o = findAnyOrder(id); if (!o) return;
+  const st = { pending: 'sent — waiting for the café to accept', accepted: 'accepted', preparing: 'being made right now ☕', ready: 'READY for pickup!', completed: 'picked up', cancelled: 'cancelled' }[o.status] || o.status;
+  const eta = etaMinutes && etaMinutes(o), text = `My ${state.settings?.business_name || 'Filter'} order #${o.order_number} is ${st}${eta && ['accepted', 'preparing'].includes(o.status) ? ` — about ${eta} min to go` : ''}.`;
+  try { if (navigator.share) { await navigator.share({ text }); return; } } catch (e) { if (e && e.name === 'AbortError') return; }
+  try { await navigator.clipboard.writeText(text); showToast('Status copied — paste it anywhere', 'ok'); } catch (e) { showToast(text); }
+}
+
+// Staff: my shift, clock in/out, prep timers
+let _myShift = undefined, _shiftLoading = false;
+async function loadMyShift(force){
+  if (_shiftLoading || (_myShift !== undefined && !force)) return; _shiftLoading = true;
+  try { const since = new Date(); since.setHours(0, 0, 0, 0); const { data } = await sb.from('staff_shifts').select('*').eq('user_id', state.session.user.id).gte('clock_in', new Date(since.getTime() - 864e5).toISOString()).order('clock_in', { ascending: false }).limit(20); _myShift = data || []; }
+  finally { _shiftLoading = false; } if (!modalInUse() && !isEditingSomething()) render();
+}
+function shiftMinutesToday(list){ const s = new Date(); s.setHours(0, 0, 0, 0); return (list || []).reduce((a, x) => { const i = Math.max(new Date(x.clock_in), s), o = x.clock_out ? new Date(x.clock_out) : new Date(); return a + Math.max(0, (o - i) / 60000); }, 0); }
+function fmtMins(m){ m = Math.round(m); return m >= 60 ? `${Math.floor(m / 60)}h ${m % 60}m` : `${m}m`; }
+async function clockToggle(){
+  const open = (_myShift || []).find(x => !x.clock_out);
+  const r = open ? await sb.from('staff_shifts').update({ clock_out: new Date().toISOString() }).eq('id', open.id).select('id') : await sb.from('staff_shifts').insert({ user_id: state.session.user.id });
+  if (r.error) { showToast(r.error.message, 'err'); return; }
+  showToast(open ? 'Clocked out — thanks!' : 'Clocked in — have a good shift ☕', 'ok'); if (!open) burst(14); await loadMyShift(true);
+}
+function myStatsHtml(){
+  if (_myShift === undefined) loadMyShift();
+  const me = state.session.user.id, today = localDateStr(new Date());
+  const done = state.workerOrders.filter(o => o.completed_by === me && o.status === 'completed' && o.completed_at && localDateStr(new Date(o.completed_at)) === today);
+  const prep = done.filter(o => o.preparing_at && o.ready_at).map(o => (new Date(o.ready_at) - new Date(o.preparing_at)) / 60000);
+  const open = (_myShift || []).find(x => !x.clock_out);
+  return `<div class="my-stats"><div class="ms-card"><b data-count="${done.length}">${done.length}</b><span>completed by you today</span></div><div class="ms-card"><b>${prep.length ? fmtMins(prep.reduce((a, b) => a + b, 0) / prep.length) : '—'}</b><span>your avg prep</span></div>
+    <div class="ms-card ms-clock ${open ? 'on' : ''}"><b>${_myShift === undefined ? '…' : open ? `<span class="ptimer" data-since="${open.clock_in}">${fmtMins((Date.now() - new Date(open.clock_in)) / 60000)}</span>` : fmtMins(shiftMinutesToday(_myShift))}</b><span>${open ? 'on shift' : 'worked today'}</span><button class="btn btn-sm ${open ? 'btn-outline' : 'btn-primary'}" onclick="clockToggle()">${open ? 'Clock out' : 'Clock in'}</button></div></div>`;
+}
+function prepTimerHtml(o){
+  const since = o.status === 'preparing' ? o.preparing_at : o.status === 'accepted' ? o.accepted_at : o.status === 'ready' ? o.ready_at : o.created_at; if (!since) return '';
+  const m = (Date.now() - new Date(since)) / 60000, lim = o.status === 'preparing' ? 8 : o.status === 'ready' ? 15 : 5;
+  return `<span class="ptimer chip-timer ${m > lim ? 'late' : ''}" data-since="${since}" data-lim="${lim}" title="Time in this step">⏱ ${fmtMins(m)}</span>`;
+}
+setInterval(() => { document.querySelectorAll('.ptimer[data-since]').forEach(el => { const m = (Date.now() - new Date(el.dataset.since)) / 60000; const t = (el.classList.contains('chip-timer') ? '⏱ ' : '') + fmtMins(m); if (el.textContent !== t) el.textContent = t; if (el.dataset.lim) el.classList.toggle('late', m > Number(el.dataset.lim)); }); }, 15000);
+
+// Admin: staff performance (last 7 days)
+let _staffPerf = null, _spLoading = false;
+async function loadStaffPerf(){
+  if (_spLoading) return; _spLoading = true;
+  try {
+    const since = new Date(Date.now() - 7 * 864e5).toISOString();
+    const [sh, st] = await Promise.all([sb.from('staff_shifts').select('*').gte('clock_in', since).limit(500), sb.from('profiles').select('id, full_name, role, avatar_url').in('role', ['worker', 'admin'])]);
+    _staffPerf = { shifts: sh.data || [], staff: st.data || [] };
+  } finally { _spLoading = false; } if (state.adminTab === 'shop' && !modalInUse() && !isEditingSomething()) render();
+}
+function staffPerfHtml(){
+  if (!_staffPerf || !_an) { loadStaffPerf(); if (!_an) loadAnalytics(); return `<div class="card" style="padding:16px;margin-bottom:16px"><div class="skel" style="height:80px"></div></div>`; }
+  const since = Date.now() - 7 * 864e5;
+  const rows = _staffPerf.staff.map(s => {
+    const done = _an.filter(o => o.completed_by === s.id && o.status === 'completed' && new Date(o.completed_at || o.created_at) >= since);
+    const prep = done.filter(o => o.preparing_at && o.ready_at).map(o => (new Date(o.ready_at) - new Date(o.preparing_at)) / 60000);
+    const mins = _staffPerf.shifts.filter(x => x.user_id === s.id).reduce((a, x) => a + Math.max(0, ((x.clock_out ? new Date(x.clock_out) : new Date()) - new Date(x.clock_in)) / 60000), 0);
+    return { s, n: done.length, prep: prep.length ? prep.reduce((a, b) => a + b, 0) / prep.length : null, mins, on: _staffPerf.shifts.some(x => x.user_id === s.id && !x.clock_out) };
+  }).filter(r => r.n || r.mins).sort((a, b) => b.n - a.n);
+  const max = Math.max(1, ...rows.map(r => r.n));
+  return `<div class="card" style="padding:16px;margin-bottom:16px"><div style="display:flex;justify-content:space-between;align-items:baseline;margin-bottom:8px"><div class="display" style="font-size:17px">Team · last 7 days</div><span class="meta">completed · avg prep · hours</span></div>
+    ${rows.length ? rows.map(r => `<div class="sp-row"><span class="av-sm">${avatarHtml(r.s.full_name ? r.s : { full_name: '?' }, 28)}</span><div style="flex:1;min-width:0"><div style="display:flex;justify-content:space-between;gap:8px"><b class="lb-name">${esc(r.s.full_name || 'Staff')}${r.on ? ' <span class="on-dot" title="On shift"></span>' : ''}</b><span class="meta">${r.n} · ${r.prep != null ? fmtMins(r.prep) : '—'} · ${r.mins ? fmtMins(r.mins) : '—'}</span></div><div class="eb" style="margin-top:5px"><i data-anim-w="${Math.round(r.n / max * 100)}%" style="width:${Math.round(r.n / max * 100)}%"></i></div></div></div>`).join('') : `<div class="meta">When staff clock in and complete orders, their stats show here.</div>`}</div>`;
+}
+
 let _screenKey = '', _enterT = null, _lastCartCount = 0, _freshOrderIds = new Set();
 function successPop(text){
   const el = document.createElement('div'); el.className = 'success-pop'; el.innerHTML = `<div class="sp-card"><div class="sp-check"><svg viewBox="0 0 52 52"><circle cx="26" cy="26" r="24"/><path d="M15 27l7 7 15-16"/></svg></div><div class="sp-text">${esc(text)}</div></div>`;
@@ -1695,6 +1963,7 @@ function render(){
   if (state.cartOpen) html += renderCartSheet(justOpened('cart', true)); else justOpened('cart', false);
   if (state.checkoutOpen) html += renderCheckoutSheet(justOpened('checkout', true)); else justOpened('checkout', false);
   if (state.customerProfile) html += renderCustomerProfileSheet(justOpened('custProfile', true)); else justOpened('custProfile', false);
+  if (state.accountOpen) html += renderAccountSheet(justOpened('account', true)); else justOpened('account', false);
   if (state.orderDetailId) html += renderOrderDetailSheet(justOpened('orderDetail', true)); else justOpened('orderDetail', false);
   if (state.receiptOrderId) html += renderReceiptSheet();
   if (state.quickActionsId) html += renderQuickActions();
@@ -1885,7 +2154,7 @@ function renderCustomer(){
       </div>
       <div style="display:flex;align-items:center;gap:8px">
         <div class="pts-pill">★ ${state.profile?.loyalty_points||0}</div>
-        <button class="btn btn-ghost" style="width:36px;height:36px;padding:0;border-radius:50%;font-weight:700;font-size:14px;background:${state.tab==='profile'?'var(--coffee-900)':'var(--line)'};color:${state.tab==='profile'?'var(--cream-2)':'var(--coffee-700)'}" onclick="setState({tab:'profile', notifPanelOpen:false})" title="Profile">${esc((state.profile?.full_name||'?').trim().charAt(0).toUpperCase()||'?')}</button>
+        <button class="btn btn-ghost" style="width:36px;height:36px;padding:0;border-radius:50%;font-weight:700;font-size:14px;background:${state.tab==='profile'?'var(--coffee-900)':'var(--line)'};color:${state.tab==='profile'?'var(--cream-2)':'var(--coffee-700)'}" onclick="setState({tab:'profile', notifPanelOpen:false})" title="Profile">${avatarHtml(state.profile, 36)}</button>
         ${renderInstallIconBtn()}
         ${renderBell()}
         <button class="btn btn-ghost" style="padding:9px 12px;position:relative" onclick="setState({cartOpen:true, notifPanelOpen:false})">🛍
@@ -2029,7 +2298,7 @@ function receiptData(o){
     num: o.order_number, placed: new Date(o.created_at),
     pickup: `${o.pickup_date ? new Date(o.pickup_date+'T12:00').toLocaleDateString([],{weekday:'short',day:'numeric',month:'short'}) : ''}${o.pickup_time ? ' · ' + fmtTime12(o.pickup_time.slice(0,5)) : ' · ASAP'}`,
     items, sub, promo: promo > 0 ? promo : 0, ptsRedeemed: Number(o.loyalty_points_redeemed||0), ptsDiscount: pts,
-    tax: Number(o.tax_amount||0), tip: Number(o.tip||0), total: Number(o.total||0) + Number(o.tip||0), paid: !!o.payment_confirmed, method: PAY_LABELS[o.payment_method||'cash'] || 'Cash at pickup',
+    tax: Number(o.tax_amount||0), fee: Number(o.payment_fee||0), feeLabel: o.payment_method && o.payment_method!=='cash' ? feeLabel(o.payment_method) : 'Payment fee', tip: Number(o.tip||0), total: Number(o.total||0) + Number(o.tip||0), paid: !!o.payment_confirmed, method: PAY_LABELS[o.payment_method||'cash'] || 'Cash at pickup',
     earned: Number(o.loyalty_points_earned||0), customer: o.profiles?.full_name || (o.customer_id===state.session?.user?.id ? state.profile?.full_name : '') || '',
     notes: o.special_instructions || '', status: o.status
   };
@@ -2063,6 +2332,7 @@ function receiptHtml(d){
     ${d.promo?row('Promo discount', '−'+money(d.promo)):''}
     ${d.ptsDiscount?row(`Points redeemed (${d.ptsRedeemed})`, '−'+money(d.ptsDiscount)):''}
     ${d.tax?row('Tax', money(d.tax)):''}
+    ${d.fee?row(esc(d.feeLabel), money(d.fee)):''}
     ${d.tip?row('Tip — thank you!', money(d.tip)):''}
     ${row('Total', money(d.total), 'rc-total')}
     <div class="rc-pay ${d.paid?'paid':''}">${d.paid?'✓ Paid':'Payment pending'} · ${esc(d.method)}</div>
@@ -2167,12 +2437,13 @@ async function shareReceipt(){
 function printReceipt(){ document.body.classList.add('printing-receipt'); setTimeout(() => { window.print(); setTimeout(() => document.body.classList.remove('printing-receipt'), 500); }, 50); }
 
 // ---- Payment method + QR (v16) ----
-const PAY_LABELS = { cash: 'Cash at pickup', bank: 'Bank transfer', qr: 'QR payment' };
-function payBadge(o, style=''){ const m = o.payment_method || 'cash'; if (m === 'cash') return ''; return `<span class="badge pay-${m}" style="${style}">${m === 'qr' ? 'QR' : 'Bank'}</span>`; }
+const PAY_LABELS = { cash: 'Cash at pickup', bank: 'Bank transfer', qr: 'QR payment', card: 'Card at pickup' };
+function payBadge(o, style=''){ const m = o.payment_method || 'cash'; if (m === 'cash') return ''; return `<span class="badge pay-${m}" style="${style}">${m === 'qr' ? 'QR' : m === 'card' ? 'Card' : 'Bank'}</span>`; }
 function availablePayMethods(){
   const m = ['cash'];
   if (state.payoutDetails?.show_to_customers && (state.payoutDetails.account_number || state.payoutDetails.iban)) m.push('bank');
   if (state.settings?.pay_qr_enabled && state.settings?.pay_qr_url) m.push('qr');
+  if (state.settings?.card_enabled) m.push('card');
   return m;
 }
 function renderPayMethodPicker(total){
@@ -2180,9 +2451,9 @@ function renderPayMethodPicker(total){
   if (methods.length === 1) return '';
   const cur = methods.includes(state.payMethod) ? state.payMethod : 'cash';
   const pd = state.payoutDetails || {}, st = state.settings || {};
-  const icon = { cash:'💵', bank:'🏦', qr:'▦' };
+  const icon = { cash:'💵', bank:'🏦', qr:'▦', card:'💳' };
   return `<label class="small">How will you pay?</label>
-  <div class="pay-opts">${methods.map(m=>`<button class="pay-opt ${cur===m?'on':''}" onclick="setState({payMethod:'${m}'})"><span class="pi">${icon[m]}</span>${m==='cash'?'Cash at pickup':m==='bank'?'Bank transfer':'Pay by QR'}</button>`).join('')}</div>
+  <div class="pay-opts">${methods.map(m=>`<button class="pay-opt ${cur===m?'on':''}" onclick="setState({payMethod:'${m}'})"><span class="pi">${icon[m]}</span>${m==='cash'?'Cash at pickup':m==='bank'?'Bank transfer':m==='card'?'Card at pickup':'Pay by QR'}${feePct(m)?`<span class="pay-fee">+${feePct(m)}%</span>`:''}</button>`).join('')}</div>
   ${cur==='bank' ? `<div class="card pay-panel">
       ${pd.bank_name?`<div class="kv"><span class="meta">Bank</span><span>${esc(pd.bank_name)}</span></div>`:''}
       ${pd.account_title?`<div class="kv"><span class="meta">Title</span><span>${esc(pd.account_title)}</span></div>`:''}
@@ -2197,6 +2468,7 @@ function renderPayMethodPicker(total){
       <div style="display:flex;gap:8px;margin-top:12px"><button class="btn btn-ghost btn-sm" style="flex:1" onclick="saveQrImage()">Save QR</button><button class="btn btn-ghost btn-sm" style="flex:1" onclick="setState({qrZoom:true})">Enlarge</button></div>
       <div class="pay-note">Scan with your banking app, pay <b>${money(total)}</b>, then tap Place Order — we'll confirm your payment.</div></div>` : ''}
   ${cur==='cash' ? `<div class="meta" style="margin:-4px 0 16px">Pay at the counter when you pick up.</div>` : ''}
+  ${cur==='card' ? `<div class="meta" style="margin:-4px 0 16px">Tap or insert your card at the counter when you pick up.${feePct('card')?` A ${feePct('card')}% card fee applies.`:''}</div>` : ''}
   ${state.qrZoom && cur==='qr' ? `<div class="qr-zoom" onclick="setState({qrZoom:false})"><img src="${esc(st.pay_qr_url)}" alt="Payment QR"><div style="margin-top:16px;font-weight:700">${money(total)} · tap anywhere to close</div></div>` : ''}`;
 }
 async function copyText(t){ try { await navigator.clipboard.writeText(t); showToast('Copied', 'ok'); } catch (e) { showToast(t, 'info'); } }
@@ -2536,7 +2808,7 @@ function renderCheckoutSheet(fresh){
   const discount = (state.promoResult?Number(state.promoResult.calculated_discount):0) + state.redeemPoints*loyaltyValue;
   const taxable = Math.max(subtotal-discount,0);
   const tax = taxable * Number(state.settings?.tax_rate||0);
-  const total = taxable+tax+tipAmt();
+  const total = taxable+tax+feeFor(taxable+tax)+tipAmt();
   return `<div class="scrim" onclick="if(event.target===this) setState({checkoutOpen:false})"><div class="sheet ${fresh?'':'no-anim'}">
     <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px">
       <h2 class="display" style="margin:0;font-size:22px">Checkout</h2>
@@ -2582,11 +2854,12 @@ function checkoutSummaryHtml(){
   const discount = promoDiscount+loyaltyDiscount;
   const taxable = Math.max(subtotal-discount,0);
   const tax = taxable * Number(state.settings?.tax_rate||0);
-  const total = taxable+tax;
+  const total = taxable+tax+feeFor(taxable+tax);
   return `<div class="card" style="padding:14px;font-size:13.5px">
     <div style="display:flex;justify-content:space-between;margin-bottom:6px"><span>Subtotal</span><span>${money(subtotal)}</span></div>
     ${discount>0?`<div style="display:flex;justify-content:space-between;margin-bottom:6px;color:var(--sage)"><span>Discount</span><span>−${money(discount)}</span></div>`:''}
     ${tax>0?`<div style="display:flex;justify-content:space-between;margin-bottom:6px"><span>Tax</span><span>${money(tax)}</span></div>`:''}
+    <div class="fee-line">${feeRowHtml(taxable+tax)}</div>
     ${tipAmt()>0?`<div style="display:flex;justify-content:space-between;margin-bottom:6px"><span>Tip</span><span>${money(tipAmt())}</span></div>`:''}
     <div style="display:flex;justify-content:space-between;font-weight:700;font-size:15px;padding-top:8px;border-top:1px solid var(--line)"><span>Total</span><span>${money(total+tipAmt())}</span></div>
   </div>`;
@@ -2700,10 +2973,11 @@ function renderOrderDetailSheet(fresh){
     ${o.status==='cancelled' && o.cancel_reason ? `<div style="font-size:12.5px;color:var(--danger);margin-bottom:12px"><b>Cancelled:</b> ${esc(o.cancel_reason)}</div>` : ''}
     ${['admin','worker'].includes(state.profile?.role) ? `<div style="display:flex;gap:8px;margin:0 0 12px"><button class="btn btn-ghost btn-sm" style="flex:1" onclick="shareOrderWhatsApp('${o.id}')">WhatsApp${o.profiles?.phone?' customer':''}</button><button class="btn btn-ghost btn-sm" style="flex:1" onclick="copyOrderSummary('${o.id}')">Share receipt</button>${o.profiles?.phone?`<a class="btn btn-ghost btn-sm" style="flex:1;text-decoration:none;display:inline-flex;align-items:center;justify-content:center" href="tel:${esc(o.profiles.phone)}">Call</a>`:''}</div>` : ''}
     ${o.status!=='cancelled' ? `<button class="btn btn-outline btn-sm" style="width:100%;margin:0 0 12px" onclick="openReceipt('${o.id}')">🧾 View receipt</button>` : ''}
-    ${state.profile?.role==='customer' ? `<div style="display:flex;gap:8px;margin:0 0 12px">${shopWa()?`<button class="btn btn-wa btn-sm" style="flex:1" onclick="openShopWhatsApp(findAnyOrder('${o.id}'))">${WA_SVG} Chat about this order</button>`:''}${['completed','cancelled'].includes(o.status)?`<button class="btn btn-ghost btn-sm" style="flex:1" onclick="setState({orderDetailId:null}); reorder('${o.id}')">Order again</button>`:''}</div>` : ''}
+    ${state.profile?.role==='customer' ? `<div style="display:flex;gap:8px;margin:0 0 12px">${shopWa()?`<button class="btn btn-wa btn-sm" style="flex:1" onclick="openShopWhatsApp(findAnyOrder('${o.id}'))">${WA_SVG} Chat about this order</button>`:''}${['completed','cancelled'].includes(o.status)?`<button class="btn btn-ghost btn-sm" style="flex:1" onclick="setState({orderDetailId:null}); reorder('${o.id}')">Order again</button>`:`<button class="btn btn-ghost btn-sm" style="flex:1" onclick="shareOrderStatus('${o.id}')">↗ Share status</button>`}</div>` : ''}
     ${canCancel(o) ? `<button class="link-danger" style="margin:0 0 16px" onclick="cancelOrder('${o.id}')">Cancel this order</button>` : ''}
     ${tipEditorHtml(o)}
     ${excludeSalesHtml(o)}
+    ${deleteOrderHtml(o)}
     <div style="font-size:12.5px;color:var(--coffee-500);margin-bottom:16px">Ordered ${new Date(o.created_at).toLocaleString([],{month:'short',day:'numeric',hour:'numeric',minute:'2-digit'})} · ${o.pickup_time?'pickup '+fmtTime12(o.pickup_time.slice(0,5)):'ASAP pickup'}</div>
     ${state.profile?.role==='admin' && o.status!=='cancelled' ? `<div class="card" style="padding:14px;margin-bottom:16px;background:${o.payment_confirmed?'#EAF2E9':'#FBF2E1'}">
       <div style="display:flex;justify-content:space-between;align-items:center;gap:10px">
@@ -2729,6 +3003,7 @@ function renderOrderDetailSheet(fresh){
       <div style="display:flex;justify-content:space-between;margin-bottom:6px"><span>Subtotal</span><span>${money(o.subtotal)}</span></div>
       ${o.discount_amount>0?`<div style="display:flex;justify-content:space-between;margin-bottom:6px;color:var(--sage)"><span>Discount</span><span>−${money(o.discount_amount)}</span></div>`:''}
       ${o.tax_amount>0?`<div style="display:flex;justify-content:space-between;margin-bottom:6px"><span>Tax</span><span>${money(o.tax_amount)}</span></div>`:''}
+      ${Number(o.payment_fee)>0?`<div style="display:flex;justify-content:space-between;margin-bottom:6px"><span>${feeLabel(o.payment_method)}</span><span>${money(o.payment_fee)}</span></div>`:''}
       <div style="display:flex;justify-content:space-between;font-weight:700;font-size:15px;padding-top:8px;border-top:1px solid var(--line)"><span>Total</span><span>${money(o.total)}</span></div>
       ${o.loyalty_points_earned>0?`<div style="margin-top:8px;font-size:12px;color:var(--caramel-dark)">★ ${o.payment_confirmed?`Earned ${o.loyalty_points_earned} points`:`Will earn ${o.loyalty_points_earned} points once payment is confirmed`}</div>`:''}
     </div>
@@ -2992,11 +3267,11 @@ function renderProfileTab(){
   const taste = computeTasteProfile();
   return `<div style="padding:16px 18px">
     <div class="card" style="padding:18px;margin-bottom:16px">
-      <div style="font-weight:700;font-size:17px">${esc(p?.full_name||'')}</div>
+      <div style="display:flex;gap:12px;align-items:center"><div class="av-btn" style="width:48px;height:48px;font-size:19px">${avatarHtml(p, 48)}</div><div style="font-weight:700;font-size:17px">${esc(p?.full_name||'')}</div></div>
       <div style="font-size:13px;color:var(--coffee-500)">${esc(state.session?.user?.email||'')}</div>
       <div style="font-size:13px;color:var(--coffee-500);margin-top:4px">${esc(p?.phone||'No phone on file')}</div>
       <div style="margin-top:10px;font-size:12px;color:var(--caramel-dark)">Referral Code: <b>${esc(p?.referral_code||'')}</b> — share for bonus points</div>
-      <button class="btn btn-outline" style="width:100%;margin-top:12px" onclick="shareReferral()">📤 Invite a Friend</button>
+      <div style="display:flex;gap:8px;margin-top:12px"><button class="btn btn-outline" style="flex:1" onclick="openAccount()">✏️ Edit profile</button><button class="btn btn-outline" style="flex:1" onclick="shareReferral()">📤 Invite a Friend</button></div>
     </div>
     ${darkToggleHtml()}
     ${birthdayCardHtml()}
@@ -3057,10 +3332,12 @@ function renderWorker(){
         ${renderInstallIconBtn()}
         ${renderBell()}
         ${!state.pushEnabled && pushSupported() ? `<button class="btn btn-ghost btn-sm" onclick="enablePushNotifications()">Alerts</button>` : ''}
+        ${accountBtnHtml()}
         <button class="btn btn-ghost btn-sm" onclick="signOut()">Sign out</button>
       </div>
     </div>
     ${state.notifPanelOpen ? renderNotifPanel() : ''}
+    ${myStatsHtml()}
     <div style="padding:16px 0 16px 18px;overflow-x:auto">
       <div style="display:flex;gap:14px;padding-right:18px">
         ${columns.map(([title, orders, bg]) => `<div style="min-width:270px;max-width:270px;flex-shrink:0">
@@ -3082,7 +3359,7 @@ function renderWorkerOrderCard(o){
   const urgent = urgency <= 10 && o.status !== 'ready';
   return `<div class="card" data-order-id="${o.id}" style="padding:12px;${urgent?'border-color:var(--danger)':''}">
     <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px">
-      <div style="font-weight:700;font-size:14px">#${o.order_number} ${payBadge(o,'font-size:10px;padding:2px 8px')}</div>
+      <div style="font-weight:700;font-size:14px;display:flex;gap:6px;align-items:center">#${o.order_number} ${payBadge(o,'font-size:10px;padding:2px 8px')}${prepTimerHtml(o)}</div>
       ${urgent ? `<span class="badge cancelled">⏱ ${urgency<=0?'DUE NOW':urgency+'m'}</span>` : `<span style="font-size:11px;color:var(--coffee-500)">${o.pickup_time?String(o.pickup_time).slice(0,5):'ASAP · '+Math.max(0,Math.round((Date.now()-new Date(o.created_at))/60000))+'m ago'}</span>`}
     </div>
     <div style="font-size:14px;font-weight:700;color:var(--coffee-900);margin-bottom:8px">${esc(o.profiles?.full_name||'Customer')}</div>
@@ -3142,7 +3419,7 @@ function renderAdmin(){
   if (state.adminTab==='dashboard') body = renderAdminDashboard();
   else if (state.adminTab==='insights') body = renderAdminInsights();
   else if (state.adminTab==='menu') body = renderAdminMenu();
-  else if (state.adminTab==='orders') body = renderAdminOrders();
+  else if (state.adminTab==='orders') body = renderAdminOrders() + deletedOrdersHtml();
   else if (state.adminTab==='promos') body = renderAdminPromos();
   else if (state.adminTab==='rewards') body = renderAdminRewards();
   else if (state.adminTab==='gifts') body = renderAdminGifts();
@@ -3157,6 +3434,7 @@ function renderAdmin(){
         ${renderInstallIconBtn()}
         ${renderBell()}
         ${!state.pushEnabled && pushSupported() ? `<button class="btn btn-ghost btn-sm" onclick="enablePushNotifications()">Alerts</button>` : ''}
+        ${accountBtnHtml()}
         <button class="btn btn-ghost btn-sm" onclick="signOut()">Sign out</button>
       </div>
     </div>
@@ -3965,6 +4243,7 @@ function renderAdminSettings(){
   </div>
   <div id="payout-body">${payoutDetailsBodyHtml()}</div>
   ${qrSettingsHtml()}
+  ${feeSettingsHtml()}
   ${announcementEditorHtml()}
   <div id="staff-codes-body" style="margin-top:16px">${staffCodesBodyHtml()}</div>`;
 }
