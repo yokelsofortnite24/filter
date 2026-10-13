@@ -7,6 +7,7 @@
 <meta http-equiv="Pragma" content="no-cache">
 <meta http-equiv="Expires" content="0">
 <meta name="theme-color" content="#F6F0E4">
+<script>try{if(localStorage.getItem('filter_theme')==='dark'){document.documentElement.classList.add('dark');document.querySelector('meta[name=theme-color]').content='#17110D'}}catch(e){}</script>
 <link rel="manifest" href="./manifest.json">
 <link rel="icon" href="./icon.svg" type="image/svg+xml">
 <link rel="apple-touch-icon" sizes="180x180" href="./apple-touch-icon.png">
@@ -476,6 +477,46 @@ select.input{padding-right:40px;text-overflow:ellipsis;white-space:nowrap;overfl
 .age-late .age-pill{background:#F8DDD7;color:var(--danger)}
 
 
+/* ---- v25 ---- */
+.switch{width:46px;height:28px;border-radius:99px;border:none;background:var(--line);position:relative;flex-shrink:0;transition:background .2s}
+.switch span{position:absolute;top:3px;left:3px;width:22px;height:22px;border-radius:50%;background:#fff;box-shadow:0 1px 3px rgba(0,0,0,.25);transition:transform .2s}
+.switch.on{background:var(--caramel)}.switch.on span{transform:translateX(18px)}
+.info-tags{display:flex;flex-wrap:wrap;gap:6px;margin:-6px 0 16px}
+.info-tag{font-size:11.5px;font-weight:600;padding:4px 9px;border-radius:99px;background:#EFE6D6;color:var(--coffee-700)}
+.info-tag.warn{background:#F7E1D9;color:#8A3527}
+.preset-card{min-width:150px;max-width:170px;padding:12px;position:relative}.preset-card.off{opacity:.55}
+.preset-x{position:absolute;top:4px;right:6px;border:none;background:none;color:var(--coffee-500);font-size:16px;padding:2px 4px}
+.heat{display:grid;gap:3px;margin-top:12px;align-items:center}
+.heat .hc{aspect-ratio:1;border-radius:3px;min-width:0}.heat .hh{font-size:9px;color:var(--coffee-500);text-align:left;white-space:nowrap}.heat .hd{font-size:10.5px;color:var(--coffee-500)}
+.exp-form{display:grid;grid-template-columns:1fr 1fr;gap:8px}.exp-form .btn{grid-column:1/-1}
+@media(min-width:640px){.exp-form{grid-template-columns:90px 1fr 1.4fr 130px auto}.exp-form .btn{grid-column:auto}}
+.exp-bars>div{display:grid;grid-template-columns:100px 1fr 80px;gap:8px;align-items:center;font-size:12.5px;margin:4px 0}.exp-bars .meta{text-align:right}
+.eb{height:8px;background:var(--line);border-radius:99px;overflow:hidden}.eb i{display:block;height:100%;background:var(--caramel);border-radius:99px}
+.exp-list{margin-top:12px}.lb-row.low b{color:var(--danger)}
+.qbtn{width:32px;height:32px;padding:0!important;border-radius:50%!important}.inv-q{min-width:58px;text-align:center;font-weight:700;font-size:13.5px}
+.chip-warn{font-size:11.5px;font-weight:700;color:#8A3527;background:#F7E1D9;padding:4px 9px;border-radius:99px}
+.note-row{display:flex;gap:8px;align-items:center;padding:10px 0;border-top:1px solid var(--line)}.note-row.pinned{background:linear-gradient(90deg,rgba(227,181,131,.18),transparent);margin:0 -8px;padding-left:8px;padding-right:8px;border-radius:10px}
+/* Dark mode */
+html.dark{color-scheme:dark;--cream:#15100C;--cream-2:#1D1611;--card:#241B15;--coffee-900:#F3E9DA;--coffee-700:#E0CFB8;--coffee-500:#B39C84;--caramel:#C98A52;--caramel-dark:#E3A66C;--caramel-light:#6B4A30;--line:#3A2E25;--sage:#9DB37E;--danger:#E07A69;--shadow:0 10px 30px -12px rgba(0,0,0,.6);--soft:0 1px 2px rgba(0,0,0,.3),0 8px 24px -18px rgba(0,0,0,.7)}
+html.dark body{background:var(--cream);color:var(--coffee-900)}
+html.dark .input,html.dark input,html.dark select,html.dark textarea{background:#1A140F;color:var(--coffee-900);border-color:var(--line)}
+html.dark .topbar,html.dark .tabbar,html.dark nav{background:rgba(29,22,17,.92)!important;border-color:var(--line)!important}
+html.dark .btn-primary{color:#1A120C}
+html.dark .btn-ghost,html.dark .chip{background:#2E241C;color:var(--coffee-900)}
+html.dark .chip.active{background:var(--caramel);color:#1A120C}
+html.dark .pts-pill,html.dark .info-tag{background:#3A2C20;color:var(--caramel-dark)}
+html.dark .info-tag.warn,html.dark .chip-warn{background:#4A2420;color:#F2A597}
+html.dark [style*="background:#fff"],html.dark [style*="background:#FFF"],html.dark [style*="background:white"],html.dark [style*="background:#F3E6CC"],html.dark [style*="background:#FBF7EF"],html.dark [style*="background:#FFFDF9"]{background:var(--card)!important;color:var(--coffee-900)}
+html.dark [style*="#EFE0C4"]{background:linear-gradient(135deg,#3A2B1F,#5A3E28)!important}
+html.dark .heart-btn{background:rgba(36,27,21,.85)!important}
+html.dark .skel{background:linear-gradient(90deg,#2A211A,#35291F,#2A211A);background-size:200% 100%}
+html.dark .switch span{background:#F3E9DA}
+html.dark .btn-primary,html.dark .chip.active,html.dark .tip-chip.on,html.dark .pay-opt.on,html.dark .admin-more-tile.active,html.dark .fm-add,html.dark .new-tag,html.dark .stamp{background:var(--caramel)!important;border-color:var(--caramel)!important;color:#1A120C!important}
+html.dark .btn-primary:hover{background:var(--caramel-dark)!important}
+html.dark .tab-pill::before{background:#3A2C20}
+html.dark .wa-fab{background:#2E241C!important;color:var(--coffee-900)!important}
+html.dark .progress-bar,html.dark .progress{background:#3A2E25}
+
 /* ---- v24 ---- */
 .stamp-card{padding:16px;margin-bottom:20px}
 .stamps{display:grid;gap:10px;justify-items:center}
@@ -509,7 +550,7 @@ select.input{padding-right:40px;text-overflow:ellipsis;white-space:nowrap;overfl
 // Bumped on every real deploy. Lets a running tab/installed PWA detect a
 // newer version is live on the server and prompt to refresh, instead of
 // silently running stale code forever (a common PWA gotcha).
-const APP_BUILD = '2026-10-13-01';
+const APP_BUILD = '2026-10-13-02';
 // ---- v23 updates + features ----
 function safeToAutoReload(){ return !(state.cart||[]).length && !modalInUse() && !isEditingSomething() && !state.adminMoreOpen && !document.querySelector('.sheet'); }
 async function fetchLatestBuild(){
@@ -1404,7 +1445,7 @@ async function loadAnalytics(force){
   const { data } = await sb.from('orders').select('id, order_number, created_at, total, tip, status, payment_confirmed, payment_method, excluded_from_sales, customer_id, profiles!orders_customer_id_fkey(full_name, phone), order_items(product_name, quantity, unit_price)').gte('created_at', since.toISOString()).order('created_at', { ascending: false }).limit(2000);
   _an = data || []; _anAt = Date.now();
   } catch (e) { _an = _an || []; } finally { _anLoading = false; }
-  if (state.adminTab === 'dashboard' && !modalInUse() && !isEditingSomething()) render();
+  if (['dashboard','insights','shop'].includes(state.adminTab) && !modalInUse() && !isEditingSomething()) render();
 }
 function salesIn(from, to){ return (_an || []).filter(o => o.payment_confirmed && o.status !== 'cancelled' && !o.excluded_from_sales && new Date(o.created_at) >= from && new Date(o.created_at) < to).reduce((a, o) => a + Number(o.total || 0), 0); }
 function trendsCardHtml(){
@@ -1463,6 +1504,179 @@ async function applyBulkPrices(){
   await refreshProducts(); state.bulkArm = false; state.bulkVal = ''; state.bulkOpen = false;
   showToast(fail ? `${ok} updated, ${fail} failed` : `Updated ${ok} price${ok !== 1 ? 's' : ''}`, fail ? 'err' : 'ok'); render();
 }
+
+// ---- v25 features ----
+// Dark mode (device-local preference)
+function isDark(){ return document.documentElement.classList.contains('dark'); }
+function toggleDark(){ const on = !isDark(); document.documentElement.classList.toggle('dark', on); try { localStorage.setItem('filter_theme', on ? 'dark' : 'light'); } catch (e) {} const m = document.querySelector('meta[name=theme-color]'); if (m) m.content = on ? '#17110D' : '#F6F0E4'; render(); }
+function darkToggleHtml(){ return `<div class="card" style="padding:14px 18px;margin-bottom:16px;display:flex;align-items:center;gap:12px"><span style="font-size:22px">${isDark() ? '🌙' : '☀️'}</span><div style="flex:1"><b>Dark mode</b><div class="meta">Easier on the eyes at night. Saved on this device.</div></div><button class="switch ${isDark() ? 'on' : ''}" role="switch" aria-checked="${isDark()}" aria-label="Dark mode" onclick="toggleDark()"><span></span></button></div>`; }
+// Surprise me
+function surpriseMe(){
+  const pool = state.products.filter(p => p.is_available && (p.is_hot || p.is_iced)); const list = pool.length ? pool : state.products.filter(p => p.is_available);
+  if (!list.length) { showToast('Nothing available right now', 'err'); return; }
+  const recent = (state.orders || []).slice(0, 5).flatMap(o => (o.order_items || []).map(i => i.product_name));
+  const fresh = list.filter(p => !recent.includes(p.name)); const pick = (fresh.length ? fresh : list)[Math.floor(Math.random() * (fresh.length ? fresh : list).length)];
+  showToast(`🎲 How about a ${pick.name}?`); openProduct(pick.id);
+}
+// Caffeine + allergen info
+const CAF = { none: ['Caffeine-free', '🌿'], low: ['Low caffeine', '☕'], regular: ['Regular caffeine', '☕☕'], high: ['Strong / high caffeine', '⚡'] };
+const ALLERGENS = ['Dairy', 'Nuts', 'Gluten', 'Soy', 'Egg'];
+function infoTagsHtml(p){
+  const t = []; if ((p.is_hot || p.is_iced) && p.caffeine_level !== 'regular' && CAF[p.caffeine_level]) t.push(`<span class="info-tag">${CAF[p.caffeine_level][1]} ${CAF[p.caffeine_level][0]}</span>`);
+  (p.allergens || []).forEach(a => t.push(`<span class="info-tag warn">⚠ Contains ${esc(a.toLowerCase())}</span>`));
+  return t.length ? `<div class="info-tags">${t.join('')}</div>` : '';
+}
+// Saved presets (device-local; prices always recalculated from the live menu)
+function getPresets(){ try { return JSON.parse(localStorage.getItem('filter_presets') || '[]'); } catch (e) { return []; } }
+function setPresets(l){ try { localStorage.setItem('filter_presets', JSON.stringify(l.slice(0, 8))); } catch (e) {} }
+function presetDesc(pr){ const p = state.products.find(x => x.id === pr.product_id); if (!p) return ''; const s = (p.product_sizes || []).find(x => x.id === pr.size); const ch = (p.product_option_groups || []).flatMap(g => (g.product_option_choices || []).filter(c => (pr.choices[g.id] || []).includes(c.id)).map(c => c.name)); return [s?.name, ...ch].filter(Boolean).join(' · '); }
+function savePreset(){
+  const m = state.productModal; if (!m) return; const l = getPresets();
+  if ((m.product.product_option_groups || []).some(g => g.is_required && (g.product_option_choices || []).length && !(m.choices[g.id] || []).length)) { showToast('Pick the required options first', 'err'); return; }
+  const name = (prompt('Name this preset', m.product.name + (l.length ? ' #' + (l.length + 1) : '')) || '').trim().slice(0, 30); if (!name) return;
+  l.unshift({ id: Date.now().toString(36), name, product_id: m.product.id, size: m.size, choices: JSON.parse(JSON.stringify(m.choices)), notes: m.notes || '', qty: 1 });
+  setPresets(l); showToast('Preset saved ⭐', 'ok'); render();
+}
+function usePreset(id){
+  const pr = getPresets().find(x => x.id === id); const p = pr && state.products.find(x => x.id === pr.product_id);
+  if (!p || !p.is_available) { showToast('That drink isn\'t available right now', 'err'); return; }
+  const sizes = p.product_sizes || [], size = sizes.find(s => s.id === pr.size) || sizes.find(s => s.is_default) || sizes[0];
+  const choices = {}; (p.product_option_groups || []).forEach(g => { const ok = (pr.choices[g.id] || []).filter(cid => (g.product_option_choices || []).some(c => c.id === cid)); if (ok.length) choices[g.id] = ok; });
+  const groups = (p.product_option_groups || []).filter(g => (g.product_option_choices || []).length && g.is_required);
+  state.productModal = { product: p, size: size?.id || null, choices, qty: 1, notes: pr.notes || '' };
+  if (groups.some(g => !(choices[g.id] || []).length)) { showToast('Some options changed — please check'); render(); return; }
+  confirmAddToCart();
+}
+function deletePreset(id){ setPresets(getPresets().filter(x => x.id !== id)); render(); }
+function presetsRowHtml(){
+  const l = getPresets().filter(pr => state.products.some(p => p.id === pr.product_id)); if (!l.length) return '';
+  return `<div style="margin-bottom:18px"><h3 style="margin:0 0 10px;font-size:15px;color:var(--coffee-700)">⭐ My presets</h3><div class="scrollx">${l.map(pr => { const p = state.products.find(x => x.id === pr.product_id); return `<div class="card preset-card ${p.is_available ? '' : 'off'}"><button class="preset-x" aria-label="Delete preset" onclick="deletePreset('${pr.id}')">×</button><div style="font-weight:700;font-size:13px;padding-right:14px">${esc(pr.name)}</div><div class="meta" style="font-size:11px;min-height:14px">${esc(presetDesc(pr))}</div><button class="btn btn-primary btn-sm" style="margin-top:8px;width:100%" ${p.is_available ? '' : 'disabled'} onclick="usePreset('${pr.id}')">${p.is_available ? '+ Add' : 'Sold out'}</button></div>`; }).join('')}</div></div>`;
+}
+// Share a drink
+async function shareDrink(id){
+  const p = state.products.find(x => x.id === id); if (!p) return;
+  const url = location.origin + location.pathname + '?drink=' + id, text = `Try the ${p.name} at ${state.settings?.business_name || 'Filter'} — ${money(p.base_price)} ☕`;
+  try { if (navigator.share) { await navigator.share({ title: p.name, text, url }); return; } } catch (e) { if (e && e.name === 'AbortError') return; }
+  try { await navigator.clipboard.writeText(text + '\n' + url); showToast('Link copied — paste it to a friend', 'ok'); } catch (e) { prompt('Copy this link', url); }
+}
+function maybeOpenDrinkFromUrl(){ try { const id = new URLSearchParams(location.search).get('drink'); if (!id) return; history.replaceState(null, '', location.pathname); const t0 = Date.now(); const tryOpen = () => { if (state.products.some(p => p.id === id)) openProduct(id); else if (Date.now() - t0 < 8000) setTimeout(tryOpen, 400); }; setTimeout(tryOpen, 500); } catch (e) {} }
+
+// ---- Admin: peak-hours heatmap ----
+function heatmapHtml(){
+  if (!_an) { loadAnalytics(); return `<div class="card" style="padding:16px;margin-bottom:16px"><div class="skel" style="height:140px"></div></div>`; }
+  const H0 = 8, H1 = 23, grid = Array.from({ length: 7 }, () => Array(H1 - H0 + 1).fill(0));
+  const since = Date.now() - 28 * 864e5; let n = 0;
+  _an.forEach(o => { if (o.status === 'cancelled' || o.excluded_from_sales) return; const d = new Date(o.created_at); if (d < since) return; const h = d.getHours(); if (h < H0 || h > H1) return; grid[(d.getDay() + 6) % 7][h - H0]++; n++; });
+  const max = Math.max(1, ...grid.flat()); const days = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
+  let best = [0, 0, 0]; grid.forEach((r, i) => r.forEach((v, j) => { if (v > best[0]) best = [v, i, j]; }));
+  const hl = h => { const x = h % 12 || 12; return x + (h < 12 ? 'a' : 'p'); };
+  return `<div class="card" style="padding:16px;margin-bottom:16px"><div style="display:flex;justify-content:space-between;align-items:baseline"><div class="display" style="font-size:17px">Busy hours</div><span class="meta">last 4 weeks · ${n} orders</span></div>
+    <div class="heat" style="grid-template-columns:30px repeat(${H1 - H0 + 1},1fr)"><span></span>${Array.from({ length: H1 - H0 + 1 }, (_, j) => `<span class="hh">${(j + H0) % 3 === 0 ? hl(j + H0) : ''}</span>`).join('')}
+    ${grid.map((r, i) => `<span class="hd">${days[i]}</span>` + r.map((v, j) => `<span class="hc" title="${days[i]} ${hl(j + H0)}: ${v}" style="background:${v ? `rgba(181,113,61,${(.15 + .85 * v / max).toFixed(2)})` : 'var(--line)'}"></span>`).join('')).join('')}</div>
+    <div class="meta" style="margin-top:8px">${best[0] ? `Busiest: <b>${days[best[1]]} around ${hl(best[2] + H0)}</b> — plan stock and help for then.` : 'Not enough orders yet.'}</div></div>`;
+}
+
+// ---- Admin: Shop tab (expenses, inventory, shift notes) ----
+let _shop = null, _shopLoading = false;
+async function loadShop(force){
+  if (_shopLoading || (_shop && !force)) return; _shopLoading = true;
+  try {
+    const since = new Date(); since.setDate(since.getDate() - 62);
+    const [ex, ing, sn] = await Promise.all([
+      sb.from('expenses').select('*').gte('spent_on', localDateStr(since)).order('spent_on', { ascending: false }).limit(500),
+      sb.from('ingredients').select('*').order('name'),
+      sb.from('shift_notes').select('*').order('created_at', { ascending: false }).limit(30),
+    ]);
+    _shop = { expenses: ex.data || [], ingredients: ing.data || [], notes: sn.data || [], err: ex.error || ing.error || sn.error };
+  } finally { _shopLoading = false; }
+  if (state.adminTab === 'shop' && !modalInUse() && !isEditingSomething()) render();
+}
+function renderAdminShop(){
+  if (!_shop) { loadShop(); return `<div class="card" style="padding:16px"><div class="skel" style="height:160px"></div></div>`; }
+  if (!_an) loadAnalytics();
+  return profitCardHtml() + inventoryHtml() + shiftNotesHtml();
+}
+const EXP_CATS = ['Beans & tea', 'Milk & dairy', 'Supplies', 'Packaging', 'Utilities', 'Other'];
+function profitCardHtml(){
+  const now = new Date(), mStart = new Date(now.getFullYear(), now.getMonth(), 1), next = new Date(now.getFullYear(), now.getMonth() + 1, 1);
+  const ms = localDateStr(mStart), ex = _shop.expenses.filter(e => e.spent_on >= ms);
+  const spent = ex.reduce((a, e) => a + Number(e.amount), 0), sales = _an ? salesIn(mStart, next) : 0, profit = sales - spent;
+  const byCat = {}; ex.forEach(e => byCat[e.category] = (byCat[e.category] || 0) + Number(e.amount));
+  return `<div class="card" style="padding:16px;margin-bottom:16px"><div class="display" style="font-size:17px;margin-bottom:10px">Profit · ${now.toLocaleDateString([], { month: 'long' })}</div>
+    <div class="stat-row" style="margin:0 0 12px"><div class="stat"><b>${money(sales)}</b><span class="meta">paid sales</span></div><div class="stat"><b>${money(spent)}</b><span class="meta">expenses</span></div><div class="stat"><b style="color:${profit >= 0 ? 'var(--sage)' : 'var(--danger)'}">${money(profit)}</b><span class="meta">profit</span></div></div>
+    ${Object.keys(byCat).length ? `<div class="exp-bars">${Object.entries(byCat).sort((a, b) => b[1] - a[1]).map(([k, v]) => `<div><span>${esc(k)}</span><div class="eb"><i style="width:${Math.round(v / spent * 100)}%"></i></div><span class="meta">${money(v)}</span></div>`).join('')}</div>` : ''}
+    <div class="sec-title" style="margin-top:14px">Log an expense</div>
+    <div class="exp-form"><input class="input" id="exp-amt" type="number" inputmode="decimal" min="1" placeholder="Rs"><select class="input" id="exp-cat">${EXP_CATS.map(c => `<option>${c}</option>`).join('')}</select><input class="input" id="exp-desc" maxlength="200" placeholder="What for? (optional)"><input class="input" id="exp-date" type="date" value="${localDateStr(now)}" max="${localDateStr(now)}"><button class="btn btn-primary btn-sm" onclick="addExpense()">Add</button></div>
+    ${_shop.expenses.length ? `<div class="exp-list">${_shop.expenses.slice(0, 8).map(e => `<div class="lb-row"><span style="flex:1;min-width:0"><b>${money(e.amount)}</b> <span class="meta">· ${esc(e.category)}${e.description ? ' · ' + esc(e.description) : ''}</span></span><span class="meta">${new Date(e.spent_on + 'T12:00').toLocaleDateString([], { day: 'numeric', month: 'short' })}</span><button class="link-danger" style="font-size:12px" aria-label="Delete expense" onclick="deleteExpense('${e.id}')">✕</button></div>`).join('')}</div>` : `<div class="meta" style="margin-top:10px">No expenses logged yet. Add what you spend on beans, milk and cups to see real profit.</div>`}
+  </div>`;
+}
+async function addExpense(){
+  const amt = Number(document.getElementById('exp-amt').value), cat = document.getElementById('exp-cat').value, desc = document.getElementById('exp-desc').value.trim(), d = document.getElementById('exp-date').value || localDateStr(new Date());
+  if (!(amt > 0)) { showToast('Enter an amount', 'err'); return; }
+  const { error } = await sb.from('expenses').insert({ amount: amt, category: cat, description: desc || null, spent_on: d });
+  if (error) { showToast('Not saved: ' + error.message, 'err'); return; }
+  showToast('Expense logged', 'ok'); await loadShop(true); render();
+}
+async function deleteExpense(id){ if (!confirm('Delete this expense?')) return; const { error } = await sb.from('expenses').delete().eq('id', id); if (error) { showToast(error.message, 'err'); return; } await loadShop(true); render(); }
+function inventoryHtml(){
+  const l = _shop.ingredients, low = l.filter(i => Number(i.qty) <= Number(i.low_at));
+  return `<div class="card" style="padding:16px;margin-bottom:16px"><div style="display:flex;justify-content:space-between;align-items:baseline;margin-bottom:8px"><div class="display" style="font-size:17px">Ingredients</div>${low.length ? `<span class="chip-warn">${low.length} running low</span>` : ''}</div>
+    ${l.map(i => { const isLow = Number(i.qty) <= Number(i.low_at); return `<div class="lb-row ${isLow ? 'low' : ''}"><span style="flex:1;min-width:0"><b>${esc(i.name)}</b><div class="meta">${isLow ? '⚠ low · ' : ''}alert at ${Number(i.low_at)} ${esc(i.unit)}</div></span>
+      <button class="btn btn-ghost btn-sm qbtn" aria-label="Less" onclick="bumpIngredient('${i.id}',-1)">−</button><span class="inv-q">${Number(i.qty)} <span class="meta">${esc(i.unit)}</span></span><button class="btn btn-ghost btn-sm qbtn" aria-label="More" onclick="bumpIngredient('${i.id}',1)">+</button>
+      <button class="btn btn-ghost btn-sm" aria-label="Set count" onclick="setIngredient('${i.id}')">✎</button><button class="link-danger" style="font-size:12px" aria-label="Remove ingredient" onclick="deleteIngredient('${i.id}')">✕</button></div>`; }).join('') || `<div class="meta">Track milk, beans, cups and more. Get a warning when something runs low.</div>`}
+    <div class="exp-form" style="margin-top:12px"><input class="input" id="ing-name" maxlength="60" placeholder="e.g. Milk"><input class="input" id="ing-qty" type="number" min="0" placeholder="Count"><input class="input" id="ing-unit" maxlength="12" placeholder="unit (L, kg, pcs)"><input class="input" id="ing-low" type="number" min="0" placeholder="Low at"><button class="btn btn-primary btn-sm" onclick="addIngredient()">Add</button></div></div>`;
+}
+async function addIngredient(){
+  const name = document.getElementById('ing-name').value.trim(); if (!name) { showToast('Name the ingredient', 'err'); return; }
+  const { error } = await sb.from('ingredients').insert({ name, qty: Math.max(0, Number(document.getElementById('ing-qty').value) || 0), unit: document.getElementById('ing-unit').value.trim() || 'pcs', low_at: Math.max(0, Number(document.getElementById('ing-low').value) || 0) });
+  if (error) { showToast('Not saved: ' + error.message, 'err'); return; } await loadShop(true); render();
+}
+async function writeIngredient(id, qty){
+  const i = _shop.ingredients.find(x => x.id === id); if (!i) return; const prev = i.qty; i.qty = Math.max(0, +qty.toFixed(2)); render();
+  const { data, error } = await sb.from('ingredients').update({ qty: i.qty, updated_at: new Date().toISOString() }).eq('id', id).select('id');
+  if (error || !data?.length) { i.qty = prev; showToast('Not saved', 'err'); render(); }
+}
+function bumpIngredient(id, d){ const i = _shop.ingredients.find(x => x.id === id); if (i) writeIngredient(id, Number(i.qty) + d); }
+function setIngredient(id){ const i = _shop.ingredients.find(x => x.id === id); if (!i) return; const v = prompt(`New count for ${i.name} (${i.unit})`, i.qty); if (v === null) return; const n = Number(v); if (!(n >= 0)) { showToast('Enter a number', 'err'); return; } writeIngredient(id, n); }
+async function deleteIngredient(id){ if (!confirm('Remove this ingredient?')) return; await sb.from('ingredients').delete().eq('id', id); await loadShop(true); render(); }
+function shiftNotesHtml(){
+  const l = [..._shop.notes].sort((a, b) => (b.pinned - a.pinned) || (new Date(b.created_at) - new Date(a.created_at)));
+  return `<div class="card" style="padding:16px;margin-bottom:16px"><div class="display" style="font-size:17px;margin-bottom:8px">Shift notes</div>
+    <div style="display:flex;gap:8px;margin-bottom:10px"><input class="input" id="sn-body" maxlength="500" placeholder="e.g. Oat milk delivery coming at 5pm"><button class="btn btn-primary btn-sm" onclick="addShiftNote()">Post</button></div>
+    ${l.map(n => `<div class="note-row ${n.pinned ? 'pinned' : ''}"><div style="flex:1;min-width:0"><div style="overflow-wrap:anywhere">${n.pinned ? '📌 ' : ''}${esc(n.body)}</div><div class="meta">${esc(n.author_name || 'Staff')} · ${timeAgo(n.created_at)}</div></div><button class="btn btn-ghost btn-sm" aria-label="${n.pinned ? 'Unpin' : 'Pin'}" onclick="pinShiftNote('${n.id}',${!n.pinned})">${n.pinned ? 'Unpin' : 'Pin'}</button><button class="link-danger" style="font-size:12px" aria-label="Delete note" onclick="deleteShiftNote('${n.id}')">✕</button></div>`).join('') || `<div class="meta">Leave handover notes for whoever is on next.</div>`}</div>`;
+}
+function timeAgo(t){ const s = (Date.now() - new Date(t)) / 1000; if (s < 60) return 'just now'; if (s < 3600) return Math.floor(s / 60) + 'm ago'; if (s < 86400) return Math.floor(s / 3600) + 'h ago'; return new Date(t).toLocaleDateString([], { day: 'numeric', month: 'short' }); }
+async function addShiftNote(){
+  const b = document.getElementById('sn-body').value.trim(); if (!b) return;
+  const { error } = await sb.from('shift_notes').insert({ body: b, author_id: state.session.user.id, author_name: state.profile?.full_name || null });
+  if (error) { showToast('Not posted: ' + error.message, 'err'); return; } await loadShop(true); render();
+}
+async function pinShiftNote(id, on){ await sb.from('shift_notes').update({ pinned: on }).eq('id', id); await loadShop(true); render(); }
+async function deleteShiftNote(id){ await sb.from('shift_notes').delete().eq('id', id); await loadShop(true); render(); }
+
+// ---- Admin: customer notes & tags ----
+const CUST_TAGS = ['VIP', 'Regular', 'Oat milk', 'Less sugar', 'Pays late', 'Friend'];
+async function loadCustNote(id){
+  const { data } = await sb.from('customer_notes').select('*').eq('customer_id', id).maybeSingle();
+  if (state.customerProfile?.id === id) { state.customerProfile.note = data ? { ...data, _exists: true } : { customer_id: id, note: '', tags: [] }; if (!isEditingSomething()) render(); }
+}
+function custNoteHtml(c){
+  if (!c.note) { setTimeout(() => loadCustNote(c.id), 0); return `<div class="sec-title">Notes & tags</div><div class="card" style="padding:12px 16px"><div class="skel" style="height:40px"></div></div>`; }
+  const tags = c.note.tags || [];
+  return `<div class="sec-title">Notes & tags <span class="meta" style="text-transform:none;letter-spacing:0;font-weight:500">· only staff can see these</span></div><div class="card" style="padding:12px 16px">
+    <div style="display:flex;flex-wrap:wrap;gap:6px;margin-bottom:10px">${CUST_TAGS.map(t => `<button class="chip ${tags.includes(t) ? 'active' : ''}" style="padding:5px 10px;font-size:12px" onclick="toggleCustTag('${t}')">${t}</button>`).join('')}</div>
+    <textarea class="input" id="cust-note" maxlength="500" style="min-height:56px" placeholder="e.g. Likes it extra hot, usually comes after 6pm">${esc(c.note.note || '')}</textarea>
+    <button class="btn btn-primary btn-sm" style="width:100%;margin-top:8px" onclick="saveCustNote()">Save note</button></div>`;
+}
+async function saveCustNote(tagsOnly){
+  const c = state.customerProfile; if (!c?.note) return;
+  const el = document.getElementById('cust-note'); if (el && !tagsOnly) c.note.note = el.value.trim();
+  const row = { note: c.note.note || null, tags: c.note.tags || [], updated_at: new Date().toISOString() };
+  const { error } = c.note._exists ? await sb.from('customer_notes').update(row).eq('customer_id', c.id).select('customer_id') : await sb.from('customer_notes').insert({ customer_id: c.id, ...row });
+  if (!error) c.note._exists = true;
+  if (error) showToast('Not saved: ' + error.message, 'err'); else if (!tagsOnly) showToast('Note saved', 'ok');
+}
+function toggleCustTag(t){ const n = state.customerProfile?.note; if (!n) return; const el = document.getElementById('cust-note'); if (el) n.note = el.value; n.tags = n.tags.includes(t) ? n.tags.filter(x => x !== t) : [...n.tags, t]; render(); saveCustNote(true); }
 
 let _screenKey = '', _enterT = null, _lastCartCount = 0, _freshOrderIds = new Set();
 function successPop(text){
@@ -1830,7 +2044,7 @@ async function openReceipt(id){
   state._receiptOrder = o; state._receiptShown = false;
   setState({ receiptOrderId: id, orderDetailId: null, notifPanelOpen: false });
 }
-function maybeOpenReceiptFromUrl(){ try { const rid = new URLSearchParams(location.search).get('receipt'); if (rid) { history.replaceState(null, '', location.pathname); setTimeout(() => openReceipt(rid), 600); } } catch (e) {} }
+function maybeOpenReceiptFromUrl(){ maybeOpenDrinkFromUrl(); try { const rid = new URLSearchParams(location.search).get('receipt'); if (rid) { history.replaceState(null, '', location.pathname); setTimeout(() => openReceipt(rid), 600); } } catch (e) {} }
 function closeReceipt(){ state._receiptOrder = null; setState({ receiptOrderId: null }); }
 function receiptHtml(d){
   const row = (l, v, cls='') => `<div class="rc-row ${cls}"><span>${l}</span><span>${v}</span></div>`;
@@ -2098,7 +2312,9 @@ function renderMenuTab(){
       <button class="chip ${state.filters.hot?'active':''}" onclick="state.filters.hot=!state.filters.hot; render()">🔥 Hot</button>
       <button class="chip ${state.filters.iced?'active':''}" onclick="state.filters.iced=!state.filters.iced; render()">🧊 Iced</button>
       <button class="chip ${(state.menuSort||'default')!=='default'?'active':''}" onclick="cycleSort()">⇅ ${SORTS.find(s=>s[0]===(state.menuSort||'default'))[1]}</button>
+      <button class="chip" onclick="surpriseMe()">🎲 Surprise me</button>
     </div>
+    ${(!state.search && state.activeCategory==='all') ? presetsRowHtml() : ''}
     ${(!state.search && state.activeCategory==='all' && featured.length) ? `
       <div style="margin-bottom:22px">
         <h3 style="margin:0 0 10px;font-size:15px;color:var(--coffee-700)">✦ Featured</h3>
@@ -2182,6 +2398,7 @@ function renderProductModal(fresh){
     <div style="height:150px;border-radius:16px;background:linear-gradient(135deg,#EFE0C4,var(--caramel-light));display:flex;align-items:center;justify-content:center;font-size:44px;margin-bottom:14px;overflow:hidden">${p.image_url?`<img src="${esc(p.image_url)}" style="width:100%;height:100%;object-fit:cover">`:'☕'}</div>
     <h2 class="display" style="margin:0 0 4px;font-size:22px">${esc(p.name)}</h2>
     <p style="color:var(--coffee-500);font-size:13.5px;margin:0 0 16px">${esc(p.description||'')}</p>
+    ${infoTagsHtml(p)}
 
     ${sizes.length ? `<label class="small">Size</label><div class="scrollx" style="margin:8px 0 16px">
       ${sizes.map(s=>`<button class="chip ${m.size===s.id?'active':''}" onclick="state.productModal.size='${s.id}'; render()">${esc(s.name)}${s.price_modifier>0?` +${money(s.price_modifier)}`:''}</button>`).join('')}
@@ -2206,6 +2423,10 @@ function renderProductModal(fresh){
         <span style="font-weight:700;font-size:16px;min-width:16px;text-align:center">${m.qty}</span>
         <button class="btn btn-ghost" style="width:44px;height:44px;padding:0;border-radius:50%" onclick="state.productModal.qty+=1; render()">+</button>
       </div>
+    </div>
+    <div style="display:flex;gap:8px;margin-bottom:10px">
+      <button class="btn btn-ghost btn-sm" style="flex:1" ${canAdd?'':'disabled'} onclick="savePreset()">⭐ Save as preset</button>
+      <button class="btn btn-ghost btn-sm" style="flex:1" onclick="shareDrink('${p.id}')">↗ Share</button>
     </div>
     <div style="display:flex;gap:10px">
       <button class="btn btn-outline" style="flex:1" onclick="closeModal()">Cancel</button>
@@ -2777,6 +2998,7 @@ function renderProfileTab(){
       <div style="margin-top:10px;font-size:12px;color:var(--caramel-dark)">Referral Code: <b>${esc(p?.referral_code||'')}</b> — share for bonus points</div>
       <button class="btn btn-outline" style="width:100%;margin-top:12px" onclick="shareReferral()">📤 Invite a Friend</button>
     </div>
+    ${darkToggleHtml()}
     ${birthdayCardHtml()}
     ${taste ? `<div class="card" style="padding:18px;margin-bottom:16px">
       <h3 style="margin:0 0 10px;font-size:15px">☕ Your Taste Profile</h3>
@@ -2913,7 +3135,7 @@ function renderAdminMoreSheet(tabs){
 }
 function closeAdminMore(tab){ state._moreShown=false; const u={adminMoreOpen:false}; if(tab) u.adminTab=tab; setState(u); window.scrollTo(0,0); }
 function renderAdmin(){
-  const tabs = [['dashboard','Today','☕'],['orders','Orders','🧾'],['menu','Menu','📋'],['insights','Insights','📈'],['users','Customers','👥'],['promos','Promos','🏷️'],['rewards','Rewards','⭐'],['gifts','Gifts','🎁'],['missions','Missions','🎯'],['settings','Settings','⚙️']];
+  const tabs = [['dashboard','Today','☕'],['orders','Orders','🧾'],['menu','Menu','📋'],['insights','Insights','📈'],['users','Customers','👥'],['promos','Promos','🏷️'],['rewards','Rewards','⭐'],['gifts','Gifts','🎁'],['missions','Missions','🎯'],['shop','Shop log','📒'],['settings','Settings','⚙️']];
   const primary = tabs.slice(0,3); const cur = tabs.find(t=>t[0]===state.adminTab)||tabs[0]; const inMore = !primary.some(t=>t[0]===state.adminTab);
   const atm = tabMotion('admin', inMore ? 3 : primary.findIndex(t=>t[0]===state.adminTab));
   let body = '';
@@ -2927,6 +3149,7 @@ function renderAdmin(){
   else if (state.adminTab==='missions') body = renderAdminMissions();
   else if (state.adminTab==='users') body = renderAdminUsers();
   else if (state.adminTab==='settings') body = renderAdminSettings();
+  else if (state.adminTab==='shop') body = renderAdminShop();
   return `<div class="app-frame-wide" style="min-height:100vh">
     <div class="topbar" style="display:flex;justify-content:space-between;align-items:center">
       <div style="min-width:0"><div class="display" style="font-size:19px;line-height:1.2;white-space:nowrap">Filter <span style="color:var(--coffee-500);font-weight:500">Owner</span></div><div class="meta">${esc(state.profile?.full_name||'')} <span class="ver">v${APP_BUILD.slice(5)}</span></div></div>
@@ -3030,6 +3253,9 @@ function statCard(label,val){ return `<div class="card" style="padding:16px"><di
 
 // ================= FILTER INSIGHTS =================
 function renderAdminInsights(){
+  return heatmapHtml() + renderAdminInsightsBody();
+}
+function renderAdminInsightsBody(){
   const orders = state.workerOrders.filter(o=>o.payment_confirmed && !o.excluded_from_sales);
   if (!orders.length) return `<div class="card" style="padding:24px;text-align:center;color:var(--coffee-500)">Insights will appear here once you have a few paid orders.</div>`;
 
@@ -3203,6 +3429,8 @@ function adminProductEditorHtml(){
       <label><input type="checkbox" id="pe-hot" ${p.is_hot?'checked':''} onchange="state.adminEditProduct.is_hot=this.checked"> Served Hot</label>
       <label><input type="checkbox" id="pe-iced" ${p.is_iced?'checked':''} onchange="state.adminEditProduct.is_iced=this.checked"> Served Iced</label>
     </div>
+    <label class="small">Caffeine</label><select class="input" id="pe-caf" style="margin:6px 0 12px">${Object.entries(CAF).map(([k,v])=>`<option value="${k}" ${(p.caffeine_level||'regular')===k?'selected':''}>${v[0]}</option>`).join('')}</select>
+    <label class="small">Contains (allergens)</label><div style="display:flex;gap:12px;flex-wrap:wrap;font-size:13px;margin:6px 0 12px">${ALLERGENS.map(a=>`<label><input type="checkbox" class="pe-alg" value="${a}" ${(p.allergens||[]).includes(a)?'checked':''}> ${a}</label>`).join('')}</div>
     <p style="font-size:11px;color:var(--coffee-500);margin:0 0 12px">Leave "Served Hot/Iced" unchecked for food items — they only affect the 🔥/🧊 filters on drinks.</p>
 
     <div id="pe-options">${optionsEditorHtml(p)}</div>
@@ -3367,6 +3595,8 @@ async function saveAdminProduct(keepOpen){
     is_featured: document.getElementById('pe-feat').checked,
     is_hot: document.getElementById('pe-hot').checked,
     is_iced: document.getElementById('pe-iced').checked,
+    caffeine_level: document.getElementById('pe-caf')?.value || 'regular',
+    allergens: [...document.querySelectorAll('.pe-alg:checked')].map(x=>x.value),
   };
   if (!payload.name) { showToast('Please enter a name', 'err'); if (btn) { btn.disabled=false; btn.textContent='Save Product'; } return; }
   const id = state.adminEditProduct.id;
@@ -3631,6 +3861,7 @@ function renderCustomerProfileSheet(fresh){
       ${kv('Push notifications', c.pushOn ? 'On' : 'Off')}
       ${kv('Promo / loyalty messages', `${u.notify_promos === false ? 'Off' : 'On'} / ${u.notify_loyalty === false ? 'Off' : 'On'}`)}
     </div>
+    ${custNoteHtml(c)}
     ${u.role==='customer' ? `<div class="sec-title">Adjust points</div>
     <div class="card" style="padding:12px 16px">
       <div class="seg" role="group"><button class="${state.adjMode!=='remove'?'on':''}" onclick="state.adjMode='add'; render()">Add</button><button class="${state.adjMode==='remove'?'on':''}" onclick="state.adjMode='remove'; render()">Remove</button></div>
