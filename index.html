@@ -617,6 +617,14 @@ html.dark .chip-timer{background:#3A2C20;color:var(--coffee-900)}html.dark .chip
 .pt-edit{display:block;margin:8px 0;background:none;border:1px dashed var(--line);border-radius:10px;padding:6px 10px;font-size:12.5px;font-weight:600;color:var(--coffee-700);width:100%;text-align:left}
 .pickup-at{font-size:14px}.eta-center{text-align:center}.meta.pickup-at{color:var(--coffee-900)}
 .pause-row{display:flex;flex-wrap:wrap;gap:6px;align-items:center;margin:10px 0 4px;font-size:13px}.pause-row .chip{padding:5px 12px}.pause-row span{margin-right:auto}
+.ready-alert{position:fixed;inset:0;z-index:200;background:rgba(42,24,15,.55);-webkit-backdrop-filter:blur(6px);backdrop-filter:blur(6px);display:flex;align-items:center;justify-content:center;padding:24px;animation:fadein .2s ease}
+.ra-card{background:var(--card);border-radius:28px;padding:28px 24px 18px;text-align:center;max-width:340px;width:100%;box-shadow:0 30px 60px -20px rgba(0,0,0,.5);animation:popIn2 .55s cubic-bezier(.3,.7,.4,1.5) both}
+.ra-cup{font-size:56px;animation:raBob 1.4s ease-in-out infinite}@keyframes raBob{0%,100%{transform:translateY(0) rotate(-4deg)}50%{transform:translateY(-8px) rotate(4deg)}}
+.ra-kicker{font-size:12px;font-weight:700;letter-spacing:.06em;color:var(--caramel-dark);text-transform:uppercase;margin-top:6px}.ra-title{font-family:'Fraunces',serif;font-size:30px;font-weight:700;color:var(--coffee-900)}.ra-sub{color:var(--coffee-500);margin:4px 0 16px}.ra-btn{width:100%;margin-top:8px}
+.make-list{padding:12px 14px;margin:4px 0 0}.ml-head{display:flex;justify-content:space-between;align-items:center;width:100%;background:none;border:0;padding:0;color:inherit}
+.ml-rows{margin-top:8px;display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:6px 14px}.ml-row{display:flex;gap:8px;align-items:flex-start;font-size:13.5px;padding:6px 0;border-top:1px solid var(--line)}
+.ml-q{font-family:'Fraunces',serif;font-size:17px;min-width:30px;color:var(--caramel-dark)}.ml-making{font-size:10.5px;font-weight:700;background:rgba(119,135,95,.16);color:#57683F;border-radius:99px;padding:2px 8px;white-space:nowrap}
+@media (prefers-reduced-motion:reduce){.ra-cup{animation:none}}
 </style>
 </head>
 <body>
@@ -626,7 +634,52 @@ html.dark .chip-timer{background:#3A2C20;color:var(--coffee-900)}html.dark .chip
 // Bumped on every real deploy. Lets a running tab/installed PWA detect a
 // newer version is live on the server and prompt to refresh, instead of
 // silently running stale code forever (a common PWA gotcha).
-const APP_BUILD = '2026-10-13-07';
+const APP_BUILD = '2026-10-22-01';
+// ===== v31: ready alert, staff make-list, admin win-back =====
+let _prevStatus = null;
+function checkReadyTransitions(){
+  const cur = {}; (state.orders || []).forEach(o => cur[o.id] = o.status);
+  if (_prevStatus) { const hit = (state.orders || []).find(o => o.status === 'ready' && _prevStatus[o.id] && _prevStatus[o.id] !== 'ready'); if (hit) showReadyAlert(hit); }
+  _prevStatus = cur;
+}
+function readyChime(){ try { const C = window.AudioContext || window.webkitAudioContext; if (!C) return; const c = new C(); [660, 880, 1320].forEach((f, i) => { const o = c.createOscillator(), g = c.createGain(); o.type = 'sine'; o.frequency.value = f; g.gain.setValueAtTime(0.0001, c.currentTime + i * .16); g.gain.exponentialRampToValueAtTime(.22, c.currentTime + i * .16 + .02); g.gain.exponentialRampToValueAtTime(.0001, c.currentTime + i * .16 + .5); o.connect(g).connect(c.destination); o.start(c.currentTime + i * .16); o.stop(c.currentTime + i * .16 + .55); }); setTimeout(() => c.close(), 1500); } catch (e) {} }
+function showReadyAlert(o){
+  if (state.profile?.role !== 'customer' || document.querySelector('.ready-alert')) return;
+  readyChime(); try { navigator.vibrate && navigator.vibrate([120, 60, 120, 60, 240]); } catch (e) {}
+  const el = document.createElement('div'); el.className = 'ready-alert'; el.setAttribute('role', 'alertdialog'); el.setAttribute('aria-label', 'Your order is ready');
+  el.innerHTML = `<div class="ra-card"><div class="ra-cup">☕</div><div class="ra-kicker">Order #${o.order_number}</div><div class="ra-title">It's ready!</div><div class="ra-sub">Come and collect it while it's hot.</div>
+    ${o.arrived_at ? '' : `<button class="btn btn-primary ra-btn" data-here="${o.id}">📍 I'm here</button>`}<button class="btn btn-ghost ra-btn" data-close="1">Got it</button></div>`;
+  el.addEventListener('click', e => { const h = e.target.closest('[data-here]'); if (h) { imHere(h.dataset.here); el.remove(); } else if (e.target === el || e.target.closest('[data-close]')) el.remove(); });
+  document.body.appendChild(el);
+}
+// Staff: what to make right now, across all open orders
+function makeListHtml(){
+  const open = (state.workerOrders || []).filter(o => ['pending','accepted','preparing'].includes(o.status) && !o.deleted_at);
+  const agg = {}; open.forEach(o => (o.order_items || []).forEach(i => { const opts = (i.order_item_options || []).map(c => c.choice_name).filter(Boolean).join(', '); const k = [i.product_name, i.size_name || '', opts].join('|'); const a = agg[k] ||= { name: i.product_name, size: i.size_name, opts, q: 0, making: 0 }; a.q += Number(i.quantity || 0); if (o.status === 'preparing') a.making += Number(i.quantity || 0); }));
+  const rows = Object.values(agg).sort((a, b) => b.q - a.q); const total = rows.reduce((t, r) => t + r.q, 0);
+  if (!rows.length) return '';
+  const openUi = state.makeListOpen !== false;
+  return `<div class="card make-list"><button class="ml-head" onclick="setState({makeListOpen:${!openUi}})" aria-expanded="${openUi}"><span class="display" style="font-size:16px">🧾 Make list</span><span class="meta">${total} drink${total > 1 ? 's' : ''} · ${open.length} order${open.length > 1 ? 's' : ''} ${openUi ? '▴' : '▾'}</span></button>
+    ${openUi ? `<div class="ml-rows">${rows.map(r => `<div class="ml-row"><b class="ml-q">${r.q}×</b><span style="flex:1;min-width:0">${esc(r.name)}${r.size ? ` <span class="meta">(${esc(r.size)})</span>` : ''}${r.opts ? `<div class="meta">${esc(r.opts)}</div>` : ''}</span>${r.making ? `<span class="ml-making">${r.making} making</span>` : ''}</div>`).join('')}</div>` : ''}</div>`;
+}
+// Admin: regulars who've gone quiet
+function winbackNudged(){ try { return JSON.parse(localStorage.getItem('filter_winback') || '{}'); } catch (e) { return {}; } }
+function winbackHtml(){
+  if (!_an) return '';
+  const nudged = winbackNudged(), now = Date.now(), DAY = 864e5, agg = {};
+  _an.filter(o => o.customer_id && o.status !== 'cancelled').forEach(o => { const a = agg[o.customer_id] ||= { name: o.profiles?.full_name || 'Customer', phone: o.profiles?.phone, n: 0, last: 0 }; a.n++; a.last = Math.max(a.last, new Date(o.created_at).getTime()); });
+  const list = Object.entries(agg).filter(([id, c]) => c.n >= 2 && now - c.last >= 14 * DAY && !(nudged[id] && now - nudged[id] < 7 * DAY)).sort((a, b) => b[1].n - a[1].n).slice(0, 6);
+  if (!list.length) return '';
+  return `<div class="card" style="padding:16px;margin-bottom:16px"><div style="display:flex;justify-content:space-between;align-items:baseline;margin-bottom:4px"><div class="display" style="font-size:17px">💌 Missing regulars</div><span class="meta">no order in 14+ days</span></div><div class="meta" style="margin-bottom:8px">A friendly WhatsApp often brings them back. Opens WhatsApp — nothing is sent until you tap send.</div>
+    ${list.map(([id, c]) => `<div class="lb-row"><span class="lb-name" style="flex:1"><button class="linkish" style="text-decoration:none;color:inherit" onclick="openCustomerProfile('${id}')">${esc(c.name)}</button><div class="meta">${c.n} orders · last ${Math.round((now - c.last) / DAY)} days ago</div></span>${c.phone ? `<button class="btn btn-wa btn-sm" onclick="winbackWa('${id}')">${WA_SVG} Nudge</button>` : '<span class="meta">no phone</span>'}</div>`).join('')}</div>`;
+}
+function winbackWa(id){
+  const o = _an.find(x => x.customer_id === id); const name = (o?.profiles?.full_name || '').split(' ')[0] || 'there';
+  const txt = `Hi ${name}! We've missed you at ${state.settings?.business_name || 'Filter'} ☕ Your favourite is just a tap away — order ahead and pick it up fresh: ${location.origin + location.pathname}`;
+  window.open(`https://wa.me/${waNumber(o?.profiles?.phone)}?text=${encodeURIComponent(txt)}`, '_blank');
+  const n = winbackNudged(); n[id] = Date.now(); try { localStorage.setItem('filter_winback', JSON.stringify(n)); } catch (e) {} render();
+}
+
 // ===== v30: admin-set pickup time, timed pause =====
 function pickupAt(o){ if (!o?.pickup_time) return null; const d = new Date(`${o.pickup_date || localDateStr(new Date())}T${String(o.pickup_time).slice(0,5)}:00`); return isNaN(d) ? null : d; }
 function fmtClock(d){ return d.toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' }); }
@@ -1359,6 +1412,7 @@ async function loadFavorites(){
 async function loadOrders(){
   const { data } = await sb.from('orders').select('*, order_items(*, order_item_options(*))').eq('customer_id', state.session.user.id).order('created_at', { ascending: false });
   state.orders = (data || []).filter(o => !_deletedIds.has(o.id));
+  checkReadyTransitions();
 }
 async function loadNotifications(){
   const { data } = await sb.from('notifications').select('*').eq('user_id', state.session.user.id).order('created_at', { ascending: false }).limit(30);
@@ -3426,6 +3480,7 @@ function renderWorker(){
     </div>
     ${state.notifPanelOpen ? renderNotifPanel() : ''}
     ${myStatsHtml()}
+    <div style="padding:0 18px">${makeListHtml()}</div>
     <div style="padding:16px 0 16px 18px;overflow-x:auto">
       <div style="display:flex;gap:14px;padding-right:18px">
         ${columns.map(([title, orders, bg]) => `<div style="min-width:270px;max-width:270px;flex-shrink:0">
@@ -3557,6 +3612,7 @@ function renderAdminDashboard(){
     ${bestSellersToday()}
     ${trendsCardHtml()}
     ${topCustomersHtml()}
+    ${winbackHtml()}
     <button class="btn btn-ghost" style="width:100%;margin:0 0 16px" onclick="exportOrdersCsv()">⬇ Export orders (CSV, last 60 days)</button>
     ${quickStockHtml()}
     <div class="stat-grid" style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:16px">
