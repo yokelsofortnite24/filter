@@ -625,6 +625,10 @@ html.dark .chip-timer{background:#3A2C20;color:var(--coffee-900)}html.dark .chip
 .ml-rows{margin-top:8px;display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:6px 14px}.ml-row{display:flex;gap:8px;align-items:flex-start;font-size:13.5px;padding:6px 0;border-top:1px solid var(--line)}
 .ml-q{font-family:'Fraunces',serif;font-size:17px;min-width:30px;color:var(--caramel-dark)}.ml-making{font-size:10.5px;font-weight:700;background:rgba(119,135,95,.16);color:#57683F;border-radius:99px;padding:2px 8px;white-space:nowrap}
 @media (prefers-reduced-motion:reduce){.ra-cup{animation:none}}
+.tip-sub{display:block;font-size:10.5px;font-weight:600;opacity:.8}
+.live-dot{display:inline-block;width:8px;height:8px;border-radius:50%;background:#C9B79F;margin-left:6px;vertical-align:middle;position:relative}.live-dot.on{background:#5E9E57}
+.live-dot.ping::after{content:'';position:absolute;inset:-4px;border-radius:50%;border:2px solid #5E9E57;animation:livePing .9s ease-out}@keyframes livePing{from{opacity:1;transform:scale(.6)}to{opacity:0;transform:scale(2.2)}}
+.ms-tips{color:#57683F!important;font-weight:600}.tip-badge{background:rgba(119,135,95,.16);color:#57683F;font-size:10px;padding:2px 8px}
 </style>
 </head>
 <body>
@@ -634,7 +638,7 @@ html.dark .chip-timer{background:#3A2C20;color:var(--coffee-900)}html.dark .chip
 // Bumped on every real deploy. Lets a running tab/installed PWA detect a
 // newer version is live on the server and prompt to refresh, instead of
 // silently running stale code forever (a common PWA gotcha).
-const APP_BUILD = '2026-10-22-01';
+const APP_BUILD = '2026-10-24-01';
 // ===== v31: ready alert, staff make-list, admin win-back =====
 let _prevStatus = null;
 function checkReadyTransitions(){
@@ -1354,6 +1358,9 @@ function pollSignature(){
 }
 // A customizer/sheet the person is using is never rebuilt by background data;
 // it picks up fresh data the next time they interact.
+// Sheets that only SHOW data (order detail, receipt, loyalty card, customer profile) update live;
+// sheets where someone is choosing/typing are never rebuilt underneath them.
+function liveBlocked(){ return !!(state.accountOpen || state.productModal || state.checkoutOpen || state.cartOpen || state.reviewModal || state.chatOpen || state.scanCard || state.iosInstallModal || state.adminMoreOpen || state.quickActionsId); }
 function modalInUse(){ return !!(state.accountOpen || state.quickActionsId || state.customerProfile || state.productModal || state.checkoutOpen || state.cartOpen || state.reviewModal || state.chatOpen || state.membershipCardOpen || state.scanCard || state.orderDetailId || state.iosInstallModal || state.adminMoreOpen || state.receiptOrderId); }
 async function pollTick(opts){
     const fast = !!(opts && opts.fast);
@@ -1388,17 +1395,18 @@ async function pollTick(opts){
 
         if (isEditingSomething()) return; // data is fresh in state; screen updates next safe render
         statusChanges.forEach(o => { if (o.status === 'ready') readyCelebration(o); else showToast(`Order #${o.order_number} is now ${o.status}`); });
-        if (pointsGained > 0) showToast(`+${pointsGained} loyalty points earned!`, 'ok');
+        if (pointsGained > 0) { showToast(`+${pointsGained} loyalty points earned!`, 'ok'); burst(18); }
         if (giftUnlocked) showToast('🎁 You unlocked a free gift! Check Rewards.', 'ok');
-        if (pollSignature() !== _sigBefore && !modalInUse()) render();
+        if (pollSignature() !== _sigBefore && !liveBlocked()) { render(); flashLive(); }
       } else if (state.profile.role === 'worker' || state.profile.role === 'admin') {
         const prevIds = new Set(state.workerOrders.map(o => o.id)), hadAny = state.workerOrders.length > 0 || _pollN > 1;
         await Promise.all([loadWorkerOrders(), loadNotifications()]);
         const fresh = hadAny ? state.workerOrders.filter(o => !prevIds.has(o.id) && o.status === 'pending') : [];
         if (fresh.length) { chime(); showNewOrderBanner(fresh[0]); fresh.forEach(o => _freshOrderIds.add(o.id)); setTimeout(() => fresh.forEach(o => _freshOrderIds.delete(o.id)), 1500); }
 
+        if (state.profile.role === 'admin' && pollSignature() !== _sigBefore && _an) { _anAt = 0; await loadAnalytics(true); }
         if (isEditingSomething()) return; // never wipe an in-progress edit (settings, product form, etc.)
-        if (pollSignature() !== _sigBefore && !modalInUse()) render();
+        if (pollSignature() !== _sigBefore && !liveBlocked()) { render(); flashLive(); }
       }
     } catch (e) { /* silent — retry on next tick */ }
     finally { _polling = false; _bgDepth = Math.max(0, _bgDepth - 1); }
@@ -1563,7 +1571,7 @@ function renderTracker(o, dark){
     if (dy > 110) { s.style.transform = 'translateY(100%)'; setTimeout(() => { const sc = s.closest('.scrim'); if (sc) sc.dispatchEvent(new MouseEvent('click', { bubbles: true })); }, 180); }
     else s.style.transform = ''; });
 })();
-function readyCelebration(o){ burst(30); successPop(`Order #${o.order_number} is ready! ☕`); try { navigator.vibrate && navigator.vibrate([120, 60, 120]); } catch (e) {} }
+function readyCelebration(o){ burst(30); if (!document.querySelector('.ready-alert')) showReadyAlert(o); }
 // Estimated ready time: orders ahead in the queue × ~4 min + 6 min base.
 function etaMinutes(o){
   if (!['pending','accepted','preparing'].includes(o.status)) return 0;
@@ -2087,7 +2095,7 @@ function myStatsHtml(){
   const done = state.workerOrders.filter(o => o.completed_by === me && o.status === 'completed' && o.completed_at && localDateStr(new Date(o.completed_at)) === today);
   const prep = done.filter(o => o.preparing_at && o.ready_at).map(o => (new Date(o.ready_at) - new Date(o.preparing_at)) / 60000);
   const open = (_myShift || []).find(x => !x.clock_out);
-  return `<div class="my-stats"><div class="ms-card"><b data-count="${done.length}">${done.length}</b><span>completed by you today</span></div><div class="ms-card"><b>${prep.length ? fmtMins(prep.reduce((a, b) => a + b, 0) / prep.length) : '—'}</b><span>your avg prep</span></div>
+  return `<div class="my-stats"><div class="ms-card"><b data-count="${done.length}">${done.length}</b><span>completed by you today</span>${(() => { const t = state.workerOrders.filter(o => o.status !== 'cancelled' && localDateStr(new Date(o.created_at)) === today).reduce((x, o) => x + Number(o.tip || 0), 0); return t ? `<span class="ms-tips">💝 team tips today ${money(t)}</span>` : ''; })()}</div><div class="ms-card"><b>${prep.length ? fmtMins(prep.reduce((a, b) => a + b, 0) / prep.length) : '—'}</b><span>your avg prep</span></div>
     <div class="ms-card ms-clock ${open ? 'on' : ''}"><b>${_myShift === undefined ? '…' : open ? `<span class="ptimer" data-since="${open.clock_in}">${fmtMins((Date.now() - new Date(open.clock_in)) / 60000)}</span>` : fmtMins(shiftMinutesToday(_myShift))}</b><span>${open ? 'on shift' : 'worked today'}</span><button class="btn btn-sm ${open ? 'btn-outline' : 'btn-primary'}" onclick="clockToggle()">${open ? 'Clock out' : 'Clock in'}</button></div></div>`;
 }
 function prepTimerHtml(o){
@@ -2699,7 +2707,7 @@ async function saveQrSettings(){
   refreshQrSettings(); showToast('QR settings saved', 'ok');
 }
 
-function tipAmt(){ return Math.max(0, Math.min(10000, Math.round(Number(state.tip) || 0))); }
+function tipAmt(){ const v = state.tipPct ? cartSubtotal() * state.tipPct / 100 : Number(state.tip) || 0; return Math.max(0, Math.min(10000, Math.round(v))); }
 function updateCheckoutTotals(){ const el = document.getElementById('checkout-summary'); if (el) el.innerHTML = checkoutSummaryHtml(); const b = document.getElementById('place-order-btn'); const t = el && el.querySelector('.card > div:last-child > span:last-child'); if (b && !b.disabled && t) b.textContent = 'Place Order · ' + t.textContent; }
 function addNoteChip(t){ const el = document.getElementById('order-notes'); if (!el) return; const v = el.value.trim(); if (v.toLowerCase().includes(t.toLowerCase())) return; el.value = v ? v + ', ' + t : t; el.dispatchEvent(new Event('input', { bubbles: true })); }
 function tipEditorHtml(o){
@@ -2974,7 +2982,7 @@ function renderCheckoutSheet(fresh){
     <textarea class="input" id="order-notes" style="margin:8px 0 16px;min-height:50px" placeholder="Anything else we should know?"></textarea>
 
     <label class="small">Add a tip? <span style="text-transform:none;font-weight:500;letter-spacing:0">(optional, goes to the team)</span></label>
-    <div class="tip-chips">${[0,50,100,200].map(v=>`<button class="tip-chip ${!state.tipCustom&&tipAmt()===v?'on':''}" onclick="setState({tip:${v},tipCustom:false})">${v?'Rs '+v:'No tip'}</button>`).join('')}<button class="tip-chip ${state.tipCustom?'on':''}" onclick="setState({tipCustom:true})">Custom</button></div>
+    <div class="tip-chips">${[0,50,100].map(v=>`<button class="tip-chip ${!state.tipCustom&&!state.tipPct&&tipAmt()===v?'on':''}" onclick="setState({tip:${v},tipCustom:false,tipPct:0})">${v?'Rs '+v:'No tip'}</button>`).join('')}<button class="tip-chip ${state.tipPct===10?'on':''}" onclick="setState({tipPct:10,tipCustom:false})">10%${state.tipPct===10?`<small class="tip-sub">${money(tipAmt())}</small>`:''}</button><button class="tip-chip ${state.tipCustom?'on':''}" onclick="setState({tipCustom:true,tipPct:0})">Custom</button></div>
     ${state.tipCustom?`<input class="input" id="tip-custom" type="number" inputmode="numeric" min="0" max="10000" placeholder="Tip amount in Rs" value="${state.tip||''}" style="margin:0 0 16px" oninput="state.tip=Math.max(0,Math.min(10000,Math.round(Number(this.value)||0))); updateCheckoutTotals()">`:'<div style="height:8px"></div>'}
 
     ${renderPayMethodPicker(total)}
@@ -3152,12 +3160,24 @@ function renderOrderDetailSheet(fresh){
   </div></div>`;
 }
 async function confirmPayment(orderId){
+  const undo = optimisticOrder(orderId, { payment_confirmed: true, payment_confirmed_at: new Date().toISOString() });
   const { error } = await sb.from('orders').update({ payment_confirmed: true }).eq('id', orderId);
-  if (error) { showToast(error.message, 'err'); return; }
+  if (error) { undo(); showToast(error.message, 'err'); return; }
   showToast('Payment confirmed — points released to customer', 'ok');
-  await loadWorkerOrders();
+  await loadWorkerOrders(); if (state.profile?.role === 'admin') { _anAt = 0; loadAnalytics(true).then(() => { if (!liveBlocked() && !isEditingSomething()) render(); }); }
   render();
 }
+// Apply a change locally right away (admin/staff), roll back if the server says no.
+function optimisticOrder(id, patch){
+  const lists = [state.workerOrders || [], _an || [], state.customerProfile?.orders || []]; const saved = [];
+  const stamp = { accepted: 'accepted_at', preparing: 'preparing_at', ready: 'ready_at', completed: 'completed_at' };
+  lists.forEach(l => l.forEach(o => { if (o.id === id) { saved.push([o, { ...o }]); Object.assign(o, patch); if (patch.status && stamp[patch.status] && !o[stamp[patch.status]]) o[stamp[patch.status]] = new Date().toISOString(); } }));
+  if (!isEditingSomething()) render();
+  return () => { saved.forEach(([o, old]) => { Object.keys(o).forEach(k => delete o[k]); Object.assign(o, old); }); render(); };
+}
+// Small "live" pulse in the header whenever realtime data lands.
+function flashLive(){ document.querySelectorAll('.live-dot').forEach(d => { d.classList.remove('ping'); void d.offsetWidth; d.classList.add('ping'); }); }
+function liveDotHtml(){ return `<span class="live-dot ${RT.joined ? 'on' : ''}" title="${RT.joined ? 'Live — updates instantly' : 'Reconnecting…'}" aria-label="${RT.joined ? 'Live' : 'Reconnecting'}"></span>`; }
 
 // ================= REVIEWS =================
 function openReviewModal(productId, productName, orderId){
@@ -3469,7 +3489,7 @@ function renderWorker(){
   const columns = [['🆕 New', pending, '#FBF2E1'], ['✓ Accepted', accepted, '#EDE0C8'], ['🔥 Preparing', preparing, '#F3D9B1'], ['✅ Ready', ready, '#CFE7DC']];
   return `<div class="app-frame-wide" style="min-height:100vh">
     <div class="topbar" style="display:flex;justify-content:space-between;align-items:center">
-      <div><div class="display" style="font-size:19px">Filter — Kitchen</div><div style="font-size:11px;color:var(--coffee-500)">${esc(state.profile?.full_name||'')}</div></div>
+      <div><div class="display" style="font-size:19px">Filter — Kitchen</div><div style="font-size:11px;color:var(--coffee-500)">${esc(state.profile?.full_name||'')}${liveDotHtml()}</div></div>
       <div style="display:flex;align-items:center;gap:8px">
         ${renderInstallIconBtn()}
         ${renderBell()}
@@ -3502,7 +3522,7 @@ function renderWorkerOrderCard(o){
   const urgent = urgency <= 10 && o.status !== 'ready';
   return `<div class="card ${o.arrived_at&&o.status!=='completed'?'arrived':''}" data-order-id="${o.id}" style="padding:12px;${urgent?'border-color:var(--danger)':''}">
     <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px">
-      <div style="font-weight:700;font-size:14px;display:flex;gap:6px;align-items:center">#${o.order_number} ${payBadge(o,'font-size:10px;padding:2px 8px')}${arrivedBadge(o)}${prepTimerHtml(o)}</div>
+      <div style="font-weight:700;font-size:14px;display:flex;gap:6px;align-items:center">#${o.order_number} ${payBadge(o,'font-size:10px;padding:2px 8px')}${arrivedBadge(o)}${Number(o.tip)>0?`<span class="badge tip-badge">+${money(o.tip)} tip</span>`:''}${prepTimerHtml(o)}</div>
       ${urgent ? `<span class="badge cancelled">⏱ ${urgency<=0?'DUE NOW':urgency+'m'}</span>` : `<span style="font-size:11px;color:var(--coffee-500)">${o.pickup_time?String(o.pickup_time).slice(0,5):'ASAP · '+Math.max(0,Math.round((Date.now()-new Date(o.created_at))/60000))+'m ago'}</span>`}
     </div>
     <div style="font-size:14px;font-weight:700;color:var(--coffee-900);margin-bottom:8px">${esc(o.profiles?.full_name||'Customer')}</div>
@@ -3540,10 +3560,12 @@ async function cancelOrder(id){
   showToast(`Order #${o?.order_number || ''} cancelled`, 'ok');
   await loadWorkerOrders(); render();
 }
-async function updateOrderStatus(id, status){
+async function updateOrderStatus(id, status, _opt){
   if (status === 'accepted' && state.profile?.role === 'admin') { const o = findAnyOrder(id); if (o && o.status === 'pending') { if (!document.querySelector(`[data-order-id="${id}"]`) || state.quickActionsId || state.notifPanelOpen) state.orderDetailId = id; state.notifPanelOpen = false; startPickupPanel(id, false); return; } }
+  const undo = optimisticOrder(id, { status });
   const { error } = await sb.from('orders').update({ status, assigned_worker_id: state.session.user.id }).eq('id', id);
-  if (error) return showToast(error.message);
+  if (error) { undo(); return showToast(error.message); }
+  if (state.profile?.role === 'admin') { _anAt = 0; loadAnalytics(true).then(() => { if (!liveBlocked() && !isEditingSomething()) render(); }); }
   await loadWorkerOrders(); render();
 }
 
@@ -3574,7 +3596,7 @@ function renderAdmin(){
   else if (state.adminTab==='shop') body = renderAdminShop();
   return `<div class="app-frame-wide" style="min-height:100vh">
     <div class="topbar" style="display:flex;justify-content:space-between;align-items:center">
-      <div style="min-width:0"><div class="display" style="font-size:19px;line-height:1.2;white-space:nowrap">Filter <span style="color:var(--coffee-500);font-weight:500">Owner</span></div><div class="meta">${esc(state.profile?.full_name||'')} <span class="ver">v${APP_BUILD.slice(5)}</span></div></div>
+      <div style="min-width:0"><div class="display" style="font-size:19px;line-height:1.2;white-space:nowrap">Filter <span style="color:var(--coffee-500);font-weight:500">Owner</span></div><div class="meta">${esc(state.profile?.full_name||'')} <span class="ver">v${APP_BUILD.slice(5)}</span>${liveDotHtml()}</div></div>
       <div style="display:flex;align-items:center;gap:8px">
         ${renderInstallIconBtn()}
         ${renderBell()}
